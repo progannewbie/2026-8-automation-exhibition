@@ -3,6 +3,7 @@ SmartCook 通訊模組 — 連線層骨架 (comms.py Connection Skeleton)
 負責建立、維護、診斷與 F60 機器人的 TCP 連線
 """
 
+import os
 import socket
 import threading
 import time
@@ -17,6 +18,8 @@ from config_connection import (
 # ============================================================================
 # 日誌設定
 # ============================================================================
+
+os.makedirs(os.path.dirname(LOGGING_CONFIG['connection_log']), exist_ok=True)
 
 logging.basicConfig(
     filename=LOGGING_CONFIG['connection_log'],

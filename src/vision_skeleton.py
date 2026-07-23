@@ -3,6 +3,7 @@ SmartCook 視覺系統 (Vision System)
 負責食材檢測、ArUco 標記、Hand-eye calibration
 """
 
+import os
 import cv2
 import numpy as np
 from typing import Dict, List, Tuple, Optional
@@ -40,10 +41,22 @@ class YOLODetector:
         """初始化 YOLO 檢測器"""
         try:
             from ultralytics import YOLO
-            self.model = YOLO(YOLOConfig.MODEL_PATH)
-            logger.info(f"✓ YOLO 模型已載入: {YOLOConfig.MODEL_PATH}")
         except ImportError:
             logger.error("✗ 未找到 ultralytics 套件，請執行: pip install ultralytics")
+            self.model = None
+            return
+
+        # 模型尚未訓練/放入前，先留空，不阻擋系統其餘部分運作
+        if not os.path.exists(YOLOConfig.MODEL_PATH):
+            logger.warning(f"⚠️ YOLO 模型檔案尚未就位: {YOLOConfig.MODEL_PATH}（之後補上即可）")
+            self.model = None
+            return
+
+        try:
+            self.model = YOLO(YOLOConfig.MODEL_PATH)
+            logger.info(f"✓ YOLO 模型已載入: {YOLOConfig.MODEL_PATH}")
+        except Exception as exc:
+            logger.error(f"✗ YOLO 模型載入失敗: {exc}")
             self.model = None
     
     def detect(self, image: np.ndarray) -> List[Dict]:

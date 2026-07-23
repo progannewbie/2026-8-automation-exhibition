@@ -13,7 +13,7 @@ from config_phase import (
     get_recipe, get_phases, FOOD_CUT_PARAMS
 )
 from config_commands import CommandParser
-from config_vision import VisionSystem
+from vision_skeleton import VisionSystem
 from comms_connection_skeleton import CommsManager
 
 # ============================================================================

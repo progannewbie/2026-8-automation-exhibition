@@ -114,7 +114,7 @@ AS_ERROR_CODES = {
 LOGGING_CONFIG = {
     'connection_log': 'logs/connection.log',
     'verbose': True,  # 詳細日誌模式
-    'log_format': '[{timestamp}] {arm_id} | {level} | {message}',
+    'log_format': '[%(asctime)s] %(levelname)s | %(message)s',
 }
 
 # ============================================================================

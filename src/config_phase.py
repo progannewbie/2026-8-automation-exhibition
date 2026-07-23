@@ -355,20 +355,18 @@ class MenuRecipes:
 # 5. 流程狀態機轉移
 # ============================================================================
 
+# 狀態轉移規則：
+#
+# INIT → PICKUP → CHOP → PLACE / PLACE_FINAL
+#                       ↓
+#                   FLIP (可選)
+#                       ↓
+#                 PLACE_FINAL
+#                       ↓
+#                     HOME
+#                       ↓
+#                     DONE
 PHASE_TRANSITIONS = {
-    """
-    狀態轉移規則：
-    
-    INIT → PICKUP → CHOP → PLACE / PLACE_FINAL
-                          ↓
-                      FLIP (可選)
-                          ↓
-                    PLACE_FINAL
-                          ↓
-                        HOME
-                          ↓
-                        DONE
-    """
     Phase.INIT: [Phase.PICKUP],
     Phase.PICKUP: [Phase.CHOP, Phase.PLACE],
     Phase.CHOP: [Phase.PLACE, Phase.PLACE_FINAL],
