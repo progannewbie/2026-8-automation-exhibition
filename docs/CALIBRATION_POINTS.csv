@@ -1,0 +1,11 @@
+Location Point ID,Zone,中文名稱,Description,X (mm),Y (mm),Angle (deg),Status,Notes
+PICKUP_CUCUMBER,PICKUP,小黃瓜取料點,小黃瓜擺放位置,待標定,待標定,待標定,PENDING,棋盤式擺放，距蘿蔓≥80mm
+PICKUP_ROMAINE,PICKUP,蘿蔓取料點,蘿蔓生菜擺放位置,待標定,待標定,待標定,PENDING,棋盤式擺放，距紅捲鬚≥80mm
+PICKUP_RED_LEAF,PICKUP,紅捲鬚取料點,紅捲鬚生菜擺放位置,待標定,待標定,待標定,PENDING,從側方接近
+WORK_CHOP_ZONE,WORK,切割區,食材切割動作中心,待標定,待標定,,PENDING,區域中心點，約 400×300 mm
+WORK_MIX_ZONE,WORK,混拌區,切好食材聚集點,待標定,待標定,,PENDING,三種食材混合區
+WORK_FLIP_ZONE,WORK,翻炒區,翻炒動作中心,待標定,待標定,,PENDING,雙鏟互補中心
+SALAD_BOWL,PLACEMENT,沙拉盤,最終放置沙拉的盤子,待標定,待標定,,PENDING,盤子中心座標
+WASTE_CORNER,PLACEMENT,廢料角,根部段廢料放置區,待標定,待標定,,PENDING,
+HOME_LEFT,HOME,左臂復歸點,左臂待機位置,待標定,待標定,待標定,PENDING,安全位置，避免干涉
+HOME_RIGHT,HOME,右臂復歸點,右臂待機位置,待標定,待標定,待標定,PENDING,安全位置，避免干涉
