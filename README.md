@@ -16,7 +16,11 @@ src/
 ├─ vision_skeleton.py             視覺層：YOLO + ArUco + Hand-eye
 └─ phase_controller_skeleton.py   流程層：狀態機實現
 
-docs/        規範文檔、快速參考、規劃總結
+docs/        規範文檔、快速參考、規劃總結、時間表與腳本 (docx/pdf)
+
+robot/
+├─ F60_F_左臂.as   Kawasaki AS 語言：F60_F 左臂 (主切割臂) 控制程式
+└─ F60_R_右臂.as   Kawasaki AS 語言：F60_R 右臂 (輔助固定臂) 控制程式
 ```
 
 所有檔案放在同一層 `src/`，因為彼此以同目錄的方式互相 import
@@ -62,6 +66,14 @@ YOLO 模型檔案（`models/yolov8_smartcook_v1.pt`，路徑定義於
 - [docs/CALIBRATION_POINTS_v1.1.csv](docs/CALIBRATION_POINTS_v1.1.csv) — 10 個標定點表
 - [docs/PLANNING_ROADMAP.txt](docs/PLANNING_ROADMAP.txt) — 規劃路線圖
 - [docs/PLANNING_COMPLETE_CHECKLIST.md](docs/PLANNING_COMPLETE_CHECKLIST.md) — 規劃完成檢查清單
+
+### 機器手臂控制程式 (robot/)
+
+- `robot/F60_F_左臂.as` / `robot/F60_R_右臂.as` — Kawasaki AS 語言骨架程式，
+  對應 `docs/COMMAND_SPECIFICATION.md`、`docs/CONNECTION_PROTOCOL.md`。
+  檔案開頭列出三項待確認事項：乙太網路通訊指令需依控制器韌體版本核對、
+  所有教點座標為佔位值 (待 `docs/CALIBRATION_POINTS_v1.1.csv` 標定完成後
+  現場教點覆蓋)、雙臂 I/O 訊號腳位待電控工程師依實際配線確認。
 
 ## 各模組負責人
 
