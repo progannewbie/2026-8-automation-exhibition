@@ -1,7 +1,7 @@
 ; =====================================================================
 ; SmartCook 機械手臂控制程式 — F60_F (左臂 / 主切割臂)
 ; 語言: Kawasaki AS Language (F 控制器)
-; 版本: v0.2 (骨架 skeleton)
+; 版本: v0.3 (骨架 skeleton)
 ; 對應規格書: COMMAND_SPECIFICATION.md / CONNECTION_PROTOCOL.md /
 ;             OBJECT_DEFINITIONS_v1.1.md / SmartCook_信號分配表.docx
 ;
@@ -9,16 +9,29 @@
 ;           signal instructions) 與 90210-1344 通信選項手冊 1.6 節
 ;           (TCP_LISTEN/TCP_ACCEPT/TCP_SEND/TCP_RECV 套接字指令)。
 ;
+; v0.3 雙臂協同架構變更:
+;   雙臂只用「一組」交握訊號 (sig_out_step/sig_in_step)，PICKUP、
+;   CHOP、PLACE(POUR)、FLIP 這四種需要雙臂同步的動作，都共用同一組
+;   訊號依序交握 (SYNC_STEP)。因為同一時間只會有一種動作在執行，
+;   共用訊號不會衝突。
+;
+;   前提: PC 端現在需要把 PICKUP / CHOP / PLACE(POUR) 這三種指令
+;   「同時發給 F60_F 與 F60_R 兩邊」(做法跟現有 FLIP 已經是雙邊各
+;   發一次一樣)，而不是像舊版規格書只發給 F60_F。這點需要跟
+;   phase_controller_skeleton.py / config_phase.py 的維護者(PC端)
+;   確認並同步修改，這裡先在 AS 端把雙臂協同的骨架寫好。
+;
 ; 三個待確認事項 (請機械/電控工程師覆核後移除本段註解):
 ;   1. 所有 PTEACH 標記的點位皆為佔位值。除 HOME_LEFT 外，其餘點皆
 ;      表示為 ORIGIN + TRANS(x,y,z,o,a,t) 複合座標 (詳見 INIT_POINTS
 ;      內註解)，現場只需教 ORIGIN 這一點，其餘偏移量再依
 ;      CALIBRATION_POINTS.csv 填入即可 (目前仍為「待標定」)。
-;   2. I/O 訊號編號 (sig_out_*/sig_in_*) 為佔位值 (輸出 1–2、輸入
-;      1001–1002)，對應 SmartCook_信號分配表.docx 中
-;      DO_F_1/DO_F_2/DO_R_1/DO_R_2，該文件註明「待你手動補充」，
-;      實際腳位需與 F60_R 對接配線後一併確認。
-;   3. TCP_LISTEN 的合法埠號範圍是 8192–65535；若展場仍要用 9000，
+;   2. I/O 訊號編號 (sig_out_step/sig_in_step) 為佔位值 (輸出 1、
+;      輸入 1001)，實際腳位需與 F60_R 對接配線後一併確認，並更新
+;      SmartCook_信號分配表.docx。
+;   3. PICKUP 集中動作 (converge_*) 的方向與距離純屬佔位示意，需現
+;      場依兩臂實際相對位置與工具形狀調整方向正負號與量值。
+;   4. TCP_LISTEN 的合法埠號範圍是 8192–65535；若展場仍要用 9000，
 ;      需與電控確認韌體是否放寬此限制，否則需與 PC 端
 ;      config_connection.py 一併改成落在合法範圍內的埠號。
 ; =====================================================================
@@ -34,19 +47,19 @@
   tout_recv = 10        ; TCP_RECV 逾時 (秒)，PC 端心跳每 3 秒一次
   tout_send = 5
 
-  ; --- I/O 訊號編號 (雙臂對接，佔位值，待電控確認) ---
+  ; --- I/O 訊號編號 (雙臂共用同一組交握訊號，佔位值，待電控確認) ---
   ; 依 AS 語言慣例，外部輸出訊號用小號碼，外部輸入訊號從 1001 起算
   ; (參照 AS Language Reference Manual 6.7 節 ON/SIGNAL 可用訊號範圍)。
-  sig_out_press_done = 1        ; DO_F_1 (輸出): 壓定完成信號 → F60_R
-  sig_out_lift_done = 2         ; DO_F_2 (輸出): 提鏟完成信號 → F60_R
-  sig_in_chop_done = 1001       ; DO_R_1 (輸入): 落刀完成信號 ← F60_R
-  sig_in_step_done = 1002       ; DO_R_2 (輸入): 步進完成信號 ← F60_R
+  sig_out_step = 1        ; 輸出: 本臂完成目前階段 → F60_R
+  sig_in_step = 1001       ; 輸入: F60_R 完成目前階段 ← F60_R
 
   ; --- 動作參數 (可依現場試切調整，單位 mm/deg) ---
   appro_mm = 80.0
   chop_down_mm = 40.0
   flip_up_mm = 90.0
   pour_tilt_deg = 90.0
+  converge_dx = 20.0      ; PICKUP 集中階段：F60_F 往中心平移量 (方向待現場確認)
+  converge_dy = 0.0
 
   ; --- 逾時設定 (秒) ---
   timeout_io_sec = 5.0
@@ -93,8 +106,7 @@
   CALL INIT_POINTS()
   SPEED 30 ALWAYS
   ACCURACY 1
-  SIGNAL -sig_out_press_done
-  SIGNAL -sig_out_lift_done
+  SIGNAL -sig_out_step
   LMOVE HOME_LEFT
 
   CALL OPEN_LISTEN()
@@ -288,10 +300,36 @@ listen:
 .END
 
 ; ---------------------------------------------------------------------
-; PICKUP,<LOCATION>,<ARM>
+; SYNC_STEP — 雙臂單一階段的完整交握 (barrier):
+;   1. 拉高自己的輸出，代表「我這階段做完了」
+;   2. 等對方也拉高 (對方也做完了)
+;   3. 拉低自己的輸出
+;   4. 等對方也拉低，雙方才一起進入下一階段
+; F60_F / F60_R 都呼叫同一套邏輯，靠訊號腳位方向不同 (sig_out_step/
+; sig_in_step 各自對應到不同物理接線) 自然形成會合點，不需要額外
+; 訊號告知現在是哪個動作、哪個階段。
+; ---------------------------------------------------------------------
+.PROGRAM SYNC_STEP(.ok)
+  SIGNAL sig_out_step
+  CALL WAIT_SIGNAL(sig_in_step, timeout_io_sec, ok1)
+  IF ok1 = 0 THEN
+    SIGNAL -sig_out_step
+    .ok = 0
+    RETURN
+  END
+  SIGNAL -sig_out_step
+  CALL WAIT_SIGNAL_OFF(sig_in_step, timeout_io_sec, ok2)
+  .ok = ok2
+.END
+
+; ---------------------------------------------------------------------
+; PICKUP,<LOCATION>,<ARM> — 雙臂協同取料
+; F60_F 為主導方: 就緒 → 下降 → 集中 → 抬起，每階段都與 F60_R 用
+; SYNC_STEP 會合一次。ARM 參數固定驗證為 "F60_F"，代表本次取料以
+; F60_F 為主導 (與 F60_R 收到的同一筆 PICKUP 指令相對應)。
 ; ---------------------------------------------------------------------
 .PROGRAM DO_PICKUP(.$location, .$arm)
-  IF .$arm <> $this_arm THEN
+  IF .$arm <> "F60_F" THEN
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
@@ -326,17 +364,51 @@ listen:
 
   robot_busy = 1
   SPEED 40 ALWAYS
+
+  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
   LAPPRO dest, appro_mm
+  CALL SYNC_STEP(ok)
+  IF ok = 0 THEN
+    CALL SEND_LINE("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+
+  ; 階段 2: 下降 — 一起下降到取料高度
   LMOVE dest
-  ; TODO: 依實際夾具/鏟取動作插入取料手勢 (鏟子插入角度、聚攏)
+  CALL SYNC_STEP(ok)
+  IF ok = 0 THEN
+    CALL SEND_LINE("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+
+  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
+  DRAW converge_dx, converge_dy, 0
+  CALL SYNC_STEP(ok)
+  IF ok = 0 THEN
+    CALL SEND_LINE("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+
+  ; 階段 4: 抬起 — 一起抬起離開取料區
   LDEPART appro_mm
+  CALL SYNC_STEP(ok)
+  IF ok = 0 THEN
+    CALL SEND_LINE("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+
   robot_busy = 0
   CALL SEND_LINE("OK")
 .END
 
 ; ---------------------------------------------------------------------
 ; CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>
-; 由左鏟(開刃)執行下壓切割，每刀完成後與 F60_R 交握 (壓點步進)
+; 由左鏟(開刃)執行下壓切割，每刀完成後與 F60_R 用 SYNC_STEP 會合一次
+; (F60_R 同時收到相同的 CHOP 指令，在自己那邊做壓料/步進)
 ; ---------------------------------------------------------------------
 .PROGRAM DO_CHOP(.$food, .cuts, .thick)
   IF .$food <> "CUCUMBER" AND .$food <> "ROMAINE" THEN
@@ -356,9 +428,7 @@ listen:
   i = 0
   DO
     DRAW 0, 0, -chop_down_mm            ; 下壓切割
-    SIGNAL sig_out_lift_done            ; 通知 F60_R: 本刀已完成 (DO_F_2)
-    CALL WAIT_SIGNAL(sig_in_step_done, timeout_io_sec, ok)
-    SIGNAL -sig_out_lift_done
+    CALL SYNC_STEP(ok)                  ; 通知/等待 F60_R 完成本刀壓料步進
     IF ok = 0 THEN
       CALL SEND_LINE("ERROR,E4023")     ; I/O 信號超時 (雙臂握手)
       robot_busy = 0
@@ -376,6 +446,7 @@ listen:
 
 ; ---------------------------------------------------------------------
 ; PLACE,<LOCATION>,<METHOD>
+; POUR 時與 F60_R 用 SYNC_STEP 會合一次，一起傾倒
 ; ---------------------------------------------------------------------
 .PROGRAM DO_PLACE(.$location, .$method)
   found = 1
@@ -412,9 +483,12 @@ listen:
   LMOVE dest
 
   IF .$method = "POUR" THEN
-    SIGNAL sig_out_press_done           ; 通知 F60_R 同步傾倒 (DO_F_1)
-    CALL WAIT_SIGNAL(sig_in_chop_done, timeout_io_sec, ok)
-    SIGNAL -sig_out_press_done
+    CALL SYNC_STEP(ok)                  ; 與 F60_R 會合，一起傾倒
+    IF ok = 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
     TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20   ; 鏟子繞刀具 Y 軸傾倒 (角度依治具調整)
     TDRAW 0, 0, 0, 0, -pour_tilt_deg, 0, 20
   ELSE
@@ -430,6 +504,7 @@ listen:
 
 ; ---------------------------------------------------------------------
 ; FLIP,<NUM_CYCLES>,<SPEED_PERCENT> — 左臂為主導方 (先上翻)
+; 每循環與 F60_R 用 SYNC_STEP 會合一次
 ; ---------------------------------------------------------------------
 .PROGRAM DO_FLIP(.cycles, .speed_pct)
   IF .cycles < 1 OR .cycles > 20 THEN
@@ -448,9 +523,7 @@ listen:
   i = 0
   DO
     DRAW 0, 0, flip_up_mm                ; 左鏟上翻
-    SIGNAL sig_out_lift_done             ; 通知 F60_R 本循環開始
-    CALL WAIT_SIGNAL(sig_in_step_done, timeout_flip_sec, ok)
-    SIGNAL -sig_out_lift_done
+    CALL SYNC_STEP(ok)
     IF ok = 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
@@ -484,8 +557,7 @@ listen:
 ; ---------------------------------------------------------------------
 .PROGRAM DO_STOP()
   BRAKE
-  SIGNAL -sig_out_press_done
-  SIGNAL -sig_out_lift_done
+  SIGNAL -sig_out_step
   robot_busy = 0
   CALL SEND_LINE("OK")
 .END
@@ -500,8 +572,7 @@ listen:
 ; ---------------------------------------------------------------------
 .PROGRAM DO_RESET()
   robot_busy = 0
-  SIGNAL -sig_out_press_done
-  SIGNAL -sig_out_lift_done
+  SIGNAL -sig_out_step
   CALL SEND_LINE("OK")
 .END
 
