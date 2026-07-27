@@ -56,14 +56,24 @@
 
 ; ---------------------------------------------------------------------
 ; 點位宣告 (PTEACH = 待現場教點，目前為佔位座標)
+;
+; 除 HOME_RIGHT 外，其餘點皆用複合座標 ORIGIN + TRANS(x,y,z,o,a,t)
+; 表示 (說明同 F60_F_左臂.as)。注意: 這裡的 ORIGIN 需在 F60_R 自己
+; 的教示盒上另外教一次——即使是同一個物理檯角，F60_R 與 F60_F 是
+; 兩台獨立控制器，各自基座座標系不同，數值不能沿用對方教好的值。
 ; ---------------------------------------------------------------------
 .PROGRAM INIT_POINTS()
-  POINT PRESS_CHOP_ZONE = TRANS(0,0,0,0,0,0)   ; PTEACH: WORK_CHOP_ZONE 對應壓點
-  POINT MIX_ZONE = TRANS(0,0,0,0,0,0)          ; PTEACH
-  POINT WORK_FLIP_ZONE = TRANS(0,0,0,0,0,0)    ; PTEACH
-  POINT SALAD_BOWL = TRANS(0,0,0,0,0,0)        ; PTEACH (ArUco ID 102 輔助標定)
-  POINT PICKUP_RED_LEAF = TRANS(0,0,0,0,0,0)   ; PTEACH (雙鏟協作聚攏)
-  POINT HOME_RIGHT = TRANS(0,0,0,0,0,0)        ; PTEACH (手工標定，示教盒)
+  POINT ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: 檯面左下角基準點 (F60_R 自身基座座標系)
+
+  ; --- 以下 X,Y,Z,Angle 皆為佔位 0，待 CALIBRATION_POINTS.csv 標定完成後填入 ---
+  POINT PRESS_CHOP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)   ; 對應 WORK_CHOP_ZONE 的壓點偏移
+  POINT MIX_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)          ; X,Y,Z ← CSV
+  POINT WORK_FLIP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ← CSV
+  POINT SALAD_BOWL = ORIGIN + TRANS(0,0,0,0,0,0)        ; X,Y,Z ← CSV (ArUco ID 102 輔助標定)
+  POINT PICKUP_RED_LEAF = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle ← CSV (雙鏟協作聚攏)
+
+  ; HOME_RIGHT 在相機拍不到的高處，與檯面座標系無關，維持獨立絕對點
+  POINT HOME_RIGHT = TRANS(0,0,0,0,0,0)   ; PTEACH (手工標定，示教盒)
 .END
 
 ; =====================================================================

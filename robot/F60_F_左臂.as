@@ -10,9 +10,10 @@
 ;           (TCP_LISTEN/TCP_ACCEPT/TCP_SEND/TCP_RECV 套接字指令)。
 ;
 ; 三個待確認事項 (請機械/電控工程師覆核後移除本段註解):
-;   1. 所有 PTEACH 標記的點位皆為佔位值 TRANS(0,0,0,0,0,0)，需在
-;      現場用教示盒實際教點後覆蓋 (參照 CALIBRATION_POINTS.csv，
-;      目前仍為「待標定」)。
+;   1. 所有 PTEACH 標記的點位皆為佔位值。除 HOME_LEFT 外，其餘點皆
+;      表示為 ORIGIN + TRANS(x,y,z,o,a,t) 複合座標 (詳見 INIT_POINTS
+;      內註解)，現場只需教 ORIGIN 這一點，其餘偏移量再依
+;      CALIBRATION_POINTS.csv 填入即可 (目前仍為「待標定」)。
 ;   2. I/O 訊號編號 (sig_out_*/sig_in_*) 為佔位值 (輸出 1–2、輸入
 ;      1001–1002)，對應 SmartCook_信號分配表.docx 中
 ;      DO_F_1/DO_F_2/DO_R_1/DO_R_2，該文件註明「待你手動補充」，
@@ -57,18 +58,31 @@
 
 ; ---------------------------------------------------------------------
 ; 點位宣告 (PTEACH = 待現場教點，目前為佔位座標)
+;
+; 除 HOME_LEFT 外，其餘 8 個點皆用複合座標 ORIGIN + TRANS(x,y,z,o,a,t)
+; 表示，對應 OBJECT_DEFINITIONS_v1.1.md 的檯面座標系 (左下角為原點)，
+; 也對應 CALIBRATION_POINTS.csv 的 X/Y/Angle 欄位。好處: 現場只需教
+; ORIGIN 這一點，其餘點皆為相對偏移，ORIGIN 校正後全部自動跟著校正，
+; 不必逐點重教。注意: ORIGIN 必須在 F60_F 自己的教示盒上教點——即使
+; 是同一個物理檯角，F60_F 與 F60_R 是兩台獨立控制器，各自基座座標系
+; 不同，數值不能共用，F60_R 需在自己的教示盒上另外教一次。
 ; ---------------------------------------------------------------------
 .PROGRAM INIT_POINTS()
-  POINT PICKUP_CUCUMBER = TRANS(0,0,0,0,0,0)   ; PTEACH
-  POINT PICKUP_ROMAINE = TRANS(0,0,0,0,0,0)    ; PTEACH
-  POINT PICKUP_RED_LEAF = TRANS(0,0,0,0,0,0)   ; PTEACH
-  POINT WAIT_ZONE = TRANS(0,0,0,0,0,0)         ; PTEACH
-  POINT MIX_ZONE = TRANS(0,0,0,0,0,0)          ; PTEACH
-  POINT WORK_CHOP_ZONE = TRANS(0,0,0,0,0,0)    ; PTEACH
-  POINT WORK_FLIP_ZONE = TRANS(0,0,0,0,0,0)    ; PTEACH
-  POINT SALAD_BOWL = TRANS(0,0,0,0,0,0)        ; PTEACH (ArUco ID 102 輔助標定)
-  POINT WASTE_CORNER = TRANS(0,0,0,0,0,0)      ; PTEACH
-  POINT HOME_LEFT = TRANS(0,0,0,0,0,0)         ; PTEACH (手工標定，示教盒)
+  POINT ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: 檯面左下角基準點 (F60_F 自身基座座標系)
+
+  ; --- 以下 X,Y,Z,Angle 皆為佔位 0，待 CALIBRATION_POINTS.csv 標定完成後填入 ---
+  POINT PICKUP_CUCUMBER = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle ← CSV
+  POINT PICKUP_ROMAINE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z,Angle ← CSV
+  POINT PICKUP_RED_LEAF = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle ← CSV
+  POINT WAIT_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)         ; X,Y,Z ← CSV
+  POINT MIX_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)          ; X,Y,Z ← CSV
+  POINT WORK_CHOP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ← CSV
+  POINT WORK_FLIP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ← CSV
+  POINT SALAD_BOWL = ORIGIN + TRANS(0,0,0,0,0,0)        ; X,Y,Z ← CSV (ArUco ID 102 輔助標定)
+  POINT WASTE_CORNER = ORIGIN + TRANS(0,0,0,0,0,0)      ; X,Y,Z ← CSV
+
+  ; HOME_LEFT 在相機拍不到的高處，與檯面座標系無關，維持獨立絕對點
+  POINT HOME_LEFT = TRANS(0,0,0,0,0,0)   ; PTEACH (手工標定，示教盒)
 .END
 
 ; =====================================================================
