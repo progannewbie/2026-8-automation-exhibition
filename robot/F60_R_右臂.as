@@ -82,12 +82,22 @@
   POINT HOME_RIGHT = TRANS(0,0,0,0,0,0)   ; PTEACH (手工標定，示教盒)
 .END
 
+; ---------------------------------------------------------------------
+; 刀具座標設定 (TOOL)，說明同 F60_F_左臂.as。
+; ---------------------------------------------------------------------
+.PROGRAM INIT_TOOL()
+  BASE NULL
+  POINT RIGHT_SPATULA = TRANS(0,0,0,0,0,0)   ; PTEACH: 右鏟(平面)相對法蘭面的偏移，待量測/教點
+  TOOL RIGHT_SPATULA
+.END
+
 ; =====================================================================
 ; MAIN — 程式進入點 (PC 指令通道)
 ; =====================================================================
 .PROGRAM MAIN()
   CALL INIT_CONST()
   CALL INIT_POINTS()
+  CALL INIT_TOOL()
   SPEED 30 ALWAYS
   ACCURACY 1
   SIGNAL -sig_out_step
@@ -176,12 +186,15 @@ listen:
     END
     TCP_RECV rret, sock_id, $recv_buf[1], recv_n, tout_recv, max_length
     IF rret < 0 THEN
-      .rok = 0
-      RETURN
-    END
-    IF recv_n > 0 THEN
-      FOR i = 1 TO recv_n
-        $rxbuf = $rxbuf + $recv_buf[i]
+      IF rret <> -34024 THEN   ; -34024 = E4024 通信逾時，只是暫時沒新資料，不是斷線
+        .rok = 0
+        RETURN
+      END
+    ELSE
+      IF recv_n > 0 THEN
+        FOR i = 1 TO recv_n
+          $rxbuf = $rxbuf + $recv_buf[i]
+        END
       END
     END
   UNTIL 1 = 0
