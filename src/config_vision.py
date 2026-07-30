@@ -22,8 +22,8 @@ class YOLOConfig:
     # 類別定義
     CLASSES = {
         0: "CUCUMBER",      # 小黃瓜
-        1: "ROMAINE",       # 蘿蔓生菜
-        2: "RED_LEAF",      # 紅卷須生菜
+        1: "CORN",       # 玉米筍
+        2: "CARROT",      # 紅蘿蔔
     }
     
     CLASS_NAMES = {v: k for k, v in CLASSES.items()}  # 反向映射
