@@ -95,35 +95,35 @@
 ; MAIN — 程式進入點 (PC 指令通道)
 ; =====================================================================
 .PROGRAM MAIN()
-  CALL INIT_CONST()
-  CALL INIT_POINTS()
-  CALL INIT_TOOL()
+  CALL INIT_CONST
+  CALL INIT_POINTS
+  CALL INIT_TOOL
   SPEED 30 ALWAYS
   ACCURACY 1
   SIGNAL -sig_out_step
   LMOVE HOME_RIGHT
 
-  CALL OPEN_LISTEN()
+  CALL OPEN_LISTEN
   DO
     CALL WAIT_ACCEPT(accepted)
-    IF accepted = 1 THEN
+    IF accepted == 1 THEN
       $rxbuf = ""
       CALL DO_HANDSHAKE(hs_ok)
-      IF hs_ok = 1 THEN
+      IF hs_ok == 1 THEN
         conn_lost = 0
         DO
           CALL RECV_LINE($line, rok)
-          IF rok = 0 THEN
+          IF rok == 0 THEN
             conn_lost = 1
           ELSE
             CALL SPLIT_CSV($line)
-            CALL DISPATCH()
+            CALL DISPATCH
           END
-        UNTIL conn_lost = 1
+        UNTIL conn_lost == 1
       END
       TCP_CLOSE cret, sock_id
     END
-  UNTIL 1 = 0
+  UNTIL 1 == 0
 .END
 
 ; ---------------------------------------------------------------------
@@ -159,11 +159,11 @@ listen:
 ; ---------------------------------------------------------------------
 .PROGRAM DO_HANDSHAKE(.ok)
   CALL RECV_LINE($line, rok)
-  IF rok = 0 THEN
+  IF rok == 0 THEN
     .ok = 0
     RETURN
   END
-  IF $line = "connect" THEN
+  IF $line == "connect" THEN
     CALL SEND_LINE("BOARD_ID,F60_CTRL_002")
     .ok = 1
   ELSE
@@ -197,7 +197,7 @@ listen:
         END
       END
     END
-  UNTIL 1 = 0
+  UNTIL 1 == 0
 .END
 
 ; ---------------------------------------------------------------------
@@ -220,28 +220,28 @@ listen:
   DO
     p = INSTR(1, $rest, ",")
     nfld = nfld + 1
-    IF p = 0 THEN
+    IF p == 0 THEN
       $fld[nfld] = $rest
       $rest = ""
     ELSE
       $fld[nfld] = $LEFT($rest, p - 1)
       $rest = $MID($rest, p + 1, LEN($rest) - p)
     END
-  UNTIL $rest = "" OR nfld >= 8
+  UNTIL $rest == "" OR nfld >= 8
 .END
 
 ; ---------------------------------------------------------------------
 ; 指令分派
 ; ---------------------------------------------------------------------
 .PROGRAM DISPATCH()
-  IF $fld[1] = "HEARTBEAT" THEN
+  IF $fld[1] == "HEARTBEAT" THEN
     CALL SEND_LINE("HEARTBEAT_ACK")
     RETURN
   END
 
-  IF robot_busy = 1 THEN
-    IF $fld[1] = "STOP" THEN
-      CALL DO_STOP()
+  IF robot_busy == 1 THEN
+    IF $fld[1] == "STOP" THEN
+      CALL DO_STOP
     ELSE
       CALL SEND_LINE("BUSY")
     END
@@ -260,9 +260,9 @@ listen:
   SVALUE "HOME":
     CALL DO_HOME($fld[2])
   SVALUE "STOP":
-    CALL DO_STOP()
+    CALL DO_STOP
   SVALUE "RESET":
-    CALL DO_RESET()
+    CALL DO_RESET
   SVALUE "STATUS":
     CALL DO_STATUS($fld[2])
   SVALUE "READY":
@@ -275,20 +275,20 @@ listen:
 ; ---------------------------------------------------------------------
 ; 訊號等待 (含逾時)，.ok=1 成功 / .ok=0 逾時
 ; ---------------------------------------------------------------------
-.PROGRAM WAIT_SIGNAL(sig_no, timeout_sec, .ok)
+.PROGRAM WAIT_SIGNAL(.sig_no, .timeout_sec, .ok)
   TIMER 1 = 0
-  WAIT SIG(sig_no) OR TIMER(1) > timeout_sec
-  IF SIG(sig_no) THEN
+  WAIT SIG(.sig_no) OR TIMER(1) > .timeout_sec
+  IF SIG(.sig_no) THEN
     .ok = 1
   ELSE
     .ok = 0
   END
 .END
 
-.PROGRAM WAIT_SIGNAL_OFF(sig_no, timeout_sec, .ok)
+.PROGRAM WAIT_SIGNAL_OFF(.sig_no, .timeout_sec, .ok)
   TIMER 1 = 0
-  WAIT (SIG(sig_no) == 0) OR TIMER(1) > timeout_sec
-  IF SIG(sig_no) == 0 THEN
+  WAIT (SIG(.sig_no) == 0) OR TIMER(1) > .timeout_sec
+  IF SIG(.sig_no) == 0 THEN
     .ok = 1
   ELSE
     .ok = 0
@@ -301,7 +301,7 @@ listen:
 .PROGRAM SYNC_STEP(.ok)
   SIGNAL sig_out_step
   CALL WAIT_SIGNAL(sig_in_step, timeout_io_sec, ok1)
-  IF ok1 = 0 THEN
+  IF ok1 == 0 THEN
     SIGNAL -sig_out_step
     .ok = 0
     RETURN
@@ -323,21 +323,21 @@ listen:
   END
 
   found = 1
-  IF .$location = "PICKUP_CUCUMBER" THEN
-    POINT dest = PICKUP_CUCUMBER
+  IF .$location == "PICKUP_CUCUMBER" THEN
+    POINT target_pt = PICKUP_CUCUMBER
   ELSE
-    IF .$location = "PICKUP_ROMAINE" THEN
-      POINT dest = PICKUP_ROMAINE
+    IF .$location == "PICKUP_ROMAINE" THEN
+      POINT target_pt = PICKUP_ROMAINE
     ELSE
-      IF .$location = "PICKUP_RED_LEAF" THEN
-        POINT dest = PICKUP_RED_LEAF
+      IF .$location == "PICKUP_RED_LEAF" THEN
+        POINT target_pt = PICKUP_RED_LEAF
       ELSE
         found = 0
       END
     END
   END
 
-  IF found = 0 THEN
+  IF found == 0 THEN
     CALL SEND_LINE("ERROR,E4002")
     RETURN
   END
@@ -346,18 +346,18 @@ listen:
   SPEED 40 ALWAYS
 
   ; 階段 1: 就緒
-  LAPPRO dest, appro_mm
+  LAPPRO target_pt, appro_mm
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
 
   ; 階段 2: 下降
-  LMOVE dest
+  LMOVE target_pt
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
@@ -366,7 +366,7 @@ listen:
   ; 階段 3: 集中 (方向與 F60_F 相對，佔位示意，待現場調整)
   DRAW converge_dx, converge_dy, 0
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
@@ -375,7 +375,7 @@ listen:
   ; 階段 4: 抬起
   LDEPART appro_mm
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
@@ -404,7 +404,7 @@ listen:
   i = 0
   DO
     CALL SYNC_STEP(ok)                  ; 等 F60_F 完成本刀下壓
-    IF ok = 0 THEN
+    IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
       RETURN
@@ -425,17 +425,17 @@ listen:
 ; ---------------------------------------------------------------------
 .PROGRAM DO_PLACE(.$location, .$method)
   found = 1
-  IF .$location = "MIX_ZONE" THEN
-    POINT dest = MIX_ZONE
+  IF .$location == "MIX_ZONE" THEN
+    POINT target_pt = MIX_ZONE
   ELSE
-    IF .$location = "SALAD_BOWL" THEN
-      POINT dest = SALAD_BOWL
+    IF .$location == "SALAD_BOWL" THEN
+      POINT target_pt = SALAD_BOWL
     ELSE
       found = 0
     END
   END
 
-  IF found = 0 THEN
+  IF found == 0 THEN
     CALL SEND_LINE("ERROR,E4002")
     RETURN
   END
@@ -446,12 +446,12 @@ listen:
 
   robot_busy = 1
   SPEED 40 ALWAYS
-  LAPPRO dest, appro_mm
-  LMOVE dest
+  LAPPRO target_pt, appro_mm
+  LMOVE target_pt
 
-  IF .$method = "POUR" THEN
+  IF .$method == "POUR" THEN
     CALL SYNC_STEP(ok)                  ; 與 F60_F 會合，一起傾倒
-    IF ok = 0 THEN
+    IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
       RETURN
@@ -485,7 +485,7 @@ listen:
   i = 0
   DO
     CALL SYNC_STEP(ok)                   ; 與左鏟本循環會合
-    IF ok = 0 THEN
+    IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
       RETURN
@@ -543,7 +543,7 @@ listen:
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
-  IF robot_busy = 1 THEN
+  IF robot_busy == 1 THEN
     CALL SEND_LINE("BUSY")
   ELSE
     CALL SEND_LINE("OK")
@@ -555,7 +555,7 @@ listen:
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
-  IF robot_busy = 1 THEN
+  IF robot_busy == 1 THEN
     CALL SEND_LINE("BUSY")
   ELSE
     CALL SEND_LINE("OK")

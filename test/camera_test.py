@@ -14,9 +14,10 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 from config_vision import VisionProcessingConfig
 
-CAPTURE_DIR = Path("captures")
+CAPTURE_DIR = Path(__file__).resolve().parent / "captures"
 
 
 def capture_one_photo(camera_index: int, warmup_frames: int) -> Path:

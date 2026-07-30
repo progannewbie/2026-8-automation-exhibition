@@ -113,35 +113,35 @@
 ; MAIN — 程式進入點 (機器人控制程式)
 ; =====================================================================
 .PROGRAM MAIN()
-  CALL INIT_CONST()
-  CALL INIT_POINTS()
-  CALL INIT_TOOL()
+  CALL INIT_CONST
+  CALL INIT_POINTS
+  CALL INIT_TOOL
   SPEED 30 ALWAYS
   ACCURACY 1
   SIGNAL -sig_out_step
   LMOVE HOME_LEFT
 
-  CALL OPEN_LISTEN()
+  CALL OPEN_LISTEN
   DO
     CALL WAIT_ACCEPT(accepted)
-    IF accepted = 1 THEN
+    IF accepted == 1 THEN
       $rxbuf = ""
       CALL DO_HANDSHAKE(hs_ok)
-      IF hs_ok = 1 THEN
+      IF hs_ok == 1 THEN
         conn_lost = 0
         DO
           CALL RECV_LINE($line, rok)
-          IF rok = 0 THEN
+          IF rok == 0 THEN
             conn_lost = 1
           ELSE
             CALL SPLIT_CSV($line)
-            CALL DISPATCH()
+            CALL DISPATCH
           END
-        UNTIL conn_lost = 1
+        UNTIL conn_lost == 1
       END
       TCP_CLOSE cret, sock_id
     END
-  UNTIL 1 = 0
+  UNTIL 1 == 0
 .END
 
 ; ---------------------------------------------------------------------
@@ -177,11 +177,11 @@ listen:
 ; ---------------------------------------------------------------------
 .PROGRAM DO_HANDSHAKE(.ok)
   CALL RECV_LINE($line, rok)
-  IF rok = 0 THEN
+  IF rok == 0 THEN
     .ok = 0
     RETURN
   END
-  IF $line = "connect" THEN
+  IF $line == "connect" THEN
     CALL SEND_LINE("BOARD_ID,F60_CTRL_001")
     .ok = 1
   ELSE
@@ -216,7 +216,7 @@ listen:
         END
       END
     END
-  UNTIL 1 = 0
+  UNTIL 1 == 0
 .END
 
 ; ---------------------------------------------------------------------
@@ -239,28 +239,28 @@ listen:
   DO
     p = INSTR(1, $rest, ",")
     nfld = nfld + 1
-    IF p = 0 THEN
+    IF p == 0 THEN
       $fld[nfld] = $rest
       $rest = ""
     ELSE
       $fld[nfld] = $LEFT($rest, p - 1)
       $rest = $MID($rest, p + 1, LEN($rest) - p)
     END
-  UNTIL $rest = "" OR nfld >= 8
+  UNTIL $rest == "" OR nfld >= 8
 .END
 
 ; ---------------------------------------------------------------------
 ; 指令分派
 ; ---------------------------------------------------------------------
 .PROGRAM DISPATCH()
-  IF $fld[1] = "HEARTBEAT" THEN
+  IF $fld[1] == "HEARTBEAT" THEN
     CALL SEND_LINE("HEARTBEAT_ACK")
     RETURN
   END
 
-  IF robot_busy = 1 THEN
-    IF $fld[1] = "STOP" THEN
-      CALL DO_STOP()
+  IF robot_busy == 1 THEN
+    IF $fld[1] == "STOP" THEN
+      CALL DO_STOP
     ELSE
       CALL SEND_LINE("BUSY")
     END
@@ -279,9 +279,9 @@ listen:
   SVALUE "HOME":
     CALL DO_HOME($fld[2])
   SVALUE "STOP":
-    CALL DO_STOP()
+    CALL DO_STOP
   SVALUE "RESET":
-    CALL DO_RESET()
+    CALL DO_RESET
   SVALUE "STATUS":
     CALL DO_STATUS($fld[2])
   SVALUE "READY":
@@ -294,20 +294,20 @@ listen:
 ; ---------------------------------------------------------------------
 ; 訊號等待 (含逾時)，.ok=1 收到訊號 / .ok=0 逾時
 ; ---------------------------------------------------------------------
-.PROGRAM WAIT_SIGNAL(sig_no, timeout_sec, .ok)
+.PROGRAM WAIT_SIGNAL(.sig_no, .timeout_sec, .ok)
   TIMER 1 = 0
-  WAIT SIG(sig_no) OR TIMER(1) > timeout_sec
-  IF SIG(sig_no) THEN
+  WAIT SIG(.sig_no) OR TIMER(1) > .timeout_sec
+  IF SIG(.sig_no) THEN
     .ok = 1
   ELSE
     .ok = 0
   END
 .END
 
-.PROGRAM WAIT_SIGNAL_OFF(sig_no, timeout_sec, .ok)
+.PROGRAM WAIT_SIGNAL_OFF(.sig_no, .timeout_sec, .ok)
   TIMER 1 = 0
-  WAIT (SIG(sig_no) == 0) OR TIMER(1) > timeout_sec
-  IF SIG(sig_no) == 0 THEN
+  WAIT (SIG(.sig_no) == 0) OR TIMER(1) > .timeout_sec
+  IF SIG(.sig_no) == 0 THEN
     .ok = 1
   ELSE
     .ok = 0
@@ -327,7 +327,7 @@ listen:
 .PROGRAM SYNC_STEP(.ok)
   SIGNAL sig_out_step
   CALL WAIT_SIGNAL(sig_in_step, timeout_io_sec, ok1)
-  IF ok1 = 0 THEN
+  IF ok1 == 0 THEN
     SIGNAL -sig_out_step
     .ok = 0
     RETURN
@@ -350,20 +350,20 @@ listen:
   END
 
   found = 1
-  IF .$location = "PICKUP_CUCUMBER" THEN
-    POINT dest = PICKUP_CUCUMBER
+  IF .$location == "PICKUP_CUCUMBER" THEN
+    POINT target_pt = PICKUP_CUCUMBER
   ELSE
-    IF .$location = "PICKUP_ROMAINE" THEN
-      POINT dest = PICKUP_ROMAINE
+    IF .$location == "PICKUP_ROMAINE" THEN
+      POINT target_pt = PICKUP_ROMAINE
     ELSE
-      IF .$location = "PICKUP_RED_LEAF" THEN
-        POINT dest = PICKUP_RED_LEAF
+      IF .$location == "PICKUP_RED_LEAF" THEN
+        POINT target_pt = PICKUP_RED_LEAF
       ELSE
-        IF .$location = "WAIT_ZONE" THEN
-          POINT dest = WAIT_ZONE
+        IF .$location == "WAIT_ZONE" THEN
+          POINT target_pt = WAIT_ZONE
         ELSE
-          IF .$location = "MIX_ZONE" THEN
-            POINT dest = MIX_ZONE
+          IF .$location == "MIX_ZONE" THEN
+            POINT target_pt = MIX_ZONE
           ELSE
             found = 0
           END
@@ -372,7 +372,7 @@ listen:
     END
   END
 
-  IF found = 0 THEN
+  IF found == 0 THEN
     CALL SEND_LINE("ERROR,E4002")
     RETURN
   END
@@ -381,18 +381,18 @@ listen:
   SPEED 40 ALWAYS
 
   ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
-  LAPPRO dest, appro_mm
+  LAPPRO target_pt, appro_mm
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
 
   ; 階段 2: 下降 — 一起下降到取料高度
-  LMOVE dest
+  LMOVE target_pt
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
@@ -401,7 +401,7 @@ listen:
   ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
   DRAW converge_dx, converge_dy, 0
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
@@ -410,7 +410,7 @@ listen:
   ; 階段 4: 抬起 — 一起抬起離開取料區
   LDEPART appro_mm
   CALL SYNC_STEP(ok)
-  IF ok = 0 THEN
+  IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     robot_busy = 0
     RETURN
@@ -444,7 +444,7 @@ listen:
   DO
     DRAW 0, 0, -chop_down_mm            ; 下壓切割
     CALL SYNC_STEP(ok)                  ; 通知/等待 F60_R 完成本刀壓料步進
-    IF ok = 0 THEN
+    IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")     ; I/O 信號超時 (雙臂握手)
       robot_busy = 0
       RETURN
@@ -465,17 +465,17 @@ listen:
 ; ---------------------------------------------------------------------
 .PROGRAM DO_PLACE(.$location, .$method)
   found = 1
-  IF .$location = "SALAD_BOWL" THEN
-    POINT dest = SALAD_BOWL
+  IF .$location == "SALAD_BOWL" THEN
+    POINT target_pt = SALAD_BOWL
   ELSE
-    IF .$location = "WAIT_ZONE" THEN
-      POINT dest = WAIT_ZONE
+    IF .$location == "WAIT_ZONE" THEN
+      POINT target_pt = WAIT_ZONE
     ELSE
-      IF .$location = "MIX_ZONE" THEN
-        POINT dest = MIX_ZONE
+      IF .$location == "MIX_ZONE" THEN
+        POINT target_pt = MIX_ZONE
       ELSE
-        IF .$location = "WASTE_CORNER" THEN
-          POINT dest = WASTE_CORNER
+        IF .$location == "WASTE_CORNER" THEN
+          POINT target_pt = WASTE_CORNER
         ELSE
           found = 0
         END
@@ -483,7 +483,7 @@ listen:
     END
   END
 
-  IF found = 0 THEN
+  IF found == 0 THEN
     CALL SEND_LINE("ERROR,E4002")
     RETURN
   END
@@ -494,12 +494,12 @@ listen:
 
   robot_busy = 1
   SPEED 40 ALWAYS
-  LAPPRO dest, appro_mm
-  LMOVE dest
+  LAPPRO target_pt, appro_mm
+  LMOVE target_pt
 
-  IF .$method = "POUR" THEN
+  IF .$method == "POUR" THEN
     CALL SYNC_STEP(ok)                  ; 與 F60_R 會合，一起傾倒
-    IF ok = 0 THEN
+    IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
       RETURN
@@ -507,7 +507,7 @@ listen:
     TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20   ; 鏟子繞刀具 Y 軸傾倒 (角度依治具調整)
     TDRAW 0, 0, 0, 0, -pour_tilt_deg, 0, 20
   ELSE
-    IF .$method = "PUSH" THEN
+    IF .$method == "PUSH" THEN
       DRAW 0, 60, 0                     ; 推動廢料至角落 (方向/距離待現場調整)
     END
   END
@@ -539,7 +539,7 @@ listen:
   DO
     DRAW 0, 0, flip_up_mm                ; 左鏟上翻
     CALL SYNC_STEP(ok)
-    IF ok = 0 THEN
+    IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
       RETURN
@@ -599,7 +599,7 @@ listen:
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
-  IF robot_busy = 1 THEN
+  IF robot_busy == 1 THEN
     CALL SEND_LINE("BUSY")
   ELSE
     CALL SEND_LINE("OK")
@@ -611,7 +611,7 @@ listen:
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
-  IF robot_busy = 1 THEN
+  IF robot_busy == 1 THEN
     CALL SEND_LINE("BUSY")
   ELSE
     CALL SEND_LINE("OK")
