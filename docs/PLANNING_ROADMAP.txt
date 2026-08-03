@@ -72,7 +72,7 @@
 │                                                               │
 │  🥕 OBJECT_DEFINITIONS_v1.1.md                               │
 │     → 物件定義規範                                           │
-│        • FoodType (3): CUCUMBER | ROMAINE | RED_LEAF          │
+│        • FoodType (3): CUCUMBER | CARROT | CORN               │
 │        • ToolType (2): LEFT_SPATULA (F60_F) | RIGHT_SPATULA   │
 │        • LocationPoint (10): 10 個位置點定義                  │
 │        • 手工標定 vs 視覺標定方法                              │

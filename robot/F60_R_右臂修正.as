@@ -1,100 +1,65 @@
-.PROGRAM INIT_SWITCHES()
-  CP ON                    ; 連續軌跡制御動作 有效 — LMOVE/DRAW 連續動作(切割、翻炒)平滑銜接需要
-  CHECK.HOLD OFF           ; 暫停狀態下小鍵盤啟動 無效
-  CYCLE.STOP OFF           ; 外部暫停時自動運轉停止 無效
-  MESSAGES ON              ; 訊息輸出 有效 — 本程式大量用 PRINT 除錯訊息，需要開啟才看得到
-  OX.PREOUT ON             ; OX信號輸出時機 動作開始時
-  PREFETCH.SIGINS OFF      ; AS輸出入信號先讀取 禁止
-  QTOOL OFF                ; 教導時TOOL資料先自動切換 無效 — 本程式有 RIGHT_SPATULA/ha_flip 兩組 TOOL，教點時避免自動切換造成教到錯的座標系
-  RPS ON                   ; 外部程式選擇 有效
-  SCREEN ON                ; 畫面表示制御一時停止 有效
-  REP_ONCE OFF             ; REPEAT回數 連續
-  STP_ONCE OFF             ; STEP實行 連續
-  AUTOSTART.PC ON          ; 控制電源ON時PC1自動開始 — 展場斷電重開後自動執行 MAIN，不需人工按 EXECUTE
-  AUTOSTART2.PC ON         ; 控制電源ON時PC2自動開始
-  AUTOSTART3.PC OFF        ; 控制電源ON時PC3自動開始
-  AUTOSTART4.PC OFF        ; 控制電源ON時PC4自動開始
-  AUTOSTART5.PC OFF        ; 控制電源ON時PC5自動開始
-  ERRSTART.PC OFF          ; ERROR時PC開始 無效
-  DISPIO_01 OFF            ; IO表示方式 O,X
-  ABS.SPEED OFF            ; 絕對速度動作 無效
-  SLOW_START OFF           ; 低速START機能 無效
-  AFTER.WAIT.TMR OFF       ; 簡易WX開始Timing 軸一致後
-.END
 .PROGRAM INIT_CONST()
   $this_arm = "F60_R"
 
-  ; --- TCP 通訊參數 ---
+  ; --- TCP 閫氳▕鍙冩暩 ---
   port = 9000
   max_length = 255
   tout_accept = 5
   tout_recv = 10
   tout_send = 5
 
-  ; --- I/O 訊號編號 (雙臂共用同一組交握訊號，電控已確認為最終配線值) ---
-  ; 依 AS 語言慣例，外部輸出訊號用小號碼，外部輸入訊號從 1001 起算。
-  sig_out_step = 1        ; 輸出: 本臂完成目前階段 → F60_F
-  sig_in_step = 1001       ; 輸入: F60_F 完成目前階段 ← F60_F
+  ; --- I/O 瑷婅櫉绶ㄨ櫉 (闆欒噦鍏辩敤鍚屼竴绲勪氦鎻¤▕铏燂紝浣斾綅鍊硷紝寰呴浕鎺х⒑瑾? ---
+  ; 渚?AS 瑾炶█鎱ｄ緥锛屽閮ㄨ几鍑鸿▕铏熺敤灏忚櫉纰硷紝澶栭儴杓稿叆瑷婅櫉寰?1001 璧风畻銆?  sig_out_step = 1        ; 杓稿嚭: 鏈噦瀹屾垚鐩墠闅庢 鈫?F60_F
+  sig_in_step = 1001       ; 杓稿叆: F60_F 瀹屾垚鐩墠闅庢 鈫?F60_F
 
-  ; --- 動作參數 (可依現場試切調整，單位 mm) ---
+  ; --- 鍕曚綔鍙冩暩 (鍙緷鐝惧牬瑭﹀垏瑾挎暣锛屽柈浣?mm) ---
   appro_mm = 80.0
-  press_down_mm = 15.0     ; 壓住食材下壓量 (輕壓，勿過力)
-  step_mm = 4.0             ; 壓點隨切割步進距離 (應與 CHOP 厚度一致)
+  press_down_mm = 15.0     ; 澹撲綇椋熸潗涓嬪閲?(杓曞锛屽嬁閬庡姏)
+  step_mm = 4.0             ; 澹撻粸闅ㄥ垏鍓叉閫茶窛闆?(鎳夎垏 CHOP 鍘氬害涓�鑷?
   flip_down_mm = 90.0
   pour_tilt_deg = 90.0
-  converge_dx = -20.0      ; PICKUP 集中階段：F60_R 往中心平移量 (與 F60_F 方向相對，待現場確認)
+  converge_dx = -20.0      ; PICKUP 闆嗕腑闅庢锛欶60_R 寰�涓績骞崇Щ閲?(鑸?F60_F 鏂瑰悜鐩稿皪锛屽緟鐝惧牬纰鸿獚)
   converge_dy = 0.0
 
-  ; --- 逾時設定 (秒) ---
-  timeout_io_sec = 30.0
-  timeout_flip_sec = 30.0
+  ; --- 閫炬檪瑷畾 (绉? ---
+  timeout_io_sec = 5.0
+  timeout_flip_sec = 5.0
 
   robot_busy = 0
   $rxbuf = ""
 .END
-.PROGRAM INIT_POINTS() #0
-  POINT origin = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 檯面左下角基準點 (須在 BASE ba 生效後教點，見 INIT_TOOL)
-  ; --- 以下 X,Y,Z,Angle 皆為佔位 0，待 CALIBRATION_POINTS.csv 標定完成後填入 ---
-  POINT pickup_cucumber = origin + TRANS (0, 0, 0, 0, 0, 0)   ; X,Y,Z,Angle ← CSV
-  POINT pickup_carrot = origin + TRANS (0, 0, 0, 0, 0, 0)     ; X,Y,Z,Angle ← CSV
-  POINT pickup_corn = origin + TRANS (0, 0, 0, 0, 0, 0)       ; X,Y,Z,Angle ← CSV
-  POINT press_chop_zone = origin + TRANS (0, 0, 0, 0, 0, 0)   ; 對應 WORK_CHOP_ZONE 的壓點偏移
-  POINT mix_zone = origin + TRANS (0, 0, 0, 0, 0, 0)          ; X,Y,Z ← CSV
-  POINT work_flip_zone = origin + TRANS (0, 0, 0, 0, 0, 0)    ; X,Y,Z ← CSV
-  POINT salad_bowl = origin + TRANS (0, 0, 0, 0, 0, 0)        ; X,Y,Z ← CSV (ArUco ID 102 輔助標定)
-  ; HOME_RIGHT 在相機拍不到的高處，與檯面座標系無關，維持獨立絕對點
-  ;POINT home_right = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH (手工標定，示教盒)
+.PROGRAM INIT_POINTS()
+  POINT ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: 妾潰宸︿笅瑙掑熀婧栭粸 (F60_R 鑷韩鍩哄骇搴ф绯?
+
+  ; --- 浠ヤ笅 X,Y,Z,Angle 鐨嗙偤浣斾綅 0锛屽緟 CALIBRATION_POINTS.csv 妯欏畾瀹屾垚寰屽～鍏?---
+  POINT PICKUP_CUCUMBER = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle 鈫?CSV
+  POINT PICKUP_CARROT = ORIGIN + TRANS(0,0,0,0,0,0)     ; X,Y,Z,Angle 鈫?CSV
+  POINT PICKUP_CORN = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z,Angle 鈫?CSV
+  POINT PRESS_CHOP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)   ; 灏嶆噳 WORK_CHOP_ZONE 鐨勫榛炲亸绉?  POINT MIX_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)          ; X,Y,Z 鈫?CSV
+  POINT WORK_FLIP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z 鈫?CSV
+  POINT SALAD_BOWL = ORIGIN + TRANS(0,0,0,0,0,0)        ; X,Y,Z 鈫?CSV (ArUco ID 102 杓斿姪妯欏畾)
+
+  ; HOME_RIGHT 鍦ㄧ浉姗熸媿涓嶅埌鐨勯珮铏曪紝鑸囨闈㈠骇妯欑郴鐒￠棞锛岀董鎸佺崹绔嬬禃灏嶉粸
+  POINT HOME_RIGHT = TRANS(0,0,0,0,0,0)   ; PTEACH (鎵嬪伐妯欏畾锛岀ず鏁欑洅)
+
   ; -----------------------------------------------------------------
-  ; 翻炒動作點位 (rturn45/90/135)，架構參考 原程式/rs_r.as 裡的
-  ; rturn45()/rturn90()/rturn135()。這些點位跟本檔案其他點位使用的
-  ; BASE ba / TOOL RIGHT_SPATULA 不是同一個座標系，是在專屬的
-  ; ba_flip (BASE) / ha_flip (TOOL) 底下教的，只能在 DO_FLIP 裡切到
-  ; ba_flip/ha_flip 之後才能用，用完要切回來。
-  ; 以下皆為佔位值，待現場手動示教。
-  ; -----------------------------------------------------------------
-  ;POINT ba_flip = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 翻炒用 BASE，待手動校點
-  ;POINT ha_flip = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 翻炒用 TOOL，待手動校點
-  ;POINT rturn45_ready = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn45_down = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn45_turn = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn90_ready = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn90_down = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn90_turn = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn90_turn10 = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn90_turn20 = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn135_ready = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn135_down = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn135_turn = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn135_turn10 = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
-  ;POINT rturn135_turn20 = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
+  ; 缈荤倰鍕曚綔榛炰綅 (rturn45/90/135)锛屾灦妲嬪弮鑰?鍘熺▼寮?rs_r.as 瑁＄殑
+  ; rturn45()/rturn90()/rturn135()銆傞�欎簺榛炰綅璺熸湰妾旀鍏朵粬榛炰綅浣跨敤鐨?  ; BASE NULL / TOOL RIGHT_SPATULA 涓嶆槸鍚屼竴鍊嬪骇妯欑郴锛屾槸鍦ㄥ皥灞殑
+  ; ba_flip (BASE) / ha_flip (TOOL) 搴曚笅鏁欑殑锛屽彧鑳藉湪 DO_FLIP 瑁″垏鍒?  ; ba_flip/ha_flip 涔嬪緦鎵嶈兘鐢紝鐢ㄥ畬瑕佸垏鍥炰締銆?  ; 浠ヤ笅鐨嗙偤浣斾綅鍊硷紝寰呯従鍫存墜鍕曠ず鏁欍�?  ; -----------------------------------------------------------------
+  POINT ba_flip = TRANS(0,0,0,0,0,0)   ; PTEACH: 缈荤倰鐢?BASE锛屽緟鎵嬪嫊鏍￠粸
+  POINT ha_flip = TRANS(0,0,0,0,0,0)   ; PTEACH: 缈荤倰鐢?TOOL锛屽緟鎵嬪嫊鏍￠粸
+
+  POINT rturn45_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn45_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn45_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?
+  POINT rturn90_ready  = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn90_down   = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn90_turn   = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn90_turn10 = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn90_turn20 = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?
+  POINT rturn135_ready  = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn135_down   = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn135_turn   = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn135_turn10 = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?  POINT rturn135_turn20 = TRANS(0,0,0,0,0,0)   ; PTEACH: 寰呮墜鍕曟牎榛?.END
+
+; ---------------------------------------------------------------------
+; 鍒�鍏峰骇妯欒ō瀹?(TOOL)锛岃鏄庡悓 F60_F_宸﹁噦.as銆?; ---------------------------------------------------------------------
 .END
 .PROGRAM INIT_TOOL()
   BASE NULL
-  POINT ba = TRANS(43, 0, 0, 0, -90, 0)                      ; 基礎座標 (原程式 rs_r.as init1222())
-  BASE ba
-  POINT RIGHT_SPATULA = TRANS(-50, -230, 50, 90, 40, -90)    ; 右鏟工具座標 (原程式 rs_r.as init1222()，沿用同一支鏟具)
+  POINT RIGHT_SPATULA = TRANS(0,0,0,0,0,0)   ; PTEACH: 鍙抽彑(骞抽潰)鐩稿皪娉曡槶闈㈢殑鍋忕Щ锛屽緟閲忔脯/鏁欓粸
   TOOL RIGHT_SPATULA
-  POINT ha_pickup = TRANS(0, 0, 0, 0, 0, 0)   ; PTEACH: PICKUP/PLACE 專用鏟具姿勢，待手動校點
 .END
 .PROGRAM heartput()
   JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[-30.054,54.056,-92.937,-8.3188,18.918,-169.17]
@@ -102,7 +67,6 @@
 .PROGRAM MAIN()
   CALL heartput
 
-  CALL INIT_SWITCHES
   CALL INIT_CONST
   CALL INIT_POINTS
   CALL INIT_TOOL
@@ -141,14 +105,14 @@
 .END
 .PROGRAM CLEAN_SOCKET()
   IF sock_open_flag == 1 THEN
-    PRINT "偵測到上次殘留的連線 sock_id=", sock_id, "，先關閉再繼續"
+    PRINT "鍋垫脯鍒颁笂娆℃畼鐣欑殑閫ｇ窔 sock_id=", sock_id, "锛屽厛闂滈枆鍐嶇辜绾?"
     CALL DISCONNECT
   END
   TCP_END_LISTEN eret, port
   IF eret < 0 THEN
-    PRINT "TCP_END_LISTEN 啟動清理 回傳=", eret, "（本來就沒有殘留監聽，正常現象）"
+    PRINT "TCP_END_LISTEN 鍟熷嫊娓呯悊 鍥炲偝=", eret, "锛堟湰渚嗗氨娌掓湁娈樼暀鐩ｈ伣锛屾甯哥従璞★級"
   ELSE
-    PRINT "TCP_END_LISTEN 啟動清理 成功，已釋放上次殘留的監聽狀態"
+    PRINT "TCP_END_LISTEN 鍟熷嫊娓呯悊 鎴愬姛锛屽凡閲嬫斁涓婃娈樼暀鐨勭洠鑱界媭鎱?"
   END
 .END
 .PROGRAM OPEN_LISTEN()
@@ -196,7 +160,7 @@ listen:
     END
     TCP_RECV rret, sock_id, $recv_buf[1], recv_n, tout_recv, max_length
     IF rret < 0 THEN
-      IF rret <> -34024 THEN   ; -34024 = E4024 通信逾時，只是暫時沒新資料，不是斷線
+      IF rret <> -34024 THEN   ; -34024 = E4024 閫氫俊閫炬檪锛屽彧鏄毇鏅傛矑鏂拌硣鏂欙紝涓嶆槸鏂风窔
         .rok = 0
         RETURN
       END
@@ -248,7 +212,7 @@ listen:
 
   SCASE $fld[1] OF
   SVALUE "PICKUP":
-    CALL DO_PICKUP($fld[2], $fld[3], VAL($fld[4]), VAL($fld[5]), VAL($fld[6]))
+    CALL DO_PICKUP($fld[2], $fld[3])
   SVALUE "CHOP":
     CALL DO_CHOP($fld[2], VAL($fld[3]), VAL($fld[4]))
   SVALUE "PLACE":
@@ -265,8 +229,6 @@ listen:
     CALL DO_STATUS($fld[2])
   SVALUE "READY":
     CALL DO_READY($fld[2])
-  SVALUE "IOTEST":
-    CALL DO_IOTEST($fld[2])
   ANY :
     CALL SEND_LINE("ERROR,E4021")
   END
@@ -289,46 +251,37 @@ listen:
     .ok = 0
   END
 .END
-.PROGRAM DO_IOTEST(.$op)
-  ; 純 I/O 接線測試，跳過 SYNC_STEP/動作流程，直接操作/讀取訊號腳位
-  IF .$op == "ON" THEN
-    SIGNAL sig_out_step
-    CALL SEND_LINE("OK")
-  ELSE
-    IF .$op == "OFF" THEN
-      SIGNAL -sig_out_step
-      CALL SEND_LINE("OK")
-    ELSE
-      IF .$op == "READ" THEN
-        IF SIG(sig_in_step) THEN
-          CALL SEND_LINE("SIG,1")
-        ELSE
-          CALL SEND_LINE("SIG,0")
-        END
-      ELSE
-        CALL SEND_LINE("ERROR,E4001")
-      END
-    END
-  END
-.END
 .PROGRAM SYNC_STEP(.ok)
   SIGNAL sig_out_step
   CALL WAIT_SIGNAL(sig_in_step, timeout_io_sec, ok1)
+  IF ok1 == 0 THEN
+    SIGNAL -sig_out_step
+    .ok = 0
+    RETURN
+  END
   SIGNAL -sig_out_step
-  .ok = ok1
+  CALL WAIT_SIGNAL_OFF(sig_in_step, timeout_io_sec, ok2)
+  .ok = ok2
 .END
-; .x_mm/.y_mm/.angle_deg：PC 端 YOLO+手眼標定即時算出的食材座標
-.PROGRAM DO_PICKUP(.$location, .$arm, .x_mm, .y_mm, .angle_deg)
+.PROGRAM DO_PICKUP(.$location, .$arm)
   IF .$arm <> "F60_F" THEN
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
 
   found = 1
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_CORN" THEN
-    POINT target_pt = ORIGIN + TRANS(.x_mm, .y_mm, 0, 0, 0, .angle_deg)
+  IF .$location == "PICKUP_CUCUMBER" THEN
+    POINT target_pt = PICKUP_CUCUMBER
   ELSE
-    found = 0
+    IF .$location == "PICKUP_CARROT" THEN
+      POINT target_pt = PICKUP_CARROT
+    ELSE
+      IF .$location == "PICKUP_CORN" THEN
+        POINT target_pt = PICKUP_CORN
+      ELSE
+        found = 0
+      END
+    END
   END
 
   IF found == 0 THEN
@@ -338,49 +291,43 @@ listen:
 
   robot_busy = 1
   SPEED 40 ALWAYS
-  TOOL ha_pickup                        ; PICKUP 專用姿勢/進退方向，結束前一定要切回 RIGHT_SPATULA
 
-  ; 階段 1: 就緒
+  ; 闅庢 1: 灏辩窉
   LAPPRO target_pt, appro_mm
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  ; 階段 2: 下降
+  ; 闅庢 2: 涓嬮檷
   LMOVE target_pt
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  ; 階段 3: 集中 (方向與 F60_F 相對，佔位示意，待現場調整)
+  ; 闅庢 3: 闆嗕腑 (鏂瑰悜鑸?F60_F 鐩稿皪锛屼綌浣嶇ず鎰忥紝寰呯従鍫磋鏁?
   DRAW converge_dx, converge_dy, 0
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  ; 階段 4: 抬起
+  ; 闅庢 4: 鎶捣
   LDEPART appro_mm
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  TOOL RIGHT_SPATULA
   robot_busy = 0
   CALL SEND_LINE("OK")
 .END
@@ -397,15 +344,15 @@ listen:
 
   i = 0
   DO
-    CALL SYNC_STEP(ok)                  ; 等 F60_F 完成本刀下壓
+    CALL SYNC_STEP(ok)                  ; 绛?F60_F 瀹屾垚鏈垁涓嬪
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
       robot_busy = 0
       RETURN
     END
-    DRAW 0, 0, -press_down_mm           ; 壓住食材
-    DRAW step_mm, 0, 0                  ; 隨切割步進 (應與 CHOP 厚度一致)
-    DRAW 0, 0, press_down_mm            ; 鬆開，準備下一刀
+    DRAW 0, 0, -press_down_mm           ; 澹撲綇椋熸潗
+    DRAW step_mm, 0, 0                  ; 闅ㄥ垏鍓叉閫?(鎳夎垏 CHOP 鍘氬害涓�鑷?
+    DRAW 0, 0, press_down_mm            ; 楝嗛枊锛屾簴鍌欎笅涓�鍒�
     i = i + 1
   UNTIL i >= .cuts
 
@@ -424,42 +371,38 @@ listen:
       found = 0
     END
   END
-
+  
   IF found == 0 THEN
-    CALL SEND_LINE("ERROR,E4002")
+    CALL SEND_LINE ("ERROR,E4002")
     RETURN
   END
   IF .$method <> "POUR" AND .$method <> "SCOOP" AND .$method <> "PUSH" THEN
-    CALL SEND_LINE("ERROR,E4001")
+    CALL SEND_LINE ("ERROR,E4001")
     RETURN
   END
-
+  
   robot_busy = 1
   SPEED 40 ALWAYS
-  TOOL ha_pickup                        ; PLACE 專用姿勢/進退方向，結束前一定要切回 RIGHT_SPATULA
   LAPPRO target_pt, appro_mm
   LMOVE target_pt
-
+  
   IF .$method == "POUR" THEN
-    CALL SYNC_STEP(ok)                  ; 與 F60_F 會合，一起傾倒
+    CALL SYNC_STEP (ok)                  ; 鑸?F60_F 鏈冨悎锛屼竴璧峰偩鍊?
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
+      CALL SEND_LINE ("ERROR,E4023")
       robot_busy = 0
       RETURN
     END
-    TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20      ; 雙鏟對合傾倒手勢 (角度依治具調整)
+    TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20      ; 闆欓彑灏嶅悎鍌惧�掓墜鍕?(瑙掑害渚濇不鍏疯鏁?
     TDRAW 0, 0, 0, 0, -pour_tilt_deg, 0, 20
   END
-
+  
   LDEPART appro_mm
-  TOOL RIGHT_SPATULA
   robot_busy = 0
-  CALL SEND_LINE("OK")
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_RTURN45(.ok)
   LMOVE rturn45_ready
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -467,9 +410,7 @@ listen:
   END
 
   LMOVE rturn45_down
-  BREAK
   LMOVE rturn45_turn
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -477,15 +418,12 @@ listen:
   END
 
   LMOVE rturn45_down
-  BREAK
   LMOVE rturn45_ready
-  BREAK
   CALL SYNC_STEP(s)
   .ok = s
 .END
 .PROGRAM DO_RTURN90(.ok)
   LMOVE rturn90_ready
- BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -493,11 +431,8 @@ listen:
   END
 
   LMOVE rturn90_down
-  BREAK
   LMOVE rturn90_turn
-  BREAK
   LMOVE rturn90_turn10
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -505,14 +440,12 @@ listen:
   END
 
   LMOVE rturn90_turn20
-  BREAK
   LMOVE rturn90_ready
   CALL SYNC_STEP(s)
   .ok = s
 .END
 .PROGRAM DO_RTURN135(.ok)
   LMOVE rturn135_ready
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -520,11 +453,8 @@ listen:
   END
 
   LMOVE rturn135_down
-  BREAK
   LMOVE rturn135_turn
-  BREAK
   LMOVE rturn135_turn10
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -532,9 +462,7 @@ listen:
   END
 
   LMOVE rturn135_turn20
-  BREAK
   LMOVE rturn135_ready
-  BREAK
   CALL SYNC_STEP(s)
   .ok = s
 .END
@@ -555,31 +483,31 @@ listen:
 
   i = 0
   DO
-    ; 階段 1：90°/90° 配對
+    ; 闅庢 1锛?0掳/90掳 閰嶅皪
     CALL DO_RTURN90(ok)
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
-      BASE ba
+      BASE NULL
       TOOL RIGHT_SPATULA
       robot_busy = 0
       RETURN
     END
 
-    ; 階段 2：135°/45° 配對 (本臂 45°)
+    ; 闅庢 2锛?35掳/45掳 閰嶅皪 (鏈噦 45掳)
     CALL DO_RTURN45(ok)
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
-      BASE ba
+      BASE NULL
       TOOL RIGHT_SPATULA
       robot_busy = 0
       RETURN
     END
 
-    ; 階段 3：45°/135° 配對 (本臂 135°)
+    ; 闅庢 3锛?5掳/135掳 閰嶅皪 (鏈噦 135掳)
     CALL DO_RTURN135(ok)
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
-      BASE ba
+      BASE NULL
       TOOL RIGHT_SPATULA
       robot_busy = 0
       RETURN
@@ -588,7 +516,7 @@ listen:
     i = i + 1
   UNTIL i >= .cycles
 
-  BASE ba
+  BASE NULL
   TOOL RIGHT_SPATULA
   robot_busy = 0
   CALL SEND_LINE("OK")
@@ -640,18 +568,14 @@ listen:
 .PROGRAM Comment___ () ; Comments for IDE. Do not use.
 	; @@@ PROJECT @@@
 	; @@@ PROJECTNAME @@@
-	; F60_R_右臂_GBK
+	; F60_R_右臂修正
 	; @@@ HISTORY @@@
-	; 01.08.2026 18:24:57
-	;
 	; @@@ INSPECTION @@@
 	; @@@ CONNECTION @@@
 	; Rs07_R
 	; 192.168.5.7
 	; 23
 	; @@@ PROGRAM @@@
-	; 0:INIT_SWITCHES:F
-	; .PC
 	; 0:INIT_CONST:F
 	; 0:INIT_POINTS:F
 	; 0:INIT_TOOL:F
@@ -661,40 +585,21 @@ listen:
 	; 0:CLEAN_SOCKET:F
 	; 0:OPEN_LISTEN:F
 	; 0:WAIT_ACCEPT:F
-	; .accepted
 	; 0:DO_HANDSHAKE:F
-	; .ok
 	; 0:RECV_LINE:F
-	; .rok
 	; 0:SEND_LINE:F
 	; 0:SPLIT_CSV:F
 	; 0:DISPATCH:F
 	; 0:WAIT_SIGNAL:F
-	; .sig_no
-	; .timeout_sec
-	; .ok
 	; 0:WAIT_SIGNAL_OFF:F
-	; .sig_no
-	; .timeout_sec
-	; .ok
-	; 0:DO_IOTEST:F
-	; .op
 	; 0:SYNC_STEP:F
-	; .ok
 	; 0:DO_PICKUP:F
 	; 0:DO_CHOP:F
-	; .cuts
-	; .thick
 	; 0:DO_PLACE:F
 	; 0:DO_RTURN45:F
-	; .ok
 	; 0:DO_RTURN90:F
-	; .ok
 	; 0:DO_RTURN135:F
-	; .ok
 	; 0:DO_FLIP:F
-	; .cycles
-	; .speed_pct
 	; 0:DO_HOME:F
 	; 0:DO_STOP:F
 	; 0:DO_RESET:F

@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+.DS_Store
+.claude/settings.local.json
+
+# 測試時拍的照片/暫存，不是原始碼
+test/captures/
+test/captures*/
+test/captures*.zip
+capture_*.jpg
+
+# 空白/重複檔案殘留
+/rs_f_utf8.txt
+/docs/rs_f_utf8.txt
+/原程式/
+/robot-*.zip
+
+# 執行期日誌
+logs/
+src/logs/
+test/logs/

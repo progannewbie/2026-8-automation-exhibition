@@ -71,6 +71,9 @@ class F60Connection:
         self.heartbeat_enabled = HEARTBEAT['enabled']
         self.heartbeat_interval = HEARTBEAT['interval']
         self.stop_heartbeat = False
+
+        # 保護 socket 收發，避免心跳線程與指令送收互相干擾
+        self.socket_lock = threading.Lock()
         
         logger.info(f"[{self.arm_id}] 連線物件初始化完成")
     
@@ -208,13 +211,14 @@ class F60Connection:
         while not self.stop_heartbeat:
             try:
                 time.sleep(self.heartbeat_interval)
-                
-                # 發送心跳
-                hb_msg = f"{HEARTBEAT['command']}{CSV_PROTOCOL['line_terminator']}"
-                self.socket.sendall(hb_msg.encode(CSV_PROTOCOL['encoding']))
-                
-                # 等待心跳確認
-                response = self._recv_line(timeout=2)
+
+                # 發送心跳（與 send_command 共用 socket，須加鎖避免收發交錯）
+                with self.socket_lock:
+                    hb_msg = f"{HEARTBEAT['command']}{CSV_PROTOCOL['line_terminator']}"
+                    self.socket.sendall(hb_msg.encode(CSV_PROTOCOL['encoding']))
+
+                    # 等待心跳確認
+                    response = self._recv_line(timeout=2)
                 if response and 'HEARTBEAT_ACK' in response:
                     logger.debug(f"[{self.arm_id}] 心跳確認")
                 else:
@@ -295,13 +299,13 @@ class F60Connection:
             return None
         
         try:
-            # 發送指令
-            msg = f"{cmd}{CSV_PROTOCOL['line_terminator']}"
-            self.socket.sendall(msg.encode(CSV_PROTOCOL['encoding']))
-            logger.info(f"[{self.arm_id}] 發送: {cmd}")
-            
-            # 接收回應
-            response = self._recv_line(timeout=self.read_timeout)
+            # 發送指令與接收回應（與心跳線程共用 socket，須加鎖避免收發交錯）
+            with self.socket_lock:
+                msg = f"{cmd}{CSV_PROTOCOL['line_terminator']}"
+                self.socket.sendall(msg.encode(CSV_PROTOCOL['encoding']))
+                logger.info(f"[{self.arm_id}] 發送: {cmd}")
+
+                response = self._recv_line(timeout=self.read_timeout)
             if response:
                 logger.info(f"[{self.arm_id}] 回應: {response}")
             return response
@@ -402,6 +406,33 @@ class CommsManager:
         else:
             logger.error(f"未知的 arm_id: {arm_id}")
             return None
+
+    def send_command_dual(self, cmd: str) -> Dict[str, Optional[str]]:
+        """
+        同時送同一筆指令給 F60_F 與 F60_R（各自在自己的執行緒平行送出）
+
+        PICKUP / CHOP / PLACE(POUR) / FLIP 這幾種動作，兩台控制器的 AS
+        程式會逐階段用 SYNC_STEP 訊號互相等待對方。若用 send_command()
+        依序送（先送 F60_F、等回應、再送 F60_R），等於變相把兩邊的動作
+        時間疊加，而且先收到指令的那台會在 SYNC_STEP 卡住等對方，直到
+        PC 端真的把指令送到另一邊才會繼續——這裡改用兩個執行緒同時送出，
+        兩邊控制器才會幾乎同時進入各自的 SYNC_STEP 交握。
+
+        Returns:
+            {"F60_F": 回應或 None, "F60_R": 回應或 None}
+        """
+        responses: Dict[str, Optional[str]] = {}
+
+        def _call(arm_id: str):
+            responses[arm_id] = self.send_command(arm_id, cmd)
+
+        threads = [threading.Thread(target=_call, args=(arm_id,)) for arm_id in ('F60_F', 'F60_R')]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        return responses
 
 
 # ============================================================================

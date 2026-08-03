@@ -42,7 +42,7 @@ class PhaseStatus(Enum):
 @dataclass
 class FoodCutParams:
     """食材切割參數"""
-    food_type: str              # "CUCUMBER", "ROMAINE"
+    food_type: str              # "CUCUMBER", "CARROT", "CORN"
     num_cuts: int               # 切割次數
     cut_thickness_mm: float     # 切割厚度 (mm)
     holding_arm: str            # 壓住食材的臂 (F60_R)
@@ -57,12 +57,19 @@ FOOD_CUT_PARAMS = {
         holding_arm="F60_R",
         description="小黃瓜：5 片，每片 4mm",
     ),
-    "ROMAINE": FoodCutParams(
-        food_type="ROMAINE",
-        num_cuts=8,
-        cut_thickness_mm=30.0,
+    "CARROT": FoodCutParams(
+        food_type="CARROT",
+        num_cuts=5,
+        cut_thickness_mm=4.0,
         holding_arm="F60_R",
-        description="蘿蔓生菜：8 段，每段 30mm",
+        description="紅蘿蔔：5 片，每片 4mm",
+    ),
+    "CORN": FoodCutParams(
+        food_type="CORN",
+        num_cuts=5,
+        cut_thickness_mm=4.0,
+        holding_arm="F60_R",
+        description="玉米筍：5 片，每片 4mm",
     ),
 }
 
@@ -158,26 +165,26 @@ class MenuRecipes:
     }
     
     # ========================================================================
-    # 菜色 2: 蘿蔓生菜單品
+    # 菜色 2: 紅蘿蔔單品
     # ========================================================================
-    
-    RECIPE_2_ROMAINE = {
-        "name": "菜色 2: 蘿蔓生菜",
-        "description": "取生菜 → 切 → 放沙拉盤",
+
+    RECIPE_2_CARROT = {
+        "name": "菜色 2: 紅蘿蔔",
+        "description": "取紅蘿蔔 → 切 → 放沙拉盤",
         "continuous": False,
-        "estimated_time_sec": 40,
+        "estimated_time_sec": 35,
         "phases": [
             PhaseInstruction(
                 phase=Phase.PICKUP,
                 action="PICKUP",
-                location="PICKUP_ROMAINE",
+                location="PICKUP_CARROT",
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
-                params=FOOD_CUT_PARAMS["ROMAINE"].__dict__,
+                params=FOOD_CUT_PARAMS["CARROT"].__dict__,
             ),
             PhaseInstruction(
                 phase=Phase.PLACE_FINAL,
@@ -195,20 +202,26 @@ class MenuRecipes:
     }
     
     # ========================================================================
-    # 菜色 3: 紅卷須單品（不切）
+    # 菜色 3: 玉米筍單品
     # ========================================================================
-    
-    RECIPE_3_RED_LEAF = {
-        "name": "菜色 3: 紅卷須",
-        "description": "取紅卷須 → 放沙拉盤（不切）",
+
+    RECIPE_3_CORN = {
+        "name": "菜色 3: 玉米筍",
+        "description": "取玉米筍 → 切 → 放沙拉盤",
         "continuous": False,
-        "estimated_time_sec": 20,
+        "estimated_time_sec": 35,
         "phases": [
             PhaseInstruction(
                 phase=Phase.PICKUP,
                 action="PICKUP",
-                location="PICKUP_RED_LEAF",
+                location="PICKUP_CORN",
                 params={"arm": "F60_F"},
+            ),
+            PhaseInstruction(
+                phase=Phase.CHOP,
+                action="CHOP",
+                location="WORK_CHOP_ZONE",
+                params=FOOD_CUT_PARAMS["CORN"].__dict__,
             ),
             PhaseInstruction(
                 phase=Phase.PLACE_FINAL,
@@ -231,9 +244,9 @@ class MenuRecipes:
     
     RECIPE_4_SALAD = {
         "name": "菜色 4: 生菜沙拉完整流程",
-        "description": "小黃瓜 → 等待區 → 生菜 → 搅拌區 → 紅卷須 → 翻炒 → 沙拉盤",
+        "description": "小黃瓜 → 等待區 → 紅蘿蔔 → 搅拌區 → 玉米筍 → 翻炒 → 沙拉盤",
         "continuous": True,  # ⚠️ 必須連續執行
-        "estimated_time_sec": 150,  # ~2.5 分鐘
+        "estimated_time_sec": 165,  # ~2.75 分鐘（玉米筍新增切割步驟）
         "phases": [
             # ================================================================
             # 步驟 1: 小黃瓜 → 等待區
@@ -259,20 +272,20 @@ class MenuRecipes:
             ),
             
             # ================================================================
-            # 步驟 2: 蘿蔓生菜 → 搅拌區
+            # 步驟 2: 紅蘿蔔 → 搅拌區
             # ================================================================
-            
+
             PhaseInstruction(
                 phase=Phase.PICKUP,
                 action="PICKUP",
-                location="PICKUP_ROMAINE",
+                location="PICKUP_CARROT",
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
-                params=FOOD_CUT_PARAMS["ROMAINE"].__dict__,
+                params=FOOD_CUT_PARAMS["CARROT"].__dict__,
             ),
             PhaseInstruction(
                 phase=Phase.PLACE,
@@ -299,14 +312,20 @@ class MenuRecipes:
             ),
             
             # ================================================================
-            # 步驟 4: 紅卷須 → 搅拌區
+            # 步驟 4: 玉米筍 → 搅拌區
             # ================================================================
-            
+
             PhaseInstruction(
                 phase=Phase.PICKUP,
                 action="PICKUP",
-                location="PICKUP_RED_LEAF",
+                location="PICKUP_CORN",
                 params={"arm": "F60_F"},
+            ),
+            PhaseInstruction(
+                phase=Phase.CHOP,
+                action="CHOP",
+                location="WORK_CHOP_ZONE",
+                params=FOOD_CUT_PARAMS["CORN"].__dict__,
             ),
             PhaseInstruction(
                 phase=Phase.PLACE,
@@ -424,8 +443,8 @@ class PhaseLog:
 
 MENU = {
     "1": MenuRecipes.RECIPE_1_CUCUMBER,
-    "2": MenuRecipes.RECIPE_2_ROMAINE,
-    "3": MenuRecipes.RECIPE_3_RED_LEAF,
+    "2": MenuRecipes.RECIPE_2_CARROT,
+    "3": MenuRecipes.RECIPE_3_CORN,
     "4": MenuRecipes.RECIPE_4_SALAD,
 }
 

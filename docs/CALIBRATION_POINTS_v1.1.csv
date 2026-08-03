@@ -1,7 +1,7 @@
 Location Point ID,Zone,中文名稱,Description,標定方法,X (mm),Y (mm),Angle (deg),Status,Notes
 PICKUP_CUCUMBER,PICKUP,小黃瓜取料點,小黃瓜擺放位置,視覺 + Hand-eye,待標定,待標定,待標定,PENDING,YOLO檢測 → 像素轉換 → 現實座標
-PICKUP_ROMAINE,PICKUP,蘿蔓取料點,蘿蔓生菜擺放位置,視覺 + Hand-eye,待標定,待標定,待標定,PENDING,YOLO檢測 → 像素轉換 → 現實座標
-PICKUP_RED_LEAF,PICKUP,紅捲鬚取料點,紅捲鬚生菜擺放位置,視覺 + Hand-eye,待標定,待標定,待標定,PENDING,YOLO檢測 → 像素轉換 → 現實座標
+PICKUP_CARROT,PICKUP,紅蘿蔔取料點,紅蘿蔔擺放位置,視覺 + Hand-eye,待標定,待標定,待標定,PENDING,YOLO檢測 → 像素轉換 → 現實座標
+PICKUP_CORN,PICKUP,玉米筍取料點,玉米筍擺放位置,視覺 + Hand-eye,待標定,待標定,待標定,PENDING,YOLO檢測 → 像素轉換 → 現實座標
 WORK_CHOP_ZONE,WORK,切割區,食材切割動作中心,視覺 + ArUco,待標定,待標定,,PENDING,ArUco基準 → 區域中心點，約 400×300 mm
 WORK_MIX_ZONE,WORK,混拌區,切好食材聚集點,視覺 + ArUco,待標定,待標定,,PENDING,ArUco基準 → 視覺區域標定
 WORK_FLIP_ZONE,WORK,翻炒區,翻炒動作中心,視覺 + ArUco,待標定,待標定,,PENDING,ArUco基準 → 雙鏟互補中心

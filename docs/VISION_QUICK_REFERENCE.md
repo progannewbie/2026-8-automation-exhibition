@@ -55,7 +55,7 @@ for marker in markers:
 
 ```python
 {
-    'class_id': 0,                    # 0=CUCUMBER, 1=ROMAINE, 2=RED_LEAF
+    'class_id': 0,                    # 0=CUCUMBER, 1=CARROT, 2=CORN
     'class_name': 'CUCUMBER',
     'confidence': 0.92,
     'center_x_pixel': 320.5,          # 像素座標
@@ -94,6 +94,7 @@ for marker in markers:
 |------|------|
 | `vision.detect_foods(image)` | 檢測所有食材（返回現實座標） |
 | `vision.get_location_mm(food_name, image)` | 查詢單個食材座標 |
+| `vision.get_location_and_angle_mm(food_name, image)` | 查詢單個食材座標＋旋轉角（PICKUP 用） |
 | `vision.detect_aruco_markers(image)` | 檢測 ArUco 標記 |
 | `vision.calibrator.add_calibration_pair(px, py, rx, ry)` | 新增標定點 |
 | `vision.calibrator.calibrate()` | 執行 Hand-eye 標定 |
@@ -104,8 +105,8 @@ for marker in markers:
 | class_id | 英文 | 中文 |
 |----------|------|------|
 | 0 | CUCUMBER | 小黃瓜 |
-| 1 | ROMAINE | 蘿蔓生菜 |
-| 2 | RED_LEAF | 紅卷須生菜 |
+| 1 | CARROT | 紅蘿蔔 |
+| 2 | CORN | 玉米筍 |
 
 ## ArUco 標記 ID
 

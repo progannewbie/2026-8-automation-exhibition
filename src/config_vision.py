@@ -4,8 +4,12 @@ YOLO 模型、ArUco 標記、Hand-eye calibration 相關參數
 """
 
 from enum import Enum
+from pathlib import Path
 from typing import Dict, Tuple, List, Optional
 import numpy as np
+
+# 相對於本檔案所在目錄 (src/) 算出絕對路徑，不受呼叫端的執行目錄 (cwd) 影響
+_SRC_DIR = Path(__file__).resolve().parent
 
 # ============================================================================
 # 1. YOLO 相關配置
@@ -13,17 +17,17 @@ import numpy as np
 
 class YOLOConfig:
     """YOLOv8 模型配置"""
-    
+
     # 模型參數
-    MODEL_PATH = "models/yolov8_smartcook_v1.pt"  # 待訓練模型路徑
+    MODEL_PATH = str(_SRC_DIR / "models" / "yolov8_smartcook_v1.pt")
     CONFIDENCE_THRESHOLD = 0.7  # 信心閾值
     IOU_THRESHOLD = 0.5  # IoU 非極大值抑制閾值
     
     # 類別定義
     CLASSES = {
         0: "CUCUMBER",      # 小黃瓜
-        1: "CORN",       # 玉米筍
-        2: "CARROT",      # 紅蘿蔔
+        1: "CARROT",        # 紅蘿蔔
+        2: "CORN",          # 玉米筍
     }
     
     CLASS_NAMES = {v: k for k, v in CLASSES.items()}  # 反向映射
@@ -293,8 +297,10 @@ class VisionProcessingConfig:
     """視覺處理流程配置"""
     
     # 相機參數
+    CAMERA_INDEX = 0                  # 攝影機裝置編號
     CAMERA_RESOLUTION = (640, 480)    # (寬, 高)
     CAMERA_FPS = 30                   # 影格率
+    CAMERA_WARMUP_FRAMES = 5          # 拍照前丟棄的暖機畫面數（讓自動曝光穩定）
     
     # 圖像處理
     UNDISTORT_IMAGES = True           # 是否進行畸變矯正
@@ -309,7 +315,7 @@ class VisionProcessingConfig:
     # 檔案儲存
     SAVE_CALIBRATION_DATA = True
     CALIBRATION_DATA_PATH = "data/calibration/hand_eye_calibration.npy"
-    YOLO_MODEL_PATH = "models/yolov8_smartcook_v1.pt"
+    YOLO_MODEL_PATH = YOLOConfig.MODEL_PATH
 
 
 # ============================================================================

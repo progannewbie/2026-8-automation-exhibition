@@ -36,28 +36,47 @@ class CommandType(Enum):
 class PickupCommand:
     """
     取料指令格式
-    
-    CSV: PICKUP,<LOCATION>,<ARM>
-    
+
+    CSV: PICKUP,<LOCATION>,<ARM>,<X_MM>,<Y_MM>,<ANGLE_DEG>
+
+    X_MM/Y_MM/ANGLE_DEG 只有 VISION_LOCATIONS（食材點位）會被 AS 端拿來用
+    （即時算出 ORIGIN + TRANS(x,y,0,0,0,angle) 作為抓取點）；WAIT_ZONE 這類
+    固定暫存區 AS 端會忽略這三個欄位、直接用教點，呼叫端仍要照格式帶上
+    （沒有視覺目標時傳 0,0,0 即可），避免 AS 端 SPLIT_CSV 少切到欄位。
+
     例子:
-        PICKUP,PICKUP_CUCUMBER,F60_F
-        PICKUP,PICKUP_ROMAINE,F60_R
+        PICKUP,PICKUP_CUCUMBER,F60_F,120.50,80.30,45.00
+        PICKUP,WAIT_ZONE,F60_F,0,0,0
     """
-    
-    FORMAT = "PICKUP,<LOCATION>,<ARM>"
-    
+
+    FORMAT = "PICKUP,<LOCATION>,<ARM>,<X_MM>,<Y_MM>,<ANGLE_DEG>"
+
     VALID_LOCATIONS = [
         "PICKUP_CUCUMBER",
-        "PICKUP_ROMAINE",
-        "PICKUP_RED_LEAF",
+        "PICKUP_CARROT",
+        "PICKUP_CORN",
+        "WAIT_ZONE",  # 菜色 4 完整流程：從等待區取回暫放的食材
     ]
-    
+
+    # 這幾個位置的座標由 YOLO + 手眼標定即時算出；其餘位置忽略 X/Y/ANGLE，用教點
+    VISION_LOCATIONS = [
+        "PICKUP_CUCUMBER",
+        "PICKUP_CARROT",
+        "PICKUP_CORN",
+    ]
+
     VALID_ARMS = ["F60_F", "F60_R"]  # 通常 F60_F(左臂) 取料
-    
+
     @staticmethod
-    def create(location: str, arm: str = "F60_F") -> str:
+    def create(
+        location: str,
+        arm: str = "F60_F",
+        x_mm: float = 0.0,
+        y_mm: float = 0.0,
+        angle_deg: float = 0.0,
+    ) -> str:
         """建立取料指令"""
-        return f"PICKUP,{location},{arm}"
+        return f"PICKUP,{location},{arm},{x_mm:.2f},{y_mm:.2f},{angle_deg:.2f}"
 
 
 # ============================================================================
@@ -69,26 +88,33 @@ class ChopCommand:
     切割指令格式
     
     CSV: CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>
-    
+
     例子:
         CHOP,CUCUMBER,5,4
-        CHOP,ROMAINE,8,30
+        CHOP,CARROT,5,4
+        CHOP,CORN,5,4
     """
-    
+
     FORMAT = "CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>"
-    
+
     FOOD_TYPES = {
         "CUCUMBER": {
             "name": "小黃瓜",
             "method": "SLICE",
             "default_thickness_mm": 4,
-            "typical_cuts": "5-8",
+            "typical_cuts": "5",
         },
-        "ROMAINE": {
-            "name": "蘿蔓生菜",
-            "method": "SEGMENT",
-            "default_thickness_mm": 30,  # 段長
-            "typical_cuts": "6-10",
+        "CARROT": {
+            "name": "紅蘿蔔",
+            "method": "SLICE",
+            "default_thickness_mm": 4,
+            "typical_cuts": "5",
+        },
+        "CORN": {
+            "name": "玉米筍",
+            "method": "SLICE",
+            "default_thickness_mm": 4,
+            "typical_cuts": "5",
         },
     }
     
@@ -271,20 +297,21 @@ RECIPES = {
             "PLACE,SALAD_BOWL,POUR",
         ],
     },
-    "菜色2_生菜": {
-        "name": "蘿蔓生菜單品",
-        "description": "取生菜 → 切 → 放沙拉盤",
+    "菜色2_紅蘿蔔": {
+        "name": "紅蘿蔔單品",
+        "description": "取紅蘿蔔 → 切 → 放沙拉盤",
         "instructions": [
-            "PICKUP,PICKUP_ROMAINE,F60_F",
-            "CHOP,ROMAINE,8,30",
+            "PICKUP,PICKUP_CARROT,F60_F",
+            "CHOP,CARROT,5,4",
             "PLACE,SALAD_BOWL,POUR",
         ],
     },
-    "菜色3_紅卷須": {
-        "name": "紅卷須生菜單品",
-        "description": "取紅卷須 → 放沙拉盤（不切）",
+    "菜色3_玉米筍": {
+        "name": "玉米筍單品",
+        "description": "取玉米筍 → 切 → 放沙拉盤",
         "instructions": [
-            "PICKUP,PICKUP_RED_LEAF,F60_F",
+            "PICKUP,PICKUP_CORN,F60_F",
+            "CHOP,CORN,5,4",
             "PLACE,SALAD_BOWL,POUR",
         ],
     },
@@ -296,20 +323,21 @@ RECIPES = {
             "PICKUP,PICKUP_CUCUMBER,F60_F",
             "CHOP,CUCUMBER,5,4",
             "PLACE,WAIT_ZONE,SCOOP",
-            
-            # 步驟 2: 生菜 → 搅拌區
-            "PICKUP,PICKUP_ROMAINE,F60_F",
-            "CHOP,ROMAINE,8,30",
+
+            # 步驟 2: 紅蘿蔔 → 搅拌區
+            "PICKUP,PICKUP_CARROT,F60_F",
+            "CHOP,CARROT,5,4",
             "PLACE,MIX_ZONE,SCOOP",
-            
+
             # 步驟 3: 等待區小黃瓜 → 搅拌區
             "PICKUP,WAIT_ZONE,F60_F",
             "PLACE,MIX_ZONE,SCOOP",
-            
-            # 步驟 4: 紅卷須 → 搅拌區
-            "PICKUP,PICKUP_RED_LEAF,F60_F",
+
+            # 步驟 4: 玉米筍 → 搅拌區
+            "PICKUP,PICKUP_CORN,F60_F",
+            "CHOP,CORN,5,4",
             "PLACE,MIX_ZONE,SCOOP",
-            
+
             # 步驟 5: 翻炒
             "FLIP,6,50",
             
@@ -346,11 +374,18 @@ class CommandParser:
     @staticmethod
     def validate_pickup(params: List[str]) -> bool:
         """驗證取料指令參數"""
-        if len(params) < 2:
+        if len(params) < 5:
             return False
         location, arm = params[0], params[1]
-        return (location in PickupCommand.VALID_LOCATIONS and
-                arm in PickupCommand.VALID_ARMS)
+        if not (location in PickupCommand.VALID_LOCATIONS and arm in PickupCommand.VALID_ARMS):
+            return False
+        try:
+            float(params[2])
+            float(params[3])
+            float(params[4])
+        except ValueError:
+            return False
+        return True
     
     @staticmethod
     def validate_chop(params: List[str]) -> bool:
@@ -387,9 +422,17 @@ class CommandParser:
         except ValueError:
             return False
 
+    @staticmethod
+    def validate_home(params: List[str]) -> bool:
+        """驗證復歸指令參數"""
+        if len(params) < 1:
+            return False
+        arm = params[0]
+        return arm in PickupCommand.VALID_ARMS
+
 
 # ============================================================================
-# 10. 菜單選擇邏輯（main.py 會用到）
+# 10. 菜單選擇邏輯（目前未接回主程式，main.py 實際使用 config_phase.MENU）
 # ============================================================================
 
 MENU = {
@@ -398,12 +441,12 @@ MENU = {
         "recipe_key": "菜色1_小黃瓜",
     },
     "2": {
-        "name": "菜色 2: 蘿蔓生菜",
-        "recipe_key": "菜色2_生菜",
+        "name": "菜色 2: 紅蘿蔔",
+        "recipe_key": "菜色2_紅蘿蔔",
     },
     "3": {
-        "name": "菜色 3: 紅卷須",
-        "recipe_key": "菜色3_紅卷須",
+        "name": "菜色 3: 玉米筍",
+        "recipe_key": "菜色3_玉米筍",
     },
     "4": {
         "name": "菜色 4: 生菜沙拉完整流程",

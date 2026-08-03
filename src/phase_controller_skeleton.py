@@ -12,7 +12,10 @@ from config_phase import (
     Phase, PhaseStatus, PhaseInstruction, PhaseLog, RetryPolicy, MENU,
     get_recipe, get_phases, FOOD_CUT_PARAMS
 )
-from config_commands import CommandParser
+from config_commands import (
+    CommandParser, PickupCommand, ChopCommand, PlaceCommand,
+    FlipCommand, HomeCommand, StatusCommand,
+)
 from vision_skeleton import VisionSystem
 from comms_connection_skeleton import CommsManager
 
@@ -220,36 +223,77 @@ class PhaseController:
         return success
     
     # ========================================================================
+    # 指令驗證
+    # ========================================================================
+
+    def _validate_command(self, cmd: str, validator) -> bool:
+        """
+        送出前用 CommandParser 驗證指令格式
+
+        Args:
+            cmd: CSV 格式指令字串
+            validator: CommandParser 的 validate_* 靜態方法
+
+        Returns:
+            True 格式正確，False 格式錯誤（不應送出）
+        """
+        _, cmd_params = CommandParser.parse(cmd)
+        if not validator(cmd_params):
+            logger.error(f"  ✗ 指令格式驗證失敗，不送出: {cmd}")
+            return False
+        return True
+
+    # ========================================================================
     # 具體動作實現
     # ========================================================================
-    
+
     def _handle_pickup(self, location: str, params: Dict, max_retries: int) -> bool:
         """處理取料"""
         arm = params.get("arm", "F60_F")
-        
+
+        # PICKUP_<食材> 這幾個點位改用 YOLO + 手眼標定即時算座標；
+        # WAIT_ZONE 這類暫存區沒有視覺目標，維持送 0,0,0（AS 端會忽略，用教點）
+        expected_food = location if location in PickupCommand.VISION_LOCATIONS else None
+        expected_food = expected_food[len("PICKUP_"):] if expected_food else None
+
         for attempt in range(max_retries):
             try:
-                # 使用視覺系統定位食材
-                # (這裡簡化版本，實際應根據 location 從視覺系統取得座標)
-                
-                logger.info(f"  取料: {location} (臂: {arm})")
-                
-                # 發送取料指令
-                cmd = f"PICKUP,{location},{arm}"
-                response = self.comms.send_command(arm, cmd)
-                
-                if response == "OK":
+                x_mm, y_mm, angle_deg = 0.0, 0.0, 0.0
+
+                if expected_food:
+                    image = self.vision.capture_frame()
+                    detection = (
+                        self.vision.get_location_and_angle_mm(expected_food, image)
+                        if image is not None else None
+                    )
+                    if detection is None:
+                        logger.warning(f"  ⚠️ 視覺未偵測到 {expected_food}，中止本次取料，不送指令給機器人")
+                        if attempt < max_retries - 1:
+                            time.sleep(RetryPolicy.RETRY_DELAY_SEC)
+                        continue
+                    x_mm, y_mm, angle_deg = detection
+                    logger.info(f"  視覺定位 {expected_food}: x={x_mm:.1f}mm, y={y_mm:.1f}mm, angle={angle_deg:.1f}°")
+
+                cmd = PickupCommand.create(location, arm, x_mm, y_mm, angle_deg)
+                if not self._validate_command(cmd, CommandParser.validate_pickup):
+                    return False
+
+                logger.info(f"  取料: {location} (雙臂協同，主導臂: {arm})")
+
+                # PICKUP 兩臂會逐階段用 SYNC_STEP 會合，指令必須同時送給兩邊
+                responses = self.comms.send_command_dual(cmd)
+                if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
                     logger.info(f"  ✓ 取料成功")
                     return True
                 else:
-                    logger.warning(f"  ⚠️ 取料回應異常: {response}")
-                    
+                    logger.warning(f"  ⚠️ 取料回應異常: F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}")
+
             except Exception as e:
                 logger.warning(f"  ⚠️ 取料嘗試 {attempt+1}/{max_retries} 失敗: {e}")
-            
+
             if attempt < max_retries - 1:
                 time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-        
+
         logger.error(f"  ✗ 取料失敗 (重試 {max_retries} 次)")
         return False
     
@@ -258,20 +302,22 @@ class PhaseController:
         food_type = params.get("food_type", "CUCUMBER")
         num_cuts = params.get("num_cuts", 5)
         thickness = params.get("cut_thickness_mm", 4.0)
-        
+        cmd = ChopCommand.create(food_type, num_cuts, thickness)
+
+        if not self._validate_command(cmd, CommandParser.validate_chop):
+            return False
+
         for attempt in range(max_retries):
             try:
-                logger.info(f"  切割: {food_type} ({num_cuts} 次，{thickness} mm)")
-                
-                # 發送切割指令
-                cmd = f"CHOP,{food_type},{num_cuts},{thickness}"
-                response = self.comms.send_command("F60_F", cmd)
-                
-                if response == "OK":
+                logger.info(f"  切割: {food_type} ({num_cuts} 次，{thickness} mm，雙臂協同)")
+
+                # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
+                responses = self.comms.send_command_dual(cmd)
+                if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
                     logger.info(f"  ✓ 切割完成")
                     return True
                 else:
-                    logger.warning(f"  ⚠️ 切割回應異常: {response}")
+                    logger.warning(f"  ⚠️ 切割回應異常: F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}")
                     
             except Exception as e:
                 logger.warning(f"  ⚠️ 切割嘗試 {attempt+1}/{max_retries} 失敗: {e}")
@@ -285,20 +331,34 @@ class PhaseController:
     def _handle_place(self, location: str, params: Dict, max_retries: int) -> bool:
         """處理放置"""
         method = params.get("method", "SCOOP")
-        
+        cmd = PlaceCommand.create(location, method)
+
+        if not self._validate_command(cmd, CommandParser.validate_place):
+            return False
+
+        # 只有 POUR（雙鏟一起傾倒）需要兩臂用 SYNC_STEP 會合；
+        # SCOOP/PUSH 是 F60_F 單獨搬運（F60_R 的 AS 程式對這兩種方式不會合，
+        # 也不認得 WAIT_ZONE 這類暫存位置），維持只送 F60_F
+        dual = (method == "POUR")
+
         for attempt in range(max_retries):
             try:
-                logger.info(f"  放置: {location} (方式: {method})")
-                
-                # 發送放置指令
-                cmd = f"PLACE,{location},{method}"
-                response = self.comms.send_command("F60_F", cmd)
-                
-                if response == "OK":
+                logger.info(f"  放置: {location} (方式: {method}{'，雙臂協同' if dual else ''})")
+
+                if dual:
+                    responses = self.comms.send_command_dual(cmd)
+                    ok = responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK"
+                    response_desc = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
+                else:
+                    response = self.comms.send_command("F60_F", cmd)
+                    ok = response == "OK"
+                    response_desc = response
+
+                if ok:
                     logger.info(f"  ✓ 放置完成")
                     return True
                 else:
-                    logger.warning(f"  ⚠️ 放置回應異常: {response}")
+                    logger.warning(f"  ⚠️ 放置回應異常: {response_desc}")
                     
             except Exception as e:
                 logger.warning(f"  ⚠️ 放置嘗試 {attempt+1}/{max_retries} 失敗: {e}")
@@ -313,20 +373,22 @@ class PhaseController:
         """處理翻炒"""
         num_cycles = params.get("num_cycles", 6)
         speed_percent = params.get("speed_percent", 50)
-        
+        cmd = FlipCommand.create(num_cycles, speed_percent)
+
+        if not self._validate_command(cmd, CommandParser.validate_flip):
+            return False
+
         for attempt in range(max_retries):
             try:
-                logger.info(f"  翻炒: {num_cycles} 循環，{speed_percent}% 速度")
-                
-                # 發送翻炒指令
-                cmd = f"FLIP,{num_cycles},{speed_percent}"
-                response = self.comms.send_command("F60_F", cmd)
-                
-                if response == "OK":
+                logger.info(f"  翻炒: {num_cycles} 循環，{speed_percent}% 速度，雙臂協同")
+
+                # FLIP 兩臂逐循環用 SYNC_STEP 會合，指令必須同時送給兩邊
+                responses = self.comms.send_command_dual(cmd)
+                if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
                     logger.info(f"  ✓ 翻炒完成")
                     return True
                 else:
-                    logger.warning(f"  ⚠️ 翻炒回應異常: {response}")
+                    logger.warning(f"  ⚠️ 翻炒回應異常: F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}")
                     
             except Exception as e:
                 logger.warning(f"  ⚠️ 翻炒嘗試 {attempt+1}/{max_retries} 失敗: {e}")
@@ -340,12 +402,15 @@ class PhaseController:
     def _handle_home(self, location: str, params: Dict, max_retries: int) -> bool:
         """處理復歸"""
         arm = params.get("arm", "F60_F")
-        
+        cmd = HomeCommand.create(arm)
+
+        if not self._validate_command(cmd, CommandParser.validate_home):
+            return False
+
         # 復歸失敗是致命的，不允許重試
         try:
             logger.info(f"  復歸: {arm} → {location}")
-            
-            cmd = f"HOME,{arm}"
+
             response = self.comms.send_command(arm, cmd)
             
             if response == "OK":
@@ -370,7 +435,7 @@ class PhaseController:
         try:
             # 檢查兩臂狀態
             for arm in ["F60_F", "F60_R"]:
-                response = self.comms.send_command(arm, f"STATUS,{arm}")
+                response = self.comms.send_command(arm, StatusCommand.create(arm))
                 
                 if response == "OK":
                     logger.info(f"  ✓ {arm} 狀態正常")

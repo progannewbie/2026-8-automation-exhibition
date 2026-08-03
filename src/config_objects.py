@@ -14,8 +14,8 @@ from typing import Dict, Tuple, Optional
 class FoodType(Enum):
     """食材類型列舉"""
     CUCUMBER = "CUCUMBER"          # 小黃瓜
-    ROMAINE = "ROMAINE"            # 蘿蔓生菜
-    RED_LEAF = "RED_LEAF"          # 紅捲鬚生菜
+    CARROT = "CARROT"              # 紅蘿蔔
+    CORN = "CORN"                  # 玉米筍
 
 
 FOOD_METADATA = {
@@ -27,20 +27,21 @@ FOOD_METADATA = {
         'cut_thickness_mm': 4,  # 建議切片厚度
         'cut_method': 'SLICE',  # 切片方式
     },
-    FoodType.ROMAINE: {
-        'name': '蘿蔓生菜',
-        'description': '葉菜，長條型',
-        'color': 'green',
-        'typical_weight_g': 300,
-        'cut_length_mm': 30,  # 建議段長
-        'cut_method': 'SEGMENT',  # 分段方式
+    FoodType.CARROT: {
+        'name': '紅蘿蔔',
+        'description': '細長圓錐型，約 15-20cm 長',
+        'color': 'orange',
+        'typical_weight_g': 150,
+        'cut_thickness_mm': 4,  # 建議切片厚度
+        'cut_method': 'SLICE',  # 切片方式
     },
-    FoodType.RED_LEAF: {
-        'name': '紅捲鬚生菜',
-        'description': '結球蔬菜，鬚狀葉',
-        'color': 'red_purple',
-        'typical_weight_g': 400,
-        'cut_method': 'GATHER',  # 聚攏方式（不切，直接聚）
+    FoodType.CORN: {
+        'name': '玉米筍',
+        'description': '幼嫩玉米，約 8-10cm 長',
+        'color': 'yellow',
+        'typical_weight_g': 30,
+        'cut_thickness_mm': 4,  # 建議切片厚度
+        'cut_method': 'SLICE',  # 切片方式
     },
 }
 
@@ -83,8 +84,8 @@ class LocationPoint(Enum):
     
     # --- 取料區 (Pickup Zone) ---
     PICKUP_CUCUMBER = "PICKUP_CUCUMBER"          # 小黃瓜取料點
-    PICKUP_ROMAINE = "PICKUP_ROMAINE"            # 蘿蔓取料點
-    PICKUP_RED_LEAF = "PICKUP_RED_LEAF"          # 紅捲鬚取料點
+    PICKUP_CARROT = "PICKUP_CARROT"              # 紅蘿蔔取料點
+    PICKUP_CORN = "PICKUP_CORN"                  # 玉米筍取料點
     
     # --- 工作區 (Work Zone) ---
     WORK_CHOP_ZONE = "WORK_CHOP_ZONE"            # 切割區（食材準備區）
@@ -111,21 +112,21 @@ LOCATION_METADATA = {
         'coordinate_mm': None,  # 待視覺系統 + 手工標定
         'angle_deg': None,      # 食材長軸方向角
     },
-    LocationPoint.PICKUP_ROMAINE: {
-        'name': '蘿蔓取料點',
+    LocationPoint.PICKUP_CARROT: {
+        'name': '紅蘿蔔取料點',
         'zone': 'PICKUP',
-        'description': '放置蘿蔓的位置，鏟子從上方接近',
-        'food_type': FoodType.ROMAINE,
+        'description': '放置紅蘿蔔的位置，鏟子從上方接近',
+        'food_type': FoodType.CARROT,
         'approach_from': 'TOP',
         'coordinate_mm': None,
         'angle_deg': None,
     },
-    LocationPoint.PICKUP_RED_LEAF: {
-        'name': '紅捲鬚取料點',
+    LocationPoint.PICKUP_CORN: {
+        'name': '玉米筍取料點',
         'zone': 'PICKUP',
-        'description': '放置紅捲鬚的位置，鏟子從側方接近',
-        'food_type': FoodType.RED_LEAF,
-        'approach_from': 'SIDE',
+        'description': '放置玉米筍的位置，鏟子從上方接近',
+        'food_type': FoodType.CORN,
+        'approach_from': 'TOP',
         'coordinate_mm': None,
         'angle_deg': None,
     },
@@ -164,7 +165,7 @@ LOCATION_METADATA = {
     LocationPoint.WASTE_CORNER: {
         'name': '廢料角',
         'zone': 'PLACEMENT',
-        'description': '放置蘿蔓根部等廢料的區域',
+        'description': '放置食材根部、頭尾等廢料的區域',
         'coordinate_mm': None,
     },
     
@@ -247,8 +248,8 @@ VISION_DETECTION = {
     # YOLO 類別對應
     'yolo_classes': {
         0: FoodType.CUCUMBER,
-        1: FoodType.ROMAINE,
-        2: FoodType.RED_LEAF,
+        1: FoodType.CARROT,
+        2: FoodType.CORN,
     },
     
     # ArUco 標記點

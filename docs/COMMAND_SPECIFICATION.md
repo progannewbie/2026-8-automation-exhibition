@@ -1,7 +1,7 @@
 # SmartCook 指令規範 (Command Specification)
 
-**版本**: v1.0  
-**日期**: 2026/7/23  
+**版本**: v1.1  
+**日期**: 2026/8/3  
 **作者**: Zhang (軟體)  
 **狀態**: ✅ 定案
 
@@ -52,24 +52,30 @@ FLIP,6,50\n
 
 **目的**: 使用鏟子從指定位置取料
 
-**格式**:
+**格式**（2026/08 更新：新增 X_MM/Y_MM/ANGLE_DEG，食材點位改用 YOLO + 手眼標定即時定位，不再是開機前教死的固定點）:
 ```
-PICKUP,<LOCATION>,<ARM>
+PICKUP,<LOCATION>,<ARM>,<X_MM>,<Y_MM>,<ANGLE_DEG>
 ```
 
 | 參數 | 類型 | 說明 | 例子 |
 |------|------|------|------|
-| LOCATION | string | 取料位置 | `PICKUP_CUCUMBER`, `PICKUP_ROMAINE`, `PICKUP_RED_LEAF`, `WAIT_ZONE`, `MIX_ZONE` |
+| LOCATION | string | 取料位置 | `PICKUP_CUCUMBER`, `PICKUP_CARROT`, `PICKUP_CORN`, `WAIT_ZONE` |
 | ARM | string | 使用的手臂 | `F60_F` (左臂), `F60_R` (右臂) |
+| X_MM | float | 食材現實座標 X（mm），只有 `PICKUP_*` 食材點位會用到 | `120.50` |
+| Y_MM | float | 食材現實座標 Y（mm），只有 `PICKUP_*` 食材點位會用到 | `80.30` |
+| ANGLE_DEG | float | 食材旋轉角（0-180°，來自 YOLO OBB，非 OBB 模型只是估計值） | `45.00` |
 
 **有效位置**:
 ```python
-"PICKUP_CUCUMBER"      # 小黃瓜取料點
-"PICKUP_ROMAINE"       # 蘿蔓取料點
-"PICKUP_RED_LEAF"      # 紅卷須取料點
-"WAIT_ZONE"            # 等待區（中間位置）
-"MIX_ZONE"             # 搅拌區（混合所有菜色）
+"PICKUP_CUCUMBER"      # 小黃瓜取料點 — 座標由視覺即時給
+"PICKUP_CARROT"        # 紅蘿蔔取料點 — 座標由視覺即時給
+"PICKUP_CORN"          # 玉米筍取料點 — 座標由視覺即時給
+"WAIT_ZONE"            # 等待區（中間位置）— 固定教點，X/Y/ANGLE 欄位會被 AS 端忽略
 ```
+
+**X_MM/Y_MM/ANGLE_DEG 的規則**:
+- `PICKUP_CUCUMBER`／`PICKUP_CARROT`／`PICKUP_CORN`：送指令前必須先用 `VisionSystem.get_location_and_angle_mm()` 拍照偵測，拿到座標才組指令；**偵測不到就不送指令**，回報錯誤即可，不要用舊教點頂替。
+- `WAIT_ZONE` 等固定暫存區：沒有視覺目標，X/Y/ANGLE 傳 `0,0,0` 即可（AS 端會忽略，直接用教點）。
 
 **使用臂規則**:
 - 通常使用 `F60_F` (左臂) 進行取料操作
@@ -83,9 +89,8 @@ ERROR,<ERROR_CODE>     # 失敗，帶錯誤碼
 
 **例子**:
 ```
-PICKUP,PICKUP_CUCUMBER,F60_F
-PICKUP,WAIT_ZONE,F60_F
-PICKUP,MIX_ZONE,F60_F
+PICKUP,PICKUP_CUCUMBER,F60_F,120.50,80.30,45.00
+PICKUP,WAIT_ZONE,F60_F,0,0,0
 ```
 
 ---
@@ -101,7 +106,7 @@ CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>
 
 | 參數 | 類型 | 說明 | 範圍 |
 |------|------|------|------|
-| FOOD_TYPE | string | 食材類型 | `CUCUMBER`, `ROMAINE` |
+| FOOD_TYPE | string | 食材類型 | `CUCUMBER`, `CARROT`, `CORN` |
 | NUM_CUTS | int | 切割次數 | 1–20 |
 | CUT_THICKNESS_MM | float | 切割厚度 (mm) | > 0 |
 
@@ -110,27 +115,34 @@ CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>
 #### CUCUMBER (小黃瓜)
 
 - **方法**: SLICE (縱向切片)
-- **推薦切數**: 5–8 次
+- **推薦切數**: 5 次
 - **推薦厚度**: 4 mm
-- **總長度**: ~200–250 mm
 
 **例子**:
 ```
 CHOP,CUCUMBER,5,4      # 切 5 片，每片 4 mm
-CHOP,CUCUMBER,7,4      # 切 7 片，每片 4 mm
 ```
 
-#### ROMAINE (蘿蔓生菜)
+#### CARROT (紅蘿蔔)
 
-- **方法**: SEGMENT (分段切割)
-- **推薦切數**: 6–10 次
-- **推薦段長**: 30 mm
-- **總長度**: ~250–300 mm
+- **方法**: SLICE (縱向切片)
+- **推薦切數**: 5 次
+- **推薦厚度**: 4 mm
 
 **例子**:
 ```
-CHOP,ROMAINE,8,30      # 切 8 段，每段 30 mm
-CHOP,ROMAINE,10,25     # 切 10 段，每段 25 mm
+CHOP,CARROT,5,4        # 切 5 片，每片 4 mm
+```
+
+#### CORN (玉米筍)
+
+- **方法**: SLICE (縱向切片)
+- **推薦切數**: 5 次
+- **推薦厚度**: 4 mm
+
+**例子**:
+```
+CHOP,CORN,5,4          # 切 5 片，每片 4 mm
 ```
 
 **回應**:
@@ -383,30 +395,31 @@ BUSY                   # 忙碌中，請稍候
 
 ---
 
-#### 菜色 2: 蘿蔓生菜單品
+#### 菜色 2: 紅蘿蔔單品
 
 ```
 用戶輸入: 2
 指令序列:
-  1. PICKUP,PICKUP_ROMAINE,F60_F
-  2. CHOP,ROMAINE,8,30
+  1. PICKUP,PICKUP_CARROT,F60_F
+  2. CHOP,CARROT,5,4
   3. PLACE,SALAD_BOWL,POUR
 ```
 
-**流程時間**: ~35–45 秒
+**流程時間**: ~30–40 秒
 
 ---
 
-#### 菜色 3: 紅卷須生菜單品
+#### 菜色 3: 玉米筍單品
 
 ```
 用戶輸入: 3
 指令序列:
-  1. PICKUP,PICKUP_RED_LEAF,F60_F
-  2. PLACE,SALAD_BOWL,POUR
+  1. PICKUP,PICKUP_CORN,F60_F
+  2. CHOP,CORN,5,4
+  3. PLACE,SALAD_BOWL,POUR
 ```
 
-**流程時間**: ~15–20 秒（無切割）
+**流程時間**: ~30–40 秒
 
 ---
 
@@ -421,18 +434,19 @@ BUSY                   # 忙碌中，請稍候
   1.2. CHOP,CUCUMBER,5,4
   1.3. PLACE,WAIT_ZONE,SCOOP
 
-步驟 2: 生菜 → 搅拌區
-  2.1. PICKUP,PICKUP_ROMAINE,F60_F
-  2.2. CHOP,ROMAINE,8,30
+步驟 2: 紅蘿蔔 → 搅拌區
+  2.1. PICKUP,PICKUP_CARROT,F60_F
+  2.2. CHOP,CARROT,5,4
   2.3. PLACE,MIX_ZONE,SCOOP
 
 步驟 3: 等待區小黃瓜 → 搅拌區
   3.1. PICKUP,WAIT_ZONE,F60_F
   3.2. PLACE,MIX_ZONE,SCOOP
 
-步驟 4: 紅卷須 → 搅拌區
-  4.1. PICKUP,PICKUP_RED_LEAF,F60_F
-  4.2. PLACE,MIX_ZONE,SCOOP
+步驟 4: 玉米筍 → 搅拌區
+  4.1. PICKUP,PICKUP_CORN,F60_F
+  4.2. CHOP,CORN,5,4
+  4.3. PLACE,MIX_ZONE,SCOOP
 
 步驟 5: 翻炒
   5.1. FLIP,6,50
@@ -455,7 +469,7 @@ BUSY                   # 忙碌中，請稍候
 |------|---------|------|
 | PICKUP | LOCATION | 必須在有效位置列表中 |
 | PICKUP | ARM | 必須是 `F60_F` 或 `F60_R` |
-| CHOP | FOOD_TYPE | 必須是 `CUCUMBER` 或 `ROMAINE` |
+| CHOP | FOOD_TYPE | 必須是 `CUCUMBER`、`CARROT` 或 `CORN` |
 | CHOP | NUM_CUTS | 必須 > 0 |
 | CHOP | CUT_THICKNESS_MM | 必須 > 0 |
 | PLACE | LOCATION | 必須在有效位置列表中 |
@@ -487,9 +501,9 @@ from config_commands import (
     get_recipe_instructions, CommandParser
 )
 
-# 構建單個指令
-pickup_cmd = PickupCommand.create("PICKUP_CUCUMBER", "F60_F")
-print(pickup_cmd)  # 輸出: PICKUP,PICKUP_CUCUMBER,F60_F
+# 構建單個指令（X/Y/ANGLE 通常來自 VisionSystem.get_location_and_angle_mm()）
+pickup_cmd = PickupCommand.create("PICKUP_CUCUMBER", "F60_F", 120.50, 80.30, 45.00)
+print(pickup_cmd)  # 輸出: PICKUP,PICKUP_CUCUMBER,F60_F,120.50,80.30,45.00
 
 chop_cmd = ChopCommand.create("CUCUMBER", 5, 4)
 print(chop_cmd)    # 輸出: CHOP,CUCUMBER,5,4
@@ -533,8 +547,9 @@ else:
 | 版本 | 日期 | 修改內容 |
 |------|------|--------|
 | v1.0 | 2026/7/23 | 初版定案，支持四菜色模式 |
+| v1.1 | 2026/8/3 | PICKUP 新增 X_MM/Y_MM/ANGLE_DEG（食材點位改用 YOLO+手眼標定即時定位）；食材種類統一改為 CUCUMBER/CARROT/CORN，取代舊版的 ROMAINE/RED_LEAF，跟 `config_commands.py`/`config_phase.py`/`.as` 程式對齊 |
 
 ---
 
 **文檔維護者**: Zhang  
-**最後更新**: 2026/7/23
+**最後更新**: 2026/8/3

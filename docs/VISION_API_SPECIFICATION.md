@@ -90,7 +90,7 @@ def detect(image: np.ndarray) -> List[Dict]
 
 ```python
 {
-    'class_id': int,           # 類別 ID: 0=CUCUMBER, 1=ROMAINE, 2=RED_LEAF
+    'class_id': int,           # 類別 ID: 0=CUCUMBER, 1=CARROT, 2=CORN
     'class_name': str,         # 類別名稱: "CUCUMBER" 等
     'confidence': float,       # 信心度 (0.0-1.0)，閾值 ≥ 0.7
     'center_x_pixel': float,   # 中心點 X (像素座標)
@@ -128,7 +128,7 @@ for det in detections:
 
 ```
 CUCUMBER: (320.5, 240.3), confidence=0.92
-ROMAINE: (150.2, 180.4), confidence=0.88
+CARROT: (150.2, 180.4), confidence=0.88
 ```
 
 ---
@@ -357,7 +357,7 @@ def get_location_mm(
 
 | 參數 | 類型 | 說明 |
 |------|------|------|
-| food_name | str | "CUCUMBER", "ROMAINE", "RED_LEAF" |
+| food_name | str | "CUCUMBER", "CARROT", "CORN" |
 | image | np.ndarray | 輸入圖像 |
 
 **輸出**: `(x_mm, y_mm)` 或 `None` 如果未檢測到
@@ -373,6 +373,42 @@ if location:
     print(f"小黃瓜位置: ({x_mm:.1f}, {y_mm:.1f})")
 else:
     print("未檢測到小黃瓜")
+```
+
+---
+
+### VisionSystem.get_location_and_angle_mm()
+
+**簽名**:
+```python
+def get_location_and_angle_mm(
+    self,
+    food_name: str,
+    image: np.ndarray
+) -> Optional[Tuple[float, float, float]]
+```
+
+跟 `get_location_mm()` 一樣，但多回傳旋轉角，給 PICKUP 指令即時定位用（2026/8 起 PICKUP 的 X_MM/Y_MM/ANGLE_DEG 就是從這裡來的）。
+
+**輸入參數**:
+
+| 參數 | 類型 | 說明 |
+|------|------|------|
+| food_name | str | "CUCUMBER", "CARROT", "CORN" |
+| image | np.ndarray | 輸入圖像 |
+
+**輸出**: `(x_mm, y_mm, angle_deg)` 或 `None` 如果未檢測到；`angle_deg` 為 0-180°，只有 OBB 模型才是真實量測值（見 `angle_source` 欄位），目前無法分辨食材頭尾方向。
+
+**使用範例**:
+
+```python
+detection = vision.get_location_and_angle_mm("CUCUMBER", image)
+
+if detection:
+    x_mm, y_mm, angle_deg = detection
+    print(f"小黃瓜位置: ({x_mm:.1f}, {y_mm:.1f})，角度: {angle_deg:.1f}°")
+else:
+    print("未檢測到小黃瓜，不送 PICKUP 指令")
 ```
 
 ---
@@ -460,26 +496,27 @@ class PhaseController:
     def execute_pickup_phase(self, food_type: str, image: np.ndarray):
         """
         執行取料階段
-        
+
         Args:
-            food_type: "CUCUMBER", "ROMAINE", "RED_LEAF"
+            food_type: "CUCUMBER", "CARROT", "CORN"
             image: 現場圖像
         """
-        # 1. 使用視覺系統取得食材座標
-        location = self.vision.get_location_mm(food_type, image)
-        
-        if not location:
-            raise Exception(f"未檢測到食材: {food_type}")
-        
-        x_mm, y_mm = location
-        
-        # 2. 發送取料指令
-        self.comms.send_command('F60_F', f'PICKUP,PICKUP_{food_type},F60_F')
-        
+        # 1. 使用視覺系統取得食材座標＋旋轉角
+        detection = self.vision.get_location_and_angle_mm(food_type, image)
+
+        if not detection:
+            raise Exception(f"未檢測到食材: {food_type}，不送取料指令")
+
+        x_mm, y_mm, angle_deg = detection
+
+        # 2. 發送取料指令（座標/角度隨指令一起送給雙臂）
+        cmd = f'PICKUP,PICKUP_{food_type},F60_F,{x_mm:.2f},{y_mm:.2f},{angle_deg:.2f}'
+        self.comms.send_command_dual(cmd)
+
         # 3. 確認取料完成
         response = self.comms.send_command('F60_F', 'READY,F60_F')
-        
-        return location
+
+        return detection
 ```
 
 ---
@@ -530,8 +567,9 @@ class PhaseController:
 | 版本 | 日期 | 修改內容 |
 |------|------|--------|
 | v1.0 | 2026/7/23 | 初版定案 |
+| v1.1 | 2026/8/3 | 食材種類改為 CUCUMBER/CARROT/CORN；新增 `get_location_and_angle_mm()` API（PICKUP 視覺定位用） |
 
 ---
 
 **文檔維護者**: Wilson + Zhang  
-**最後更新**: 2026/7/23
+**最後更新**: 2026/8/3

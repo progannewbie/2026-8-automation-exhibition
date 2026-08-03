@@ -3,6 +3,7 @@ SmartCook 視覺系統 (Vision System)
 負責食材檢測、ArUco 標記、Hand-eye calibration
 """
 
+import math
 import os
 import cv2
 import numpy as np
@@ -76,13 +77,15 @@ class YOLODetector:
                 'center_y_pixel': float,
                 'width_pixel': float,
                 'height_pixel': float,
-                'angle_deg': float,
+                'angle_deg': float,       # 0-180°，來源見 angle_source
+                'angle_source': str,      # 'obb'：模型直接輸出的旋轉角，可信
+                                           # 'estimated'：非 OBB 模型，用長短邊粗略猜 0/90°
             }
         """
         if self.model is None:
             logger.error("✗ YOLO 模型未初始化")
             return []
-        
+
         try:
             # 執行推理
             results = self.model(
@@ -93,13 +96,48 @@ class YOLODetector:
                 device=YOLOConfig.DEVICE,
                 verbose=False
             )
-            
+
             detections = []
-            
+
             # 提取檢測結果
             for result in results:
+                # OBB (Oriented Bounding Box) 模型會有 result.obb，直接附旋轉角，
+                # 精準度遠比用長寬猜的好，優先使用；一般 (軸對齊) 模型才 fallback 到 boxes。
+                # 注意：OBB 模型即使這張畫面 0 個偵測，result.obb 也不是 None（只是空的），
+                # 但 result.boxes 在 OBB 模型上本來就是 None——用 obb is not None 判斷任務
+                # 類型即可，不能再用 len(obb) > 0，不然 0 偵測那幀會誤判成一般模型，
+                # 掉進下面的 for box in boxes 對 None 做 iterate 而炸掉。
+                obb = getattr(result, 'obb', None)
+
+                if obb is not None:
+                    for i in range(len(obb)):
+                        center_x, center_y, width, height, rot_rad = (
+                            obb.xywhr[i].cpu().numpy().tolist()
+                        )
+                        class_id = int(obb.cls[i].cpu().numpy())
+                        confidence = float(obb.conf[i].cpu().numpy())
+
+                        if confidence < YOLOConfig.CONFIDENCE_THRESHOLD:
+                            continue
+
+                        class_name = YOLOConfig.CLASSES.get(class_id, "UNKNOWN")
+                        angle_deg = math.degrees(rot_rad) % 180.0
+
+                        detections.append({
+                            'class_id': class_id,
+                            'class_name': class_name,
+                            'confidence': confidence,
+                            'center_x_pixel': center_x,
+                            'center_y_pixel': center_y,
+                            'width_pixel': width,
+                            'height_pixel': height,
+                            'angle_deg': angle_deg,
+                            'angle_source': 'obb',
+                        })
+                    continue  # 這個 result 已經用 OBB 取完，不再重複用 boxes 算一次
+
                 boxes = result.boxes
-                
+
                 for box in boxes:
                     # 取得邊界框
                     x1, y1, x2, y2 = box.xyxy[0].cpu().numpy()
@@ -107,23 +145,20 @@ class YOLODetector:
                     center_y = (y1 + y2) / 2.0
                     width = x2 - x1
                     height = y2 - y1
-                    
+
                     # 類別與信心度
                     class_id = int(box.cls[0].cpu().numpy())
                     confidence = float(box.conf[0].cpu().numpy())
                     class_name = YOLOConfig.CLASSES.get(class_id, "UNKNOWN")
-                    
-                    # 提取方向角（來自 YOLO OBB 輸出或估計）
-                    # 簡化版本：假設從邊界框寬高推估
-                    if height > width:
-                        angle_deg = 90.0  # 豎直
-                    else:
-                        angle_deg = 0.0   # 水平
-                    
+
                     # 濾除低信心度檢測
                     if confidence < YOLOConfig.CONFIDENCE_THRESHOLD:
                         continue
-                    
+
+                    # 非 OBB 模型沒有真正的旋轉角，只能用長短邊粗略猜 0°/90°，
+                    # 準確度有限，僅供參考 (angle_source 標成 'estimated')
+                    angle_deg = 90.0 if height > width else 0.0
+
                     detection = {
                         'class_id': class_id,
                         'class_name': class_name,
@@ -133,13 +168,14 @@ class YOLODetector:
                         'width_pixel': width,
                         'height_pixel': height,
                         'angle_deg': angle_deg,
+                        'angle_source': 'estimated',
                     }
-                    
+
                     detections.append(detection)
-            
+
             logger.info(f"✓ 檢測到 {len(detections)} 個食材")
             return detections
-            
+
         except Exception as e:
             logger.error(f"✗ YOLO 推理失敗: {e}")
             return []
@@ -162,9 +198,7 @@ class ArUcoDetector:
     def __init__(self):
         """初始化 ArUco 檢測器"""
         try:
-            self.aruco_dict = cv2.getPredefinedDictionary(
-                cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100)
-            )
+            self.aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_5X5_100)
             self.detector = cv2.aruco.ArucoDetector(self.aruco_dict)
             logger.info("✓ ArUco 檢測器已初始化")
         except Exception as e:
@@ -409,6 +443,73 @@ class VisionSystem:
         
         return detections
     
+    def capture_frame(self) -> Optional[np.ndarray]:
+        """
+        從相機拍攝一張畫面（取料前視覺確認用）
+
+        Returns:
+            BGR 影像，或 None 如果相機無法使用（失敗時不拋出例外，交由呼叫端決定如何處理）
+        """
+        try:
+            cap = cv2.VideoCapture(VisionProcessingConfig.CAMERA_INDEX)
+            if not cap.isOpened():
+                logger.warning(f"⚠️ 無法開啟相機 index={VisionProcessingConfig.CAMERA_INDEX}")
+                return None
+
+            width, height = VisionProcessingConfig.CAMERA_RESOLUTION
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, width)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, height)
+
+            # 丟棄暖機畫面，避免用到自動曝光/白平衡還沒穩定的第一張
+            for _ in range(VisionProcessingConfig.CAMERA_WARMUP_FRAMES):
+                cap.read()
+
+            ok, frame = cap.read()
+            cap.release()
+
+            if not ok:
+                logger.warning("⚠️ 相機已開啟，但讀取畫面失敗")
+                return None
+
+            return frame
+
+        except Exception as exc:
+            logger.warning(f"⚠️ 相機拍照異常: {exc}")
+            return None
+
+    def verify_food_present(self, food_type: str) -> bool:
+        """
+        取料前的視覺確認：拍照後用 YOLO 檢查指定食材是否存在
+
+        只做「有沒有偵測到」的確認，不影響送給機器人的指令內容（CSV 通訊格式不變）。
+        YOLO 模型未載入或相機無法使用時，視為確認能力暫時不可用，回傳 True 讓流程照常進行，
+        避免視覺子系統本身的問題連帶擋住整條取料流程。
+
+        Args:
+            food_type: 期望偵測到的食材類別（例如 "CUCUMBER"、"CARROT"、"CORN"）
+
+        Returns:
+            True：偵測到該食材，或確認能力目前不可用；False：確實沒偵測到
+        """
+        if self.yolo_detector.model is None:
+            logger.warning(f"⚠️ YOLO 模型未載入，略過取料前確認: {food_type}")
+            return True
+
+        image = self.capture_frame()
+        if image is None:
+            logger.warning(f"⚠️ 無法取得相機畫面，略過取料前確認: {food_type}")
+            return True
+
+        detections = self.yolo_detector.detect(image)
+        found = any(d['class_name'] == food_type for d in detections)
+
+        if found:
+            logger.info(f"✓ 視覺確認: 偵測到 {food_type}")
+        else:
+            logger.warning(f"⚠️ 視覺確認: 未偵測到 {food_type}")
+
+        return found
+
     def detect_aruco_markers(self, image: np.ndarray) -> List[Dict]:
         """
         檢測 ArUco 標記
@@ -436,18 +537,48 @@ class VisionSystem:
         取得食材在現實世界中的座標
         
         Args:
-            food_name: 食材名稱 ("CUCUMBER", "ROMAINE", "RED_LEAF")
+            food_name: 食材名稱 ("CUCUMBER", "CARROT", "CORN")
             image: 輸入圖像
         
         Returns:
             (x_mm, y_mm) 或 None 如果未檢測到食材
         """
         detections = self.detect_foods(image)
-        
+
         for detection in detections:
             if detection['class_name'] == food_name:
                 return (detection['center_x_mm'], detection['center_y_mm'])
-        
+
+        logger.warning(f"⚠️ 未檢測到食材: {food_name}")
+        return None
+
+    def get_location_and_angle_mm(
+        self, food_name: str, image: np.ndarray
+    ) -> Optional[Tuple[float, float, float]]:
+        """
+        取得食材在現實世界中的座標與旋轉角，給 PICKUP 指令即時定位用
+
+        角度直接沿用 YOLODetector 輸出的 angle_deg（0-180°，OBB 模型才是真實量測值，
+        非 OBB 模型只是用長寬猜的估計值，見 YOLODetector.detect() 的 angle_source）。
+        目前無法分辨食材頭尾方向 (0-360°)，只到 180° 週期。
+
+        Args:
+            food_name: 食材名稱 ("CUCUMBER", "CARROT", "CORN")
+            image: 輸入圖像
+
+        Returns:
+            (x_mm, y_mm, angle_deg) 或 None 如果未檢測到食材
+        """
+        detections = self.detect_foods(image)
+
+        for detection in detections:
+            if detection['class_name'] == food_name:
+                return (
+                    detection['center_x_mm'],
+                    detection['center_y_mm'],
+                    detection['angle_deg'],
+                )
+
         logger.warning(f"⚠️ 未檢測到食材: {food_name}")
         return None
 

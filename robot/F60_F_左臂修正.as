@@ -1,107 +1,68 @@
-.PROGRAM INIT_SWITCHES()
-  CP ON                    ; ßBÀmÜ‰ÛEÖÆÓù„Ó×÷ ÓÐÐ§ ¡ª LMOVE/DRAW ßBÀm„Ó×÷(ÇÐ¸î¡¢·­³´)Æ½»¬ã•½ÓÐèÒª
-  CHECK.HOLD OFF           ; •ºÍ£ î‘BÏÂÐ¡æI±P†¢„Ó ŸoÐ§
-  CYCLE.STOP OFF           ; Íâ²¿•ºÍ£•r×Ô„Óß\ÞDÍ£Ö¹ ŸoÐ§
-  MESSAGES ON              ; ÓÏ¢Ý”³ö ÓÐÐ§ ¡ª ±¾³ÌÊ½´óÁ¿ÓÃ PRINT ³ýåeÓÏ¢£¬ÐèÒªé_†¢²Å¿´µÃµ½
-  OX.PREOUT ON             ; OXÐÅÌ–Ý”³ö•r™C „Ó×÷é_Ê¼•r
-  PREFETCH.SIGINS OFF      ; ASÝ”³öÈëÐÅÌ–ÏÈ×xÈ¡ ½ûÖ¹
-  QTOOL OFF                ; ½ÌŒ§•rTOOLÙYÁÏÏÈ×Ô„ÓÇÐ“Q ŸoÐ§ ¡ª ±¾³ÌÊ½ÓÐ LEFT_SPATULA/ha_flip ƒÉ½M TOOL£¬½Ìüc•r±ÜÃâ×Ô„ÓÇÐ“QÔì³É½Ìµ½åeµÄ×ù˜ËÏµ
-  RPS ON                   ; Íâ²¿³ÌÊ½ßx“ñ ÓÐÐ§
-  SCREEN ON                ; ®‹Ãæ±íÊ¾ÖÆÓùÒ»•rÍ£Ö¹ ÓÐÐ§
-  REP_ONCE OFF             ; REPEAT»Ø”µ ßBÀm
-  STP_ONCE OFF             ; STEPŒÐÐ ßBÀm
-  AUTOSTART.PC ON          ; ¿ØÖÆëŠÔ´ON•rPC1×Ô„Óé_Ê¼ ¡ª Õ¹ˆö”àëŠÖØé_áá×Ô„ÓˆÌÐÐ MAIN£¬²»ÐèÈË¹¤°´ EXECUTE
-  AUTOSTART2.PC ON         ; ¿ØÖÆëŠÔ´ON•rPC2×Ô„Óé_Ê¼
-  AUTOSTART3.PC OFF        ; ¿ØÖÆëŠÔ´ON•rPC3×Ô„Óé_Ê¼
-  AUTOSTART4.PC OFF        ; ¿ØÖÆëŠÔ´ON•rPC4×Ô„Óé_Ê¼
-  AUTOSTART5.PC OFF        ; ¿ØÖÆëŠÔ´ON•rPC5×Ô„Óé_Ê¼
-  ERRSTART.PC OFF          ; ERROR•rPCé_Ê¼ ŸoÐ§
-  DISPIO_01 OFF            ; IO±íÊ¾·½Ê½ O,X
-  ABS.SPEED OFF            ; ½^Œ¦ËÙ¶È„Ó×÷ ŸoÐ§
-  SLOW_START OFF           ; µÍËÙSTART™CÄÜ ŸoÐ§
-  AFTER.WAIT.TMR OFF       ; º†Ò×WXé_Ê¼Timing ÝSÒ»ÖÂáá
-.END
 .PROGRAM INIT_CONST()
-  ; ÊÖ±Û×R„e
+  ; æ‰‹è‡‚è­˜åˆ¥
   $this_arm = "F60_F"
 
-  ; --- TCP Í¨Ó…¢”µ ---
+  ; --- TCP é€šè¨Šåƒæ•¸ ---
   port = 9000
   max_length = 255
-  tout_accept = 5      ; TCP_ACCEPT Óâ•r (Ãë)£¬Óâ•ráá»Øµ½Þ’È¦ÖØÐÂµÈ´ý
-  tout_recv = 10        ; TCP_RECV Óâ•r (Ãë)£¬PC ¶ËÐÄÌøÃ¿ 3 ÃëÒ»´Î
-  tout_send = 5
+  tout_accept = 5      ; TCP_ACCEPT é€¾æ™‚ (ç§?ï¼Œé€¾æ™‚å¾Œå›žåˆ°è¿´åœˆé‡æ–°ç­‰å¾?  tout_recv = 10        ; TCP_RECV é€¾æ™‚ (ç§?ï¼ŒPC ç«¯å¿ƒè·³æ¯ 3 ç§’ä¸€æ¬?  tout_send = 5
 
-  ; --- I/O ÓÌ–¾ŽÌ– (ëp±Û¹²ÓÃÍ¬Ò»½M½»ÎÕÓÌ–£¬ëŠ¿ØÒÑ´_ÕJžé×î½KÅä¾€Öµ) ---
-  ; ÒÀ AS ÕZÑÔ‘TÀý£¬Íâ²¿Ý”³öÓÌ–ÓÃÐ¡Ì–´a£¬Íâ²¿Ý”ÈëÓÌ–Ä 1001 ÆðËã
-  ; (…¢ÕÕ AS Language Reference Manual 6.7 ¹ ON/SIGNAL ¿ÉÓÃÓÌ–¹ ‡ú)¡£
-  sig_out_step = 1        ; Ý”³ö: ±¾±ÛÍê³ÉÄ¿Ç°ëA¶Î ¡ú F60_R
-  sig_in_step = 1001       ; Ý”Èë: F60_R Íê³ÉÄ¿Ç°ëA¶Î ¡û F60_R
+  ; --- I/O è¨Šè™Ÿç·¨è™Ÿ (é›™è‡‚å…±ç”¨åŒä¸€çµ„äº¤æ¡è¨Šè™Ÿï¼Œä½”ä½å€¼ï¼Œå¾…é›»æŽ§ç¢ºèª? ---
+  ; ä¾?AS èªžè¨€æ…£ä¾‹ï¼Œå¤–éƒ¨è¼¸å‡ºè¨Šè™Ÿç”¨å°è™Ÿç¢¼ï¼Œå¤–éƒ¨è¼¸å…¥è¨Šè™Ÿå¾?1001 èµ·ç®—
+  ; (åƒç…§ AS Language Reference Manual 6.7 ç¯€ ON/SIGNAL å¯ç”¨è¨Šè™Ÿç¯„åœ)ã€?  sig_out_step = 1        ; è¼¸å‡º: æœ¬è‡‚å®Œæˆç›®å‰éšŽæ®µ â†?F60_R
+  sig_in_step = 1001       ; è¼¸å…¥: F60_R å®Œæˆç›®å‰éšŽæ®µ â†?F60_R
 
-  ; --- „Ó×÷…¢”µ (¿ÉÒÀ¬FˆöÔ‡ÇÐÕ{Õû£¬†ÎÎ» mm/deg) ---
+  ; --- å‹•ä½œåƒæ•¸ (å¯ä¾ç¾å ´è©¦åˆ‡èª¿æ•´ï¼Œå–®ä½?mm/deg) ---
   appro_mm = 80.0
   chop_down_mm = 40.0
   flip_up_mm = 90.0
   pour_tilt_deg = 90.0
-  converge_dx = 20.0      ; PICKUP ¼¯ÖÐëA¶Î£ºF60_F ÍùÖÐÐÄÆ½ÒÆÁ¿ (·½Ïò´ý¬Fˆö´_ÕJ)
+  converge_dx = 20.0      ; PICKUP é›†ä¸­éšŽæ®µï¼šF60_F å¾€ä¸­å¿ƒå¹³ç§»é‡?(æ–¹å‘å¾…ç¾å ´ç¢ºèª?
   converge_dy = 0.0
 
-  ; --- Óâ•rÔO¶¨ (Ãë) ---
-  timeout_io_sec = 30.0
-  timeout_flip_sec = 30.0
+  ; --- é€¾æ™‚è¨­å®š (ç§? ---
+  timeout_io_sec = 5.0
+  timeout_flip_sec = 5.0
 
   robot_busy = 0
   $rxbuf = ""
 .END
 .PROGRAM INIT_POINTS()
-  POINT ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: ™…Ãæ×óÏÂ½Ç»ùœÊüc (íšÔÚ BASE ba ÉúÐ§áá½Ìüc£¬ÒŠ INIT_TOOL)
+  POINT ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: æª¯é¢å·¦ä¸‹è§’åŸºæº–é»ž (F60_F è‡ªèº«åŸºåº§åº§æ¨™ç³?
 
-  ; --- ÒÔÏÂ X,Y,Z,Angle ½Ôžé×Î» 0£¬´ý CALIBRATION_POINTS.csv ˜Ë¶¨Íê³ÉááÌîÈë ---
-  POINT PICKUP_CUCUMBER = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle ¡û CSV
-  POINT PICKUP_CARROT = ORIGIN + TRANS(0,0,0,0,0,0)     ; X,Y,Z,Angle ¡û CSV
-  POINT PICKUP_CORN = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z,Angle ¡û CSV
-  POINT WAIT_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)         ; X,Y,Z ¡û CSV
-  POINT MIX_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)          ; X,Y,Z ¡û CSV
-  POINT WORK_CHOP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ¡û CSV
-  POINT WORK_FLIP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ¡û CSV
-  POINT SALAD_BOWL = ORIGIN + TRANS(0,0,0,0,0,0)        ; X,Y,Z ¡û CSV (ArUco ID 102 ÝoÖú˜Ë¶¨)
-  POINT WASTE_CORNER = ORIGIN + TRANS(0,0,0,0,0,0)      ; X,Y,Z ¡û CSV
+  ; --- ä»¥ä¸‹ X,Y,Z,Angle çš†ç‚ºä½”ä½ 0ï¼Œå¾… CALIBRATION_POINTS.csv æ¨™å®šå®Œæˆå¾Œå¡«å…?---
+  POINT PICKUP_CUCUMBER = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle â†?CSV
+  POINT PICKUP_CARROT = ORIGIN + TRANS(0,0,0,0,0,0)     ; X,Y,Z,Angle â†?CSV
+  POINT PICKUP_CORN = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z,Angle â†?CSV
+  POINT WAIT_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)         ; X,Y,Z â†?CSV
+  POINT MIX_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)          ; X,Y,Z â†?CSV
+  POINT WORK_CHOP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z â†?CSV
+  POINT WORK_FLIP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z â†?CSV
+  POINT SALAD_BOWL = ORIGIN + TRANS(0,0,0,0,0,0)        ; X,Y,Z â†?CSV (ArUco ID 102 è¼”åŠ©æ¨™å®š)
+  POINT WASTE_CORNER = ORIGIN + TRANS(0,0,0,0,0,0)      ; X,Y,Z â†?CSV
 
-  ; HOME_LEFT ÔÚÏà™CÅÄ²»µ½µÄ¸ßÌŽ£¬Åc™…Ãæ×ù˜ËÏµŸoêP£¬¾S³ÖªšÁ¢½^Œ¦üc
-  ;POINT HOME_LEFT = TRANS(0,0,0,0,0,0)   ; PTEACH (ÊÖ¹¤˜Ë¶¨£¬Ê¾½ÌºÐ)
+  ; HOME_LEFT åœ¨ç›¸æ©Ÿæ‹ä¸åˆ°çš„é«˜è™•ï¼Œèˆ‡æª¯é¢åº§æ¨™ç³»ç„¡é—œï¼Œç¶­æŒç¨ç«‹çµ•å°é»ž
+  POINT HOME_LEFT = TRANS(0,0,0,0,0,0)   ; PTEACH (æ‰‹å·¥æ¨™å®šï¼Œç¤ºæ•™ç›’)
 
   ; -----------------------------------------------------------------
-  ; ·­³´„Ó×÷ücÎ» (lturn45/90/135)£¬¼Ü˜‹…¢¿¼ Ô­³ÌÊ½/rs_f.as ÑeµÄ
-  ; lturn45()/lturn90()/lturn135()¡£ß@Ð©ücÎ»¸ú±¾™n°¸ÆäËûücÎ»Ê¹ÓÃµÄ
-  ; BASE ba / TOOL LEFT_SPATULA ²»ÊÇÍ¬Ò»‚€×ù˜ËÏµ£¬ÊÇÔÚŒ£ŒÙµÄ
-  ; ba_flip (BASE) / ha_flip (TOOL) µ×ÏÂ½ÌµÄ£¬Ö»ÄÜÔÚ DO_FLIP ÑeÇÐµ½
-  ; ba_flip/ha_flip Ö®áá²ÅÄÜÓÃ£¬ÓÃÍêÒªÇÐ»Øí¡£
-  ; ÒÔÏÂ½Ôžé×Î»Öµ£¬´ý¬FˆöÊÖ„ÓÊ¾½Ì¡£
-  ; -----------------------------------------------------------------
-  POINT ba_flip = TRANS(0, -39, 0, 90, 90, 0)   ; PTEACH: ·­³´ÓÃ BASE£¬´ýÊÖ„ÓÐ£üc
-  POINT ha_flip = TRANS(50, -230, 50, -90, 240, 90)   ; PTEACH: ·­³´ÓÃ TOOL£¬´ýÊÖ„ÓÐ£üc
+  ; ç¿»ç‚’å‹•ä½œé»žä½ (lturn45/90/135)ï¼Œæž¶æ§‹åƒè€?åŽŸç¨‹å¼?rs_f.as è£¡çš„
+  ; lturn45()/lturn90()/lturn135()ã€‚é€™äº›é»žä½è·Ÿæœ¬æª”æ¡ˆå…¶ä»–é»žä½ä½¿ç”¨çš?  ; BASE NULL / TOOL LEFT_SPATULA ä¸æ˜¯åŒä¸€å€‹åº§æ¨™ç³»ï¼Œæ˜¯åœ¨å°ˆå±¬çš„
+  ; ba_flip (BASE) / ha_flip (TOOL) åº•ä¸‹æ•™çš„ï¼Œåªèƒ½åœ¨ DO_FLIP è£¡åˆ‡åˆ?  ; ba_flip/ha_flip ä¹‹å¾Œæ‰èƒ½ç”¨ï¼Œç”¨å®Œè¦åˆ‡å›žä¾†ã€?  ; ä»¥ä¸‹çš†ç‚ºä½”ä½å€¼ï¼Œå¾…ç¾å ´æ‰‹å‹•ç¤ºæ•™ã€?  ; -----------------------------------------------------------------
+  POINT ba_flip = TRANS(0,0,0,0,0,0)   ; PTEACH: ç¿»ç‚’ç”?BASEï¼Œå¾…æ‰‹å‹•æ ¡é»ž
+  POINT ha_flip = TRANS(0,0,0,0,0,0)   ; PTEACH: ç¿»ç‚’ç”?TOOLï¼Œå¾…æ‰‹å‹•æ ¡é»ž
 
-;  POINT lturn45_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn45_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn45_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;
-;  POINT lturn90_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn90_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn90_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;
-;  POINT lturn135_ready  = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn135_down   = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn135_turn   = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn135_turn10 = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
-;  POINT lturn135_turn20 = TRANS(0,0,0,0,0,0)   ; PTEACH: ´ýÊÖ„ÓÐ£üc
+  POINT lturn45_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn45_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn45_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?
+  POINT lturn90_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn90_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn90_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?
+  POINT lturn135_ready  = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn135_down   = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn135_turn   = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn135_turn10 = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?  POINT lturn135_turn20 = TRANS(0,0,0,0,0,0)   ; PTEACH: å¾…æ‰‹å‹•æ ¡é»?.END
+
+; ---------------------------------------------------------------------
+; åˆ€å…·åº§æ¨™è¨­å®?(TOOL)ã€‚çœŸå¯¦ç”¢ç·šç¨‹å¼ä¸€å¾‹æœƒå…ˆè¨­å¥?BASE/TOOL æ‰é–‹å§‹å‹•ä½œï¼Œ
+; é€™è£¡å…ˆå‰éºæ¼äº†â€”â€”æ²’è¨­å®š TOOL æ™‚ï¼ŒDRAW/TDRAW æœƒç”¨é è¨­çš„æ³•è˜­é¢åº§æ¨™ç³?; è¨ˆç®—ï¼Œè·ŸéŸå­å¯¦éš›æœ«ç«¯åç§»å°ä¸ä¸Šï¼Œå°¤å…¶å½±éŸ¿ TDRAW çš„å‚¾å€’æ‰‹å‹¢ã€?; ---------------------------------------------------------------------
 .END
 .PROGRAM INIT_TOOL()
   BASE NULL
-  POINT ba = TRANS(0, -39, 0, 90, 90, 0)                    ; »ùµA×ù˜Ë (Ô­³ÌÊ½ rs_f.as init1222())
-  BASE ba
-  POINT LEFT_SPATULA = TRANS(50, -230, 50, -90, 240, 90)    ; ×óçP¹¤¾ß×ù˜Ë (Ô­³ÌÊ½ rs_f.as init1222()£¬ÑØÓÃÍ¬Ò»Ö§çP¾ß)
+  POINT LEFT_SPATULA = TRANS(0,0,0,0,0,0)   ; PTEACH: å·¦éŸ(é–‹åˆƒ)ç›¸å°æ³•è˜­é¢çš„åç§»ï¼Œå¾…é‡æ¸¬/æ•™é»ž
   TOOL LEFT_SPATULA
-  POINT ha_pickup = TRANS(0, 0, 0, 0, 0, 0)   ; PTEACH: PICKUP/PLACE Œ£ÓÃçP¾ß×Ë„Ý£¬´ýÊÖ„ÓÐ£üc
 .END
 .PROGRAM heartput()
   JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
@@ -109,7 +70,6 @@
 .PROGRAM MAIN()
   CALL heartput
 
-  CALL INIT_SWITCHES
   CALL INIT_CONST
   CALL INIT_POINTS
   CALL INIT_TOOL
@@ -148,14 +108,14 @@
 .END
 .PROGRAM CLEAN_SOCKET()
   IF sock_open_flag == 1 THEN
-    PRINT "‚Éœyµ½ÉÏ´ÎšˆÁôµÄßB¾€ sock_id=", sock_id, "£¬ÏÈêPé]ÔÙÀ^Àm"
+    PRINT "åµæ¸¬åˆ°ä¸Šæ¬¡æ®˜ç•™çš„é€£ç·š sock_id=", sock_id, "ï¼Œå…ˆé—œé–‰å†ç¹¼çº?"
     CALL DISCONNECT
   END
   TCP_END_LISTEN eret, port
   IF eret < 0 THEN
-    PRINT "TCP_END_LISTEN †¢„ÓÇåÀí »Ø‚÷=", eret, "£¨±¾í¾Í›]ÓÐšˆÁô±OÂ £¬Õý³£¬FÏó£©"
+    PRINT "TCP_END_LISTEN å•Ÿå‹•æ¸…ç† å›žå‚³=", eret, "ï¼ˆæœ¬ä¾†å°±æ²’æœ‰æ®˜ç•™ç›£è½ï¼Œæ­£å¸¸ç¾è±¡ï¼‰"
   ELSE
-    PRINT "TCP_END_LISTEN †¢„ÓÇåÀí ³É¹¦£¬ÒÑáŒ·ÅÉÏ´ÎšˆÁôµÄ±OÂ  î‘B"
+    PRINT "TCP_END_LISTEN å•Ÿå‹•æ¸…ç† æˆåŠŸï¼Œå·²é‡‹æ”¾ä¸Šæ¬¡æ®˜ç•™çš„ç›£è½ç‹€æ…?"
   END
 .END
 .PROGRAM OPEN_LISTEN()
@@ -203,7 +163,7 @@ listen:
     END
     TCP_RECV rret, sock_id, $recv_buf[1], recv_n, tout_recv, max_length
     IF rret < 0 THEN
-      IF rret <> -34024 THEN   ; -34024 = E4024 Í¨ÐÅÓâ•r£¬Ö»ÊÇ•º•r›]ÐÂÙYÁÏ£¬²»ÊÇ”à¾€
+      IF rret <> -34024 THEN   ; -34024 = E4024 é€šä¿¡é€¾æ™‚ï¼Œåªæ˜¯æš«æ™‚æ²’æ–°è³‡æ–™ï¼Œä¸æ˜¯æ–·ç·š
         .rok = 0
         RETURN
       END
@@ -255,7 +215,7 @@ listen:
 
   SCASE $fld[1] OF
   SVALUE "PICKUP":
-    CALL DO_PICKUP($fld[2], $fld[3], VAL($fld[4]), VAL($fld[5]), VAL($fld[6]))
+    CALL DO_PICKUP($fld[2], $fld[3])
   SVALUE "CHOP":
     CALL DO_CHOP($fld[2], VAL($fld[3]), VAL($fld[4]))
   SVALUE "PLACE":
@@ -272,8 +232,6 @@ listen:
     CALL DO_STATUS($fld[2])
   SVALUE "READY":
     CALL DO_READY($fld[2])
-  SVALUE "IOTEST":
-    CALL DO_IOTEST($fld[2])
   ANY :
     CALL SEND_LINE("ERROR,E4021")
   END
@@ -296,56 +254,43 @@ listen:
     .ok = 0
   END
 .END
-.PROGRAM DO_IOTEST(.$op)
-  ; ¼ƒ I/O ½Ó¾€œyÔ‡£¬Ìøß^ SYNC_STEP/„Ó×÷Á÷³Ì£¬Ö±½Ó²Ù×÷/×xÈ¡ÓÌ–Ä_Î»
-  IF .$op == "ON" THEN
-    SIGNAL sig_out_step
-    CALL SEND_LINE("OK")
-  ELSE
-    IF .$op == "OFF" THEN
-      SIGNAL -sig_out_step
-      CALL SEND_LINE("OK")
-    ELSE
-      IF .$op == "READ" THEN
-        IF SIG(sig_in_step) THEN
-          CALL SEND_LINE("SIG,1")
-        ELSE
-          CALL SEND_LINE("SIG,0")
-        END
-      ELSE
-        CALL SEND_LINE("ERROR,E4001")
-      END
-    END
-  END
-.END
 .PROGRAM SYNC_STEP(.ok)
-  CALL WAIT_SIGNAL(sig_in_step, timeout_io_sec, ok1)
   SIGNAL sig_out_step
-  TIMER 1 = 0
-  WAIT TIMER(1) > 0.1
+  CALL WAIT_SIGNAL(sig_in_step, timeout_io_sec, ok1)
+  IF ok1 == 0 THEN
+    SIGNAL -sig_out_step
+    .ok = 0
+    RETURN
+  END
   SIGNAL -sig_out_step
-  .ok = ok1
+  CALL WAIT_SIGNAL_OFF(sig_in_step, timeout_io_sec, ok2)
+  .ok = ok2
 .END
-; .x_mm/.y_mm/.angle_deg£ºPC ¶Ë YOLO+ÊÖÑÛ˜Ë¶¨¼´•rËã³öµÄÊ³²Ä×ù˜Ë£¬Ö»ÓÐ
-; PICKUP_CUCUMBER/CARROT/CORN ß@Èý‚€Ê³²ÄücÎ»•þÓÃµ½£»WAIT_ZONE/MIX_ZONE
-; ÊÇ¹Ì¶¨•º´æ…^£¬›]ÓÐÒ•ÓXÄ¿˜Ë£¬¾S³ÖÓÃ½Ìüc£¬ß@Èý‚€…¢”µÖ±½ÓºöÂÔ¡£
-.PROGRAM DO_PICKUP(.$location, .$arm, .x_mm, .y_mm, .angle_deg)
+.PROGRAM DO_PICKUP(.$location, .$arm)
   IF .$arm <> "F60_F" THEN
     CALL SEND_LINE("ERROR,E4003")
     RETURN
   END
 
   found = 1
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_CORN" THEN
-    POINT target_pt = ORIGIN + TRANS(.x_mm, .y_mm, 0, 0, 0, .angle_deg)
+  IF .$location == "PICKUP_CUCUMBER" THEN
+    POINT target_pt = PICKUP_CUCUMBER
   ELSE
-    IF .$location == "WAIT_ZONE" THEN
-      POINT target_pt = WAIT_ZONE
+    IF .$location == "PICKUP_CARROT" THEN
+      POINT target_pt = PICKUP_CARROT
     ELSE
-      IF .$location == "MIX_ZONE" THEN
-        POINT target_pt = MIX_ZONE
+      IF .$location == "PICKUP_CORN" THEN
+        POINT target_pt = PICKUP_CORN
       ELSE
-        found = 0
+        IF .$location == "WAIT_ZONE" THEN
+          POINT target_pt = WAIT_ZONE
+        ELSE
+          IF .$location == "MIX_ZONE" THEN
+            POINT target_pt = MIX_ZONE
+          ELSE
+            found = 0
+          END
+        END
       END
     END
   END
@@ -357,84 +302,77 @@ listen:
 
   robot_busy = 1
   SPEED 40 ALWAYS
-  TOOL ha_pickup                        ; PICKUP Œ£ÓÃ×Ë„Ý/ßMÍË·½Ïò£¬½YÊøÇ°Ò»¶¨ÒªÇÐ»Ø LEFT_SPATULA
 
-  ; ëA¶Î 1: ¾Í¾w ¡ª ƒÉ±Û¸÷×Ôµ½Î»µ½È¡ÁÏücÕýÉÏ·½
-  LAPPRO target_pt, appro_mm
+  ; éšŽæ®µ 1: å°±ç·’ â€?å…©è‡‚å„è‡ªåˆ°ä½åˆ°å–æ–™é»žæ­£ä¸Šæ–?  LAPPRO target_pt, appro_mm
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL LEFT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  ; ëA¶Î 2: ÏÂ½µ ¡ª Ò»ÆðÏÂ½µµ½È¡ÁÏ¸ß¶È
+  ; éšŽæ®µ 2: ä¸‹é™ â€?ä¸€èµ·ä¸‹é™åˆ°å–æ–™é«˜åº¦
   LMOVE target_pt
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL LEFT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  ; ëA¶Î 3: ¼¯ÖÐ ¡ª ÍùÖÐégÊÕ”n (·½Ïò/¾àëxžé×Î»Ê¾Òâ£¬´ý¬FˆöÕ{Õû)
+  ; éšŽæ®µ 3: é›†ä¸­ â€?å¾€ä¸­é–“æ”¶æ” (æ–¹å‘/è·é›¢ç‚ºä½”ä½ç¤ºæ„ï¼Œå¾…ç¾å ´èª¿æ•?
   DRAW converge_dx, converge_dy, 0
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL LEFT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  ; ëA¶Î 4: Ì§Æð ¡ª Ò»ÆðÌ§Æðëxé_È¡ÁÏ…^
+  ; éšŽæ®µ 4: æŠ¬èµ· â€?ä¸€èµ·æŠ¬èµ·é›¢é–‹å–æ–™å€
   LDEPART appro_mm
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
-    TOOL LEFT_SPATULA
     robot_busy = 0
     RETURN
   END
 
-  TOOL LEFT_SPATULA
   robot_busy = 0
   CALL SEND_LINE("OK")
 .END
 .PROGRAM DO_CHOP(.$food, .cuts, .thick)
   IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "CORN" THEN
-    CALL SEND_LINE("ERROR,E4004")
+    CALL SEND_LINE ("ERROR,E4004")
     RETURN
   END
   IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
-    CALL SEND_LINE("ERROR,E4005")
+    CALL SEND_LINE ("ERROR,E4005")
     RETURN
   END
-
+  
   robot_busy = 1
   SPEED 30 ALWAYS
   LAPPRO WORK_CHOP_ZONE, appro_mm
   LMOVE WORK_CHOP_ZONE
-
+  
   i = 0
   DO
-    DRAW 0, 0, -chop_down_mm            ; ÏÂ‰ºÇÐ¸î
-    CALL SYNC_STEP(ok)                  ; Í¨Öª/µÈ´ý F60_R Íê³É±¾µ¶‰ºÁÏ²½ßM
+    DRAW 0, 0, -chop_down_mm            ; ä¸‹å£“åˆ‡å‰²
+    CALL SYNC_STEP (ok)                  ; é€šçŸ¥/ç­‰å¾… F60_R å®Œæˆæœ¬åˆ€å£“æ–™æ­¥é€?
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")     ; I/O ÐÅÌ–³¬•r (ëp±ÛÎÕÊÖ)
+      CALL SEND_LINE ("ERROR,E4023")     ; I/O ä¿¡è™Ÿè¶…æ™‚ (é›™è‡‚æ¡æ‰‹)
       robot_busy = 0
       RETURN
     END
-    DRAW 0, 0, chop_down_mm             ; ÌáçP
-    DRAW .thick, 0, 0                   ; ²½ßMµ½ÏÂÒ»µ¶Î»ÖÃ
+    DRAW 0, 0, chop_down_mm             ; æéŸ
+    DRAW .thick, 0, 0                   ; æ­¥é€²åˆ°ä¸‹ä¸€åˆ€ä½ç½®
     i = i + 1
   UNTIL i >= .cuts
-
+  
   LDEPART appro_mm
   robot_busy = 0
-  CALL SEND_LINE("OK")
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_PLACE(.$location, .$method)
   found = 1
@@ -455,46 +393,42 @@ listen:
       END
     END
   END
-
+  
   IF found == 0 THEN
-    CALL SEND_LINE("ERROR,E4002")
+    CALL SEND_LINE ("ERROR,E4002")
     RETURN
   END
   IF .$method <> "POUR" AND .$method <> "SCOOP" AND .$method <> "PUSH" THEN
-    CALL SEND_LINE("ERROR,E4001")
+    CALL SEND_LINE ("ERROR,E4001")
     RETURN
   END
-
+  
   robot_busy = 1
   SPEED 40 ALWAYS
-  TOOL ha_pickup                        ; PLACE Œ£ÓÃ×Ë„Ý/ßMÍË·½Ïò£¬½YÊøÇ°Ò»¶¨ÒªÇÐ»Ø LEFT_SPATULA
   LAPPRO target_pt, appro_mm
   LMOVE target_pt
-
+  
   IF .$method == "POUR" THEN
-    CALL SYNC_STEP(ok)                  ; Åc F60_R •þºÏ£¬Ò»ÆðƒAµ¹
+    CALL SYNC_STEP (ok)                  ; èˆ?F60_R æœƒåˆï¼Œä¸€èµ·å‚¾å€?
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL LEFT_SPATULA
+      CALL SEND_LINE ("ERROR,E4023")
       robot_busy = 0
       RETURN
     END
-    TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20   ; çP×ÓÀ@µ¶¾ß Y ÝSƒAµ¹ (½Ç¶ÈÒÀÖÎ¾ßÕ{Õû)
+    TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20   ; éŸå­ç¹žåˆ€å…?Y è»¸å‚¾å€?(è§’åº¦ä¾æ²»å…·èª¿æ•?
     TDRAW 0, 0, 0, 0, -pour_tilt_deg, 0, 20
   ELSE
     IF .$method == "PUSH" THEN
-      DRAW 0, 60, 0                     ; ÍÆ„ÓUÁÏÖÁ½ÇÂä (·½Ïò/¾àëx´ý¬FˆöÕ{Õû)
+      DRAW 0, 60, 0                     ; æŽ¨å‹•å»¢æ–™è‡³è§’è?(æ–¹å‘/è·é›¢å¾…ç¾å ´èª¿æ•?
     END
   END
-
+  
   LDEPART appro_mm
-  TOOL LEFT_SPATULA
   robot_busy = 0
-  CALL SEND_LINE("OK")
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_LTURN45(.ok)
   LMOVE lturn45_ready
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -502,9 +436,7 @@ listen:
   END
 
   LMOVE lturn45_down
-  BREAK
   LMOVE lturn45_turn
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -512,15 +444,12 @@ listen:
   END
 
   LMOVE lturn45_down
-  BREAK
   LMOVE lturn45_ready
-  BREAK
   CALL SYNC_STEP(s)
   .ok = s
 .END
 .PROGRAM DO_LTURN90(.ok)
   LMOVE lturn90_ready
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -528,9 +457,7 @@ listen:
   END
 
   LMOVE lturn90_down
-  BREAK
   LMOVE lturn90_turn
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -538,15 +465,12 @@ listen:
   END
 
   LMOVE lturn90_down
-  BREAK
   LMOVE lturn90_ready
-  BREAK
   CALL SYNC_STEP(s)
   .ok = s
 .END
 .PROGRAM DO_LTURN135(.ok)
   LMOVE lturn135_ready
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -554,11 +478,8 @@ listen:
   END
 
   LMOVE lturn135_down
-  BREAK
   LMOVE lturn135_turn
-  BREAK
   LMOVE lturn135_turn10
-  BREAK
   CALL SYNC_STEP(s)
   IF s == 0 THEN
     .ok = 0
@@ -566,9 +487,7 @@ listen:
   END
 
   LMOVE lturn135_turn20
-  BREAK
   LMOVE lturn135_ready
-  BREAK
   CALL SYNC_STEP(s)
   .ok = s
 .END
@@ -589,31 +508,31 @@ listen:
 
   i = 0
   DO
-    ; ëA¶Î 1£º90¡ã/90¡ã ÅäŒ¦
+    ; éšŽæ®µ 1ï¼?0Â°/90Â° é…å°
     CALL DO_LTURN90(ok)
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
-      BASE ba
+      BASE NULL
       TOOL LEFT_SPATULA
       robot_busy = 0
       RETURN
     END
 
-    ; ëA¶Î 2£º135¡ã/45¡ã ÅäŒ¦ (±¾±Û 135¡ã)
+    ; éšŽæ®µ 2ï¼?35Â°/45Â° é…å° (æœ¬è‡‚ 135Â°)
     CALL DO_LTURN135(ok)
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
-      BASE ba
+      BASE NULL
       TOOL LEFT_SPATULA
       robot_busy = 0
       RETURN
     END
 
-    ; ëA¶Î 3£º45¡ã/135¡ã ÅäŒ¦ (±¾±Û 45¡ã)
+    ; éšŽæ®µ 3ï¼?5Â°/135Â° é…å° (æœ¬è‡‚ 45Â°)
     CALL DO_LTURN45(ok)
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")
-      BASE ba
+      BASE NULL
       TOOL LEFT_SPATULA
       robot_busy = 0
       RETURN
@@ -622,7 +541,7 @@ listen:
     i = i + 1
   UNTIL i >= .cycles
 
-  BASE ba
+  BASE NULL
   TOOL LEFT_SPATULA
   robot_busy = 0
   CALL SEND_LINE("OK")
@@ -633,7 +552,7 @@ listen:
     RETURN
   END
   robot_busy = 1
-  SPEED 20 ALWAYS                        ; ÍšwÊ¹ÓÃÝ^µÍ°²È«ËÙ¶È
+  SPEED 20 ALWAYS                        ; å¾©æ­¸ä½¿ç”¨è¼ƒä½Žå®‰å…¨é€Ÿåº¦
   LMOVE HOME_LEFT
   robot_busy = 0
   CALL SEND_LINE("OK")
@@ -674,18 +593,16 @@ listen:
 .PROGRAM Comment___ () ; Comments for IDE. Do not use.
 	; @@@ PROJECT @@@
 	; @@@ PROJECTNAME @@@
-	; F60_F_×ó±Û_GBK
+	; F60_F_×ó±ÛÐÞÕý
 	; @@@ HISTORY @@@
-	; 01.08.2026 18:24:50
-	;
+	; 31.07.2026 17:36:13
+	; 
 	; @@@ INSPECTION @@@
 	; @@@ CONNECTION @@@
 	; Rs07_F
 	; 192.168.5.2
 	; 23
 	; @@@ PROGRAM @@@
-	; 0:INIT_SWITCHES:F
-	; .PC
 	; 0:INIT_CONST:F
 	; 0:INIT_POINTS:F
 	; 0:INIT_TOOL:F
@@ -695,40 +612,21 @@ listen:
 	; 0:CLEAN_SOCKET:F
 	; 0:OPEN_LISTEN:F
 	; 0:WAIT_ACCEPT:F
-	; .accepted
 	; 0:DO_HANDSHAKE:F
-	; .ok
 	; 0:RECV_LINE:F
-	; .rok
 	; 0:SEND_LINE:F
 	; 0:SPLIT_CSV:F
 	; 0:DISPATCH:F
 	; 0:WAIT_SIGNAL:F
-	; .sig_no
-	; .timeout_sec
-	; .ok
 	; 0:WAIT_SIGNAL_OFF:F
-	; .sig_no
-	; .timeout_sec
-	; .ok
-	; 0:DO_IOTEST:F
-	; .op
 	; 0:SYNC_STEP:F
-	; .ok
 	; 0:DO_PICKUP:F
 	; 0:DO_CHOP:F
-	; .cuts
-	; .thick
 	; 0:DO_PLACE:F
 	; 0:DO_LTURN45:F
-	; .ok
 	; 0:DO_LTURN90:F
-	; .ok
 	; 0:DO_LTURN135:F
-	; .ok
 	; 0:DO_FLIP:F
-	; .cycles
-	; .speed_pct
 	; 0:DO_HOME:F
 	; 0:DO_STOP:F
 	; 0:DO_RESET:F
