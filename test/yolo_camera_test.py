@@ -73,10 +73,13 @@ def draw_detections(cv2, frame, detections):
         cx, cy = det["center_x_pixel"], det["center_y_pixel"]
         w, h = det["width_pixel"], det["height_pixel"]
         angle = det["angle_deg"]
-        is_real_angle = det.get("angle_source") == "obb"
+        angle_source = det.get("angle_source")
+        # 'obb'：模型旋轉角，0-180°週期；'color_head_tail'：img_processing 色彩頭尾
+        # 判斷，完整 0-360°，比 'obb' 更準；只有 'estimated'（非 OBB 模型長寬猜的）
+        # 才是真的不可信，其餘兩種都是實際量測值，畫實際旋轉後的框。
+        is_real_angle = angle_source in ("obb", "color_head_tail")
 
         if is_real_angle:
-            # OBB 模型有真正的旋轉角，畫實際旋轉後的框
             box_pts = cv2.boxPoints(((cx, cy), (w, h), angle)).astype(int)
             cv2.drawContours(frame, [box_pts], 0, color, 2)
             x1, y1 = int(cx - w / 2), int(cy - h / 2)  # 標籤位置仍用軸對齊框的左上角
@@ -87,7 +90,12 @@ def draw_detections(cv2, frame, detections):
 
         cv2.circle(frame, (int(cx), int(cy)), 4, color, -1)
 
-        angle_text = f"{angle:.1f}deg" if is_real_angle else f"~{angle:.0f}deg(est)"
+        if angle_source == "color_head_tail":
+            angle_text = f"{angle:.1f}deg(360)"
+        elif angle_source == "obb":
+            angle_text = f"{angle:.1f}deg(180)"
+        else:
+            angle_text = f"~{angle:.0f}deg(est)"
         line1 = f"{det['class_name']} {det['confidence']:.2f}"
         line2 = f"({cx:.0f},{cy:.0f}) {angle_text}"
 
@@ -166,7 +174,13 @@ def run_preview_session(
                 if detections:
                     print(f"✓ 偵測到 {len(detections)} 個食材，已存到: {out_path.resolve()}")
                     for det in detections:
-                        angle_note = "" if det.get("angle_source") == "obb" else " (估計值，模型非 OBB，僅供參考)"
+                        src = det.get("angle_source")
+                        if src == "color_head_tail":
+                            angle_note = " (色彩頭尾判斷，完整 0-360°)"
+                        elif src == "obb":
+                            angle_note = " (OBB 模型旋轉角，0-180° 週期)"
+                        else:
+                            angle_note = " (估計值，模型非 OBB，僅供參考)"
                         print(
                             f"    {det['class_name']:10s} conf={det['confidence']:.2f}"
                             f"  中心像素=({det['center_x_pixel']:.0f}, {det['center_y_pixel']:.0f})"

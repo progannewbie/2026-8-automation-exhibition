@@ -15,6 +15,7 @@ from config_vision import (
     HandEyeCalibrationConfig, CoordinateTransform, VisionPrecision,
     VisionProcessingConfig
 )
+import img_processing
 
 # ============================================================================
 # 日誌設定
@@ -77,9 +78,11 @@ class YOLODetector:
                 'center_y_pixel': float,
                 'width_pixel': float,
                 'height_pixel': float,
-                'angle_deg': float,       # 0-180°，來源見 angle_source
-                'angle_source': str,      # 'obb'：模型直接輸出的旋轉角，可信
+                'angle_deg': float,       # 度數範圍依 angle_source 而定
+                'angle_source': str,      # 'obb'：模型直接輸出的旋轉角，0-180°週期
                                            # 'estimated'：非 OBB 模型，用長短邊粗略猜 0/90°
+                                           # 'color_head_tail'：img_processing 用色彩
+                                           # 分割在框內判斷頭尾，完整 0-360°，見下方精算段
             }
         """
         if self.model is None:
@@ -172,6 +175,28 @@ class YOLODetector:
                     }
 
                     detections.append(detection)
+
+            # 用色彩分割在 YOLO 框內做頭尾判斷，取得完整 0–360° 角度，取代 'obb'/
+            # 'estimated' 只有 0–180° 週期的角度；偵測不到（例如 ROMAINE 還沒有
+            # HSV 色域，見 img_processing.py）就保留原本角度，不影響既有流程。
+            for detection in detections:
+                try:
+                    refined_angle = img_processing.refine_angle_with_yolo_box(
+                        image,
+                        detection['class_name'],
+                        detection['center_x_pixel'],
+                        detection['center_y_pixel'],
+                        detection['width_pixel'],
+                        detection['height_pixel'],
+                        detection['angle_deg'],
+                    )
+                except Exception as exc:
+                    logger.warning(f"⚠️ 色彩頭尾角度精算失敗，維持原本角度: {exc}")
+                    refined_angle = None
+
+                if refined_angle is not None:
+                    detection['angle_deg'] = refined_angle
+                    detection['angle_source'] = 'color_head_tail'
 
             logger.info(f"✓ 檢測到 {len(detections)} 個食材")
             return detections
@@ -558,9 +583,10 @@ class VisionSystem:
         """
         取得食材在現實世界中的座標與旋轉角，給 PICKUP 指令即時定位用
 
-        角度直接沿用 YOLODetector 輸出的 angle_deg（0-180°，OBB 模型才是真實量測值，
-        非 OBB 模型只是用長寬猜的估計值，見 YOLODetector.detect() 的 angle_source）。
-        目前無法分辨食材頭尾方向 (0-360°)，只到 180° 週期。
+        角度直接沿用 YOLODetector 輸出的 angle_deg。CUCUMBER/CARROT 已用
+        img_processing 的色彩頭尾判斷精算成完整 0-360°（angle_source ==
+        'color_head_tail'）；ROMAINE 還沒有 HSV 色域，會 fallback 回 OBB 的
+        0-180° 週期角度（或非 OBB 模型的長寬估計值），見 YOLODetector.detect()。
 
         Args:
             food_name: 食材名稱 ("CUCUMBER", "CARROT", "CORN")

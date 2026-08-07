@@ -15,7 +15,7 @@ class FoodType(Enum):
     """食材類型列舉"""
     CUCUMBER = "CUCUMBER"          # 小黃瓜
     CARROT = "CARROT"              # 紅蘿蔔
-    CORN = "CORN"                  # 玉米筍
+    ROMAINE = "ROMAINE"            # 羅曼生菜
 
 
 FOOD_METADATA = {
@@ -35,13 +35,13 @@ FOOD_METADATA = {
         'cut_thickness_mm': 4,  # 建議切片厚度
         'cut_method': 'SLICE',  # 切片方式
     },
-    FoodType.CORN: {
-        'name': '玉米筍',
-        'description': '幼嫩玉米，約 8-10cm 長',
-        'color': 'yellow',
-        'typical_weight_g': 30,
-        'cut_thickness_mm': 4,  # 建議切片厚度
-        'cut_method': 'SLICE',  # 切片方式
+    FoodType.ROMAINE: {
+        'name': '羅曼生菜',
+        'description': '葉菜，長度約 20-25cm',
+        'color': 'green',
+        'typical_weight_g': 250,
+        'cut_thickness_mm': 25,  # 建議切段長度 (葉片分段，非圓切片)
+        'cut_method': 'SEGMENT',  # 分段方式，從葉尖向根部逐刀壓切
     },
 }
 
@@ -85,7 +85,7 @@ class LocationPoint(Enum):
     # --- 取料區 (Pickup Zone) ---
     PICKUP_CUCUMBER = "PICKUP_CUCUMBER"          # 小黃瓜取料點
     PICKUP_CARROT = "PICKUP_CARROT"              # 紅蘿蔔取料點
-    PICKUP_CORN = "PICKUP_CORN"                  # 玉米筍取料點
+    PICKUP_ROMAINE = "PICKUP_ROMAINE"            # 羅曼生菜取料點
     
     # --- 工作區 (Work Zone) ---
     WORK_CHOP_ZONE = "WORK_CHOP_ZONE"            # 切割區（食材準備區）
@@ -121,11 +121,11 @@ LOCATION_METADATA = {
         'coordinate_mm': None,
         'angle_deg': None,
     },
-    LocationPoint.PICKUP_CORN: {
-        'name': '玉米筍取料點',
+    LocationPoint.PICKUP_ROMAINE: {
+        'name': '羅曼生菜取料點',
         'zone': 'PICKUP',
-        'description': '放置玉米筍的位置，鏟子從上方接近',
-        'food_type': FoodType.CORN,
+        'description': '放置羅曼生菜的位置，鏟子從上方接近',
+        'food_type': FoodType.ROMAINE,
         'approach_from': 'TOP',
         'coordinate_mm': None,
         'angle_deg': None,
@@ -249,7 +249,7 @@ VISION_DETECTION = {
     'yolo_classes': {
         0: FoodType.CUCUMBER,
         1: FoodType.CARROT,
-        2: FoodType.CORN,
+        2: FoodType.ROMAINE,
     },
     
     # ArUco 標記點

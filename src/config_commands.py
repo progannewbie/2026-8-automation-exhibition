@@ -54,7 +54,7 @@ class PickupCommand:
     VALID_LOCATIONS = [
         "PICKUP_CUCUMBER",
         "PICKUP_CARROT",
-        "PICKUP_CORN",
+        "PICKUP_ROMAINE",
         "WAIT_ZONE",  # 菜色 4 完整流程：從等待區取回暫放的食材
     ]
 
@@ -62,7 +62,7 @@ class PickupCommand:
     VISION_LOCATIONS = [
         "PICKUP_CUCUMBER",
         "PICKUP_CARROT",
-        "PICKUP_CORN",
+        "PICKUP_ROMAINE",
     ]
 
     VALID_ARMS = ["F60_F", "F60_R"]  # 通常 F60_F(左臂) 取料
@@ -92,7 +92,7 @@ class ChopCommand:
     例子:
         CHOP,CUCUMBER,5,4
         CHOP,CARROT,5,4
-        CHOP,CORN,5,4
+        CHOP,ROMAINE,1,25
     """
 
     FORMAT = "CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>"
@@ -110,11 +110,11 @@ class ChopCommand:
             "default_thickness_mm": 4,
             "typical_cuts": "5",
         },
-        "CORN": {
-            "name": "玉米筍",
-            "method": "SLICE",
-            "default_thickness_mm": 4,
-            "typical_cuts": "5",
+        "ROMAINE": {
+            "name": "羅曼生菜",
+            "method": "SEGMENT",
+            "default_thickness_mm": 25,
+            "typical_cuts": "1",
         },
     }
     
@@ -131,34 +131,49 @@ class ChopCommand:
 class PlaceCommand:
     """
     放置指令格式
-    
-    CSV: PLACE,<LOCATION>,<METHOD>
-    
+
+    CSV: PLACE,<SOURCE>,<LOCATION>,<METHOD>
+
+    SOURCE 是食材目前所在的位置（AS 端先到這裡撈取)，LOCATION 是搬去的目的地。
+    SCOOP/PUSH 只送給 F60_F 單獨執行；POUR 需要雙臂在 LOCATION 會合一起傾倒，
+    此時 F60_R 只驗證 SOURCE 是否為 MIX_ZONE，不會真的移動過去撈取。
+
     例子:
-        PLACE,SALAD_BOWL,POUR        # 倒入沙拉盤
-        PLACE,WAIT_ZONE,SCOOP        # 用鏟放到等待區
-        PLACE,MIX_ZONE,SCOOP         # 用鏟放到搅拌區
+        PLACE,WORK_CHOP_ZONE,WAIT_ZONE_1,SCOOP   # 切割區→等待區1(暫放小黃瓜)
+        PLACE,WORK_CHOP_ZONE,WAIT_ZONE_2,SCOOP   # 切割區→等待區2(暫放羅曼生菜)
+        PLACE,WORK_CHOP_ZONE,MIX_ZONE,SCOOP      # 切割區→混拌區(直接進)
+        PLACE,WAIT_ZONE_1,MIX_ZONE,SCOOP         # 等待區1→混拌區(取回小黃瓜)
+        PLACE,WAIT_ZONE_2,MIX_ZONE,SCOOP         # 等待區2→混拌區(取回羅曼生菜)
+        PLACE,MIX_ZONE,SALAD_BOWL,POUR           # 混拌區→沙拉盤(翻炒完裝盤)
     """
-    
-    FORMAT = "PLACE,<LOCATION>,<METHOD>"
-    
+
+    FORMAT = "PLACE,<SOURCE>,<LOCATION>,<METHOD>"
+
+    VALID_SOURCES = [
+        "WORK_CHOP_ZONE",
+        "WAIT_ZONE_1",
+        "WAIT_ZONE_2",
+        "MIX_ZONE",
+    ]
+
     VALID_LOCATIONS = [
         "SALAD_BOWL",
-        "WAIT_ZONE",
+        "WAIT_ZONE_1",
+        "WAIT_ZONE_2",
         "MIX_ZONE",
         "WASTE_CORNER",
     ]
-    
+
     VALID_METHODS = {
         "POUR": "倾倒（主要用于最终沙拉盘）",
         "SCOOP": "用鏟放置（用于中间位置）",
         "PUSH": "推動（用于调整位置）",
     }
-    
+
     @staticmethod
-    def create(location: str, method: str = "SCOOP") -> str:
+    def create(source: str, location: str, method: str = "SCOOP") -> str:
         """建立放置指令"""
-        return f"PLACE,{location},{method}"
+        return f"PLACE,{source},{location},{method}"
 
 
 # ============================================================================
@@ -294,7 +309,7 @@ RECIPES = {
         "instructions": [
             "PICKUP,PICKUP_CUCUMBER,F60_F",
             "CHOP,CUCUMBER,5,4",
-            "PLACE,SALAD_BOWL,POUR",
+            "PLACE,WORK_CHOP_ZONE,SALAD_BOWL,POUR",
         ],
     },
     "菜色2_紅蘿蔔": {
@@ -303,46 +318,48 @@ RECIPES = {
         "instructions": [
             "PICKUP,PICKUP_CARROT,F60_F",
             "CHOP,CARROT,5,4",
-            "PLACE,SALAD_BOWL,POUR",
+            "PLACE,WORK_CHOP_ZONE,SALAD_BOWL,POUR",
         ],
     },
-    "菜色3_玉米筍": {
-        "name": "玉米筍單品",
-        "description": "取玉米筍 → 切 → 放沙拉盤",
+    "菜色3_羅曼生菜": {
+        "name": "羅曼生菜單品",
+        "description": "取羅曼生菜 → 切 → 放沙拉盤",
         "instructions": [
-            "PICKUP,PICKUP_CORN,F60_F",
-            "CHOP,CORN,5,4",
-            "PLACE,SALAD_BOWL,POUR",
+            "PICKUP,PICKUP_ROMAINE,F60_F",
+            "CHOP,ROMAINE,1,25",
+            "PLACE,WORK_CHOP_ZONE,SALAD_BOWL,POUR",
         ],
     },
     "菜色4_生菜沙拉": {
         "name": "生菜沙拉完整流程",
         "description": "完整多菜色組合，必須連續執行",
         "instructions": [
-            # 步驟 1: 小黃瓜 → 等待區
+            # 步驟 1: 小黃瓜 → 切 → 暫放等待區1
             "PICKUP,PICKUP_CUCUMBER,F60_F",
             "CHOP,CUCUMBER,5,4",
-            "PLACE,WAIT_ZONE,SCOOP",
+            "PLACE,WORK_CHOP_ZONE,WAIT_ZONE_1,SCOOP",
 
-            # 步驟 2: 紅蘿蔔 → 搅拌區
+            # 步驟 2: 羅曼生菜 → 切 → 暫放等待區2
+            "PICKUP,PICKUP_ROMAINE,F60_F",
+            "CHOP,ROMAINE,1,25",
+            "PLACE,WORK_CHOP_ZONE,WAIT_ZONE_2,SCOOP",
+
+            # 步驟 3: 紅蘿蔔 → 切 → 直接進混拌區
             "PICKUP,PICKUP_CARROT,F60_F",
             "CHOP,CARROT,5,4",
-            "PLACE,MIX_ZONE,SCOOP",
+            "PLACE,WORK_CHOP_ZONE,MIX_ZONE,SCOOP",
 
-            # 步驟 3: 等待區小黃瓜 → 搅拌區
-            "PICKUP,WAIT_ZONE,F60_F",
-            "PLACE,MIX_ZONE,SCOOP",
+            # 步驟 4: 取回等待區1(小黃瓜) → 混拌區
+            "PLACE,WAIT_ZONE_1,MIX_ZONE,SCOOP",
 
-            # 步驟 4: 玉米筍 → 搅拌區
-            "PICKUP,PICKUP_CORN,F60_F",
-            "CHOP,CORN,5,4",
-            "PLACE,MIX_ZONE,SCOOP",
+            # 步驟 5: 取回等待區2(羅曼生菜) → 混拌區
+            "PLACE,WAIT_ZONE_2,MIX_ZONE,SCOOP",
 
-            # 步驟 5: 翻炒
+            # 步驟 6: 翻炒
             "FLIP,6,50",
-            
-            # 步驟 6: 倒沙拉盤
-            "PLACE,SALAD_BOWL,POUR",
+
+            # 步驟 7: 倒沙拉盤
+            "PLACE,MIX_ZONE,SALAD_BOWL,POUR",
         ],
     },
 }
@@ -404,10 +421,11 @@ class CommandParser:
     @staticmethod
     def validate_place(params: List[str]) -> bool:
         """驗證放置指令參數"""
-        if len(params) < 2:
+        if len(params) < 3:
             return False
-        location, method = params[0], params[1]
-        return (location in PlaceCommand.VALID_LOCATIONS and
+        source, location, method = params[0], params[1], params[2]
+        return (source in PlaceCommand.VALID_SOURCES and
+                location in PlaceCommand.VALID_LOCATIONS and
                 method in PlaceCommand.VALID_METHODS)
     
     @staticmethod
@@ -445,8 +463,8 @@ MENU = {
         "recipe_key": "菜色2_紅蘿蔔",
     },
     "3": {
-        "name": "菜色 3: 玉米筍",
-        "recipe_key": "菜色3_玉米筍",
+        "name": "菜色 3: 羅曼生菜",
+        "recipe_key": "菜色3_羅曼生菜",
     },
     "4": {
         "name": "菜色 4: 生菜沙拉完整流程",

@@ -330,8 +330,9 @@ class PhaseController:
     
     def _handle_place(self, location: str, params: Dict, max_retries: int) -> bool:
         """處理放置"""
+        source = params.get("source", "WORK_CHOP_ZONE")
         method = params.get("method", "SCOOP")
-        cmd = PlaceCommand.create(location, method)
+        cmd = PlaceCommand.create(source, location, method)
 
         if not self._validate_command(cmd, CommandParser.validate_place):
             return False
@@ -343,7 +344,7 @@ class PhaseController:
 
         for attempt in range(max_retries):
             try:
-                logger.info(f"  放置: {location} (方式: {method}{'，雙臂協同' if dual else ''})")
+                logger.info(f"  放置: {source} → {location} (方式: {method}{'，雙臂協同' if dual else ''})")
 
                 if dual:
                     responses = self.comms.send_command_dual(cmd)

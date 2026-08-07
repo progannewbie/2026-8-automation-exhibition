@@ -2,13 +2,13 @@
 SmartCook 取料單獨測試工具 (Pickup-Only Test)
 跳過選單/切割/放置流程，只確認雙臂連線後，用視覺定位＋送出 PICKUP 指令。
 
-食材點位 (PICKUP_CUCUMBER/CARROT/CORN) 會先拍照跑 YOLO，偵測不到就中止、
+食材點位 (PICKUP_CUCUMBER/CARROT/ROMAINE) 會先拍照跑 YOLO，偵測不到就中止、
 不送指令；WAIT_ZONE 這類固定暫存區沒有視覺目標，直接送 0,0,0。
 
 用法:
     python test_pickup.py CUCUMBER        # 拍照偵測小黃瓜，定位後送 PICKUP
     python test_pickup.py CARROT
-    python test_pickup.py CORN
+    python test_pickup.py ROMAINE
     python test_pickup.py WAIT_ZONE       # 固定暫存區，不經過視覺
     python test_pickup.py CUCUMBER --conf 0.5   # 偵測不到時，先調低信心閾值試試
 """
@@ -26,7 +26,7 @@ from config_commands import PickupCommand
 FOOD_LOCATIONS = {
     "CUCUMBER": "PICKUP_CUCUMBER",
     "CARROT": "PICKUP_CARROT",
-    "CORN": "PICKUP_CORN",
+    "ROMAINE": "PICKUP_ROMAINE",
 }
 FIXED_LOCATIONS = ["WAIT_ZONE", "MIX_ZONE"]
 
@@ -35,7 +35,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "target",
-        help="食材類型 (CUCUMBER/CARROT/CORN) 或固定位置 (WAIT_ZONE/MIX_ZONE)",
+        help="食材類型 (CUCUMBER/CARROT/ROMAINE) 或固定位置 (WAIT_ZONE/MIX_ZONE)",
     )
     parser.add_argument("--arm", default="F60_F", help="主導臂 (預設 F60_F)")
     parser.add_argument("--conf", type=float, default=None, help="覆蓋 YOLO 信心閾值")

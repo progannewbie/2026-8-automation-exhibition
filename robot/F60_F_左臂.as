@@ -17,7 +17,7 @@
   AUTOSTART5.PC OFF        ; 控制電源ON時PC5自動開始
   ERRSTART.PC OFF          ; ERROR時PC開始 無效
   DISPIO_01 OFF            ; IO表示方式 O,X
-  ABS.SPEED OFF            ; 絕對速度動作 無效
+  ABS.SPEED ON             ; 絕對速度動作 有效 — 不受各控制器 monitor speed 旋鈕影響，雙臂真正等速
   SLOW_START OFF           ; 低速START機能 無效
   AFTER.WAIT.TMR OFF       ; 簡易WX開始Timing 軸一致後
 .END
@@ -39,28 +39,35 @@
   sig_in_step = 1001       ; 輸入: F60_R 完成目前階段 ← F60_R
 
   ; --- 動作參數 (可依現場試切調整，單位 mm/deg) ---
-  appro_mm = 80.0
+  appro_mm = 50.0
   chop_down_mm = 40.0
   flip_up_mm = 90.0
   pour_tilt_deg = 90.0
-  converge_dx = 20.0      ; PICKUP 集中階段：F60_F 往中心平移量 (方向待現場確認)
-  converge_dy = 0.0
+  converge_dx = 0.0      ; PICKUP 集中階段：F60_F 往中心平移量 (現場試出的值)
+  converge_dy = -30.0
+  chop_spread_dx = 0.0    ; PICKUP 階段 5 散開階段：F60_F 往外平移量 (★ 佔位值，待現場測試)
+  chop_spread_dy = 30.0
+  scoop_dx = 0.0          ; PLACE 撈取階段：鏟面滑入食材下方的位移量 (★ 佔位值，待現場設計確認)
+  scoop_dy = 20.0
+  scoop_tilt_deg = 60.0   ; PLACE 釋放階段 (SCOOP)：傾倒角度 (★ 佔位值，待現場測試)
 
   ; --- 逾時設定 (秒) ---
   timeout_io_sec = 30.0
-  timeout_flip_sec = 30.0
+  timeout_flip = 30.0
 
   robot_busy = 0
   $rxbuf = ""
 .END
 .PROGRAM INIT_POINTS()
   POINT ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: 檯面左下角基準點 (須在 BASE ba 生效後教點，見 INIT_TOOL)
+  POINT PICKUP_ORIGIN = TRANS(0,0,0,0,0,0)   ; PTEACH: 取料區專用基準點，供 DO_PICKUP 視覺座標換算用，待手動校點
 
   ; --- 以下 X,Y,Z,Angle 皆為佔位 0，待 CALIBRATION_POINTS.csv 標定完成後填入 ---
   POINT PICKUP_CUCUMBER = ORIGIN + TRANS(0,0,0,0,0,0)   ; X,Y,Z,Angle ← CSV
   POINT PICKUP_CARROT = ORIGIN + TRANS(0,0,0,0,0,0)     ; X,Y,Z,Angle ← CSV
-  POINT PICKUP_CORN = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z,Angle ← CSV
-  POINT WAIT_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)         ; X,Y,Z ← CSV
+  POINT PICKUP_ROMAINE = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z,Angle ← CSV
+  POINT WAIT_ZONE_1 = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z ← CSV (暫放小黃瓜)
+  POINT WAIT_ZONE_2 = ORIGIN + TRANS(0,0,0,0,0,0)       ; X,Y,Z ← CSV (暫放羅曼生菜)
   POINT MIX_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)          ; X,Y,Z ← CSV
   POINT WORK_CHOP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ← CSV
   POINT WORK_FLIP_ZONE = ORIGIN + TRANS(0,0,0,0,0,0)    ; X,Y,Z ← CSV
@@ -68,7 +75,9 @@
   POINT WASTE_CORNER = ORIGIN + TRANS(0,0,0,0,0,0)      ; X,Y,Z ← CSV
 
   ; HOME_LEFT 在相機拍不到的高處，與檯面座標系無關，維持獨立絕對點
-  ;POINT HOME_LEFT = TRANS(0,0,0,0,0,0)   ; PTEACH (手工標定，示教盒)
+  ; ★ 目前為零值佔位：MAIN() 開機第一件事就是 LMOVE HOME_LEFT，
+  ; 在現場用示教盒實際教點覆蓋前，執行到這裡會是未驗證的位置，勿通電後直接 EXECUTE
+  POINT HOME_LEFT = TRANS(0,0,0,0,0,0)   ; PTEACH (手工標定，示教盒)
 
   ; -----------------------------------------------------------------
   ; 翻炒動作點位 (lturn45/90/135)，架構參考 原程式/rs_f.as 裡的
@@ -101,7 +110,7 @@
   BASE ba
   POINT LEFT_SPATULA = TRANS(50, -230, 50, -90, 240, 90)    ; 左鏟工具座標 (原程式 rs_f.as init1222()，沿用同一支鏟具)
   TOOL LEFT_SPATULA
-  POINT ha_pickup = TRANS(0, 0, 0, 0, 0, 0)   ; PTEACH: PICKUP/PLACE 專用鏟具姿勢，待手動校點
+  POINT ha_pickup = TRANS(50, -320, 50, -90, 30, 90)   ; PICKUP/PLACE 專用鏟具姿勢 (現場已教點)
 .END
 .PROGRAM heartput()
   JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
@@ -111,9 +120,9 @@
 
   CALL INIT_SWITCHES
   CALL INIT_CONST
-  CALL INIT_POINTS
+  ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
   CALL INIT_TOOL
-  SPEED 30 ALWAYS
+  SPEED 50 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
   ACCURACY 1
   SIGNAL -sig_out_step
   LMOVE HOME_LEFT
@@ -259,7 +268,7 @@ listen:
   SVALUE "CHOP":
     CALL DO_CHOP($fld[2], VAL($fld[3]), VAL($fld[4]))
   SVALUE "PLACE":
-    CALL DO_PLACE($fld[2], $fld[3])
+    CALL DO_PLACE($fld[2], $fld[3], $fld[4])
   SVALUE "FLIP":
     CALL DO_FLIP(VAL($fld[2]), VAL($fld[3]))
   SVALUE "HOME":
@@ -327,7 +336,7 @@ listen:
   .ok = ok1
 .END
 ; .x_mm/.y_mm/.angle_deg：PC 端 YOLO+手眼標定即時算出的食材座標，只有
-; PICKUP_CUCUMBER/CARROT/CORN 這三個食材點位會用到；WAIT_ZONE/MIX_ZONE
+; PICKUP_CUCUMBER/CARROT/ROMAINE 這三個食材點位會用到；WAIT_ZONE/MIX_ZONE
 ; 是固定暫存區，沒有視覺目標，維持用教點，這三個參數直接忽略。
 .PROGRAM DO_PICKUP(.$location, .$arm, .x_mm, .y_mm, .angle_deg)
   IF .$arm <> "F60_F" THEN
@@ -335,19 +344,13 @@ listen:
     RETURN
   END
 
+  ; WAIT_ZONE/MIX_ZONE 已移除：暫存區/混拌區的搬運改由 DO_PLACE 的來源參數處理，
+  ; 不再需要先 PICKUP 取回。DO_PICKUP 現在只服務三個食材取料點。
   found = 1
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_CORN" THEN
-    POINT target_pt = ORIGIN + TRANS(.x_mm, .y_mm, 0, 0, 0, .angle_deg)
+  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+    POINT target_pt = TRANS(.x_mm, .y_mm, 0, 0, 0, 0) + PICKUP_ORIGIN   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
   ELSE
-    IF .$location == "WAIT_ZONE" THEN
-      POINT target_pt = WAIT_ZONE
-    ELSE
-      IF .$location == "MIX_ZONE" THEN
-        POINT target_pt = MIX_ZONE
-      ELSE
-        found = 0
-      END
-    END
+    found = 0
   END
 
   IF found == 0 THEN
@@ -355,12 +358,21 @@ listen:
     RETURN
   END
 
+  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
+  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
+  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
+  POINT target_pt_appro = SHIFT(target_pt BY 0, 0, appro_mm)
+  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
+  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
+  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
+  POINT target_conv = target_pt + TRANS(converge_dx, converge_dy, 0, 0, 0, 0)
+
   robot_busy = 1
-  SPEED 40 ALWAYS
+  SPEED 70 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
   TOOL ha_pickup                        ; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
 
   ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
-  LAPPRO target_pt, appro_mm
+  LMOVE target_pt_appro
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
@@ -380,7 +392,7 @@ listen:
   END
 
   ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
-  DRAW converge_dx, converge_dy, 0
+  LMOVE target_conv
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
@@ -389,22 +401,126 @@ listen:
     RETURN
   END
 
-  ; 階段 4: 抬起 — 一起抬起離開取料區
-  LDEPART appro_mm
+  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
+  ; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
+  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
+  POINT depart_pt = SHIFT(target_conv BY 0, 0, appro_mm)
+  LMOVE depart_pt
   CALL SYNC_STEP(ok)
   IF ok == 0 THEN
     CALL SEND_LINE("ERROR,E4023")
     TOOL LEFT_SPATULA
     robot_busy = 0
     RETURN
+  END
+
+  ; 階段 5: 移動至切割區 — 僅食材點位需要搬運，WAIT_ZONE/MIX_ZONE 是暫存/混拌區，
+  ; 取出後由 PC 另外送 PLACE 指令處理，不進切割區。比照階段 1-4 拆成 4 個子階段。
+  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+    ; 階段 5a: 就緒 — 兩臂移到切割區正上方
+    POINT chop_appro_pt = SHIFT(WORK_CHOP_ZONE BY 0, 0, appro_mm)
+    LMOVE chop_appro_pt
+    CALL SYNC_STEP(ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      TOOL LEFT_SPATULA
+      robot_busy = 0
+      RETURN
+    END
+
+    ; 階段 5b: 下降 — 下降到放置高度
+    LMOVE WORK_CHOP_ZONE
+    CALL SYNC_STEP(ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      TOOL LEFT_SPATULA
+      robot_busy = 0
+      RETURN
+    END
+
+    ; 階段 5c: 散開 — 兩臂往外移動放開食材 (集中動作的相反，沿 TOOL 座標系移動)
+    POINT chop_spread_pt = WORK_CHOP_ZONE + TRANS(chop_spread_dx, chop_spread_dy, 0, 0, 0, 0)
+    LMOVE chop_spread_pt
+    CALL SYNC_STEP(ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      TOOL LEFT_SPATULA
+      robot_busy = 0
+      RETURN
+    END
+
+    ; 階段 5d: 抬起 — 兩臂抬起離開切割區
+    POINT chop_depart_pt = SHIFT(chop_spread_pt BY 0, 0, appro_mm)
+    LMOVE chop_depart_pt
+    CALL SYNC_STEP(ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      TOOL LEFT_SPATULA
+      robot_busy = 0
+      RETURN
+    END
   END
 
   TOOL LEFT_SPATULA
   robot_busy = 0
   CALL SEND_LINE("OK")
 .END
+; 現場手動測試用，跳過 SYNC_STEP，單臂直接跑一次 PICKUP_ORIGIN 附近的移動序列，
+; 保留現狀不修改：.$location 在這支測試程式沒有參數可用，階段 5 那個 IF 恆為 false。
+.PROGRAM DO_PICKUP_test()
+  TOOL ha_pickup
+  LMOVE PICKUP_ORIGIN
+  POINT target_pt = TRANS(90, 0, 0, 0, 0, 0) + PICKUP_ORIGIN
+  POINT target_pt = target_pt + TRANS(0, 0, 0, 0, 0, 0)
+  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
+  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
+  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
+  POINT target_pt_appro = SHIFT(target_pt BY 0, 0, 50)
+  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
+  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
+  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
+  POINT target_pt_conve = target_pt + TRANS(0, -30, 0, 0, 0, 0)
+  robot_busy = 1
+  SPEED 70 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
+  TOOL ha_pickup                        ; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
+  ;LMOVE target_pt_appro
+  ; 階段 2: 下降 — 一起下降到取料高度
+  LMOVE target_pt
+  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
+  LMOVE target_pt_conve
+  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
+  ; 用 target_pt_conve 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
+  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
+  POINT depart_pt = SHIFT(target_pt_conve BY 0, 0, appro_mm)
+  LMOVE depart_pt
+  ; 階段 5: 移動至切割區 — 僅食材點位需要搬運，WAIT_ZONE/MIX_ZONE 是暫存/混拌區，
+  ; 取出後由 PC 另外送 PLACE 指令處理，不進切割區
+  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+    POINT chop_appro_pt = SHIFT(WORK_CHOP_ZONE BY 0, 0, appro_mm)
+    LMOVE chop_appro_pt
+    CALL SYNC_STEP(ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      TOOL LEFT_SPATULA
+      robot_busy = 0
+      RETURN
+    END
+    LMOVE WORK_CHOP_ZONE
+    CALL SYNC_STEP(ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      TOOL LEFT_SPATULA
+      robot_busy = 0
+      RETURN
+    END
+  END
+  TOOL LEFT_SPATULA
+  robot_busy = 0
+  CALL SEND_LINE("OK")
+.END
 .PROGRAM DO_CHOP(.$food, .cuts, .thick)
-  IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "CORN" THEN
+  IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
     CALL SEND_LINE("ERROR,E4004")
     RETURN
   END
@@ -414,20 +530,29 @@ listen:
   END
 
   robot_busy = 1
-  SPEED 30 ALWAYS
+  SPEED 50 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
   LAPPRO WORK_CHOP_ZONE, appro_mm
   LMOVE WORK_CHOP_ZONE
 
   i = 0
   DO
-    DRAW 0, 0, -chop_down_mm            ; 下壓切割
-    CALL SYNC_STEP(ok)                  ; 通知/等待 F60_R 完成本刀壓料步進
+    CALL SYNC_STEP(ok)                  ; sync A：等 F60_R 壓好食材，才下刀
     IF ok == 0 THEN
       CALL SEND_LINE("ERROR,E4023")     ; I/O 信號超時 (雙臂握手)
       robot_busy = 0
       RETURN
     END
+
+    DRAW 0, 0, -chop_down_mm            ; 下壓切割 (F60_R 已壓住食材)
     DRAW 0, 0, chop_down_mm             ; 提鏟
+
+    CALL SYNC_STEP(ok)                  ; sync B：通知 F60_R 這刀切完，可以鬆開步進
+    IF ok == 0 THEN
+      CALL SEND_LINE("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
+
     DRAW .thick, 0, 0                   ; 步進到下一刀位置
     i = i + 1
   UNTIL i >= .cuts
@@ -436,26 +561,56 @@ listen:
   robot_busy = 0
   CALL SEND_LINE("OK")
 .END
-.PROGRAM DO_PLACE(.$location, .$method)
+; DO_PLACE 現在分「來源」與「目的地」兩段：先到來源撈取食材，再搬到目的地釋放。
+; SCOOP/PUSH 只送 F60_F 單獨執行；POUR 需要 F60_R 在目的地一起 SYNC_STEP 傾倒。
+.PROGRAM DO_PLACE(.$source, .$location, .$method)
+  ; 解析來源 (撈取起點)
   found = 1
-  IF .$location == "SALAD_BOWL" THEN
-    POINT target_pt = SALAD_BOWL
+  IF .$source == "WORK_CHOP_ZONE" THEN
+    POINT source_pt = WORK_CHOP_ZONE
   ELSE
-    IF .$location == "WAIT_ZONE" THEN
-      POINT target_pt = WAIT_ZONE
+    IF .$source == "WAIT_ZONE_1" THEN
+      POINT source_pt = WAIT_ZONE_1
     ELSE
-      IF .$location == "MIX_ZONE" THEN
-        POINT target_pt = MIX_ZONE
+      IF .$source == "WAIT_ZONE_2" THEN
+        POINT source_pt = WAIT_ZONE_2
       ELSE
-        IF .$location == "WASTE_CORNER" THEN
-          POINT target_pt = WASTE_CORNER
+        IF .$source == "MIX_ZONE" THEN
+          POINT source_pt = MIX_ZONE
         ELSE
           found = 0
         END
       END
     END
   END
+  IF found == 0 THEN
+    CALL SEND_LINE("ERROR,E4002")
+    RETURN
+  END
 
+  ; 解析目的地
+  found = 1
+  IF .$location == "WAIT_ZONE_1" THEN
+    POINT target_pt = WAIT_ZONE_1
+  ELSE
+    IF .$location == "WAIT_ZONE_2" THEN
+      POINT target_pt = WAIT_ZONE_2
+    ELSE
+      IF .$location == "MIX_ZONE" THEN
+        POINT target_pt = MIX_ZONE
+      ELSE
+        IF .$location == "SALAD_BOWL" THEN
+          POINT target_pt = SALAD_BOWL
+        ELSE
+          IF .$location == "WASTE_CORNER" THEN
+            POINT target_pt = WASTE_CORNER
+          ELSE
+            found = 0
+          END
+        END
+      END
+    END
+  END
   IF found == 0 THEN
     CALL SEND_LINE("ERROR,E4002")
     RETURN
@@ -466,11 +621,33 @@ listen:
   END
 
   robot_busy = 1
-  SPEED 40 ALWAYS
+  SPEED 70 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
   TOOL ha_pickup                        ; PLACE 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  LAPPRO target_pt, appro_mm
+
+  ; 階段 1: 移到來源正上方
+  POINT source_appro_pt = SHIFT(source_pt BY 0, 0, appro_mm)
+  LMOVE source_appro_pt
+
+  ; 階段 2: 下降到來源
+  LMOVE source_pt
+
+  ; 階段 3: 撈取 — ★ 佔位動作，實際撈取手法待現場設計確認，
+  ; 目前用鏟面沿 TOOL 座標系滑入食材下方代表撈取
+  POINT scoop_pt = source_pt + TRANS(scoop_dx, scoop_dy, 0, 0, 0, 0)
+  LMOVE scoop_pt
+
+  ; 階段 4: 抬起 — 帶著食材離開來源
+  POINT scoop_depart_pt = SHIFT(scoop_pt BY 0, 0, appro_mm)
+  LMOVE scoop_depart_pt
+
+  ; 階段 5: 移至目的地正上方
+  POINT dest_appro_pt = SHIFT(target_pt BY 0, 0, appro_mm)
+  LMOVE dest_appro_pt
+
+  ; 階段 6: 下降到目的地
   LMOVE target_pt
 
+  ; 階段 7: 釋放 (依方式)
   IF .$method == "POUR" THEN
     CALL SYNC_STEP(ok)                  ; 與 F60_R 會合，一起傾倒
     IF ok == 0 THEN
@@ -484,9 +661,14 @@ listen:
   ELSE
     IF .$method == "PUSH" THEN
       DRAW 0, 60, 0                     ; 推動廢料至角落 (方向/距離待現場調整)
+    ELSE
+      ; SCOOP：單鏟傾倒釋放 (★ 角度待現場測試)
+      TDRAW 0, 0, 0, 0, scoop_tilt_deg, 0, 20
+      TDRAW 0, 0, 0, 0, -scoop_tilt_deg, 0, 20
     END
   END
 
+  ; 階段 8: 抬起離開目的地
   LDEPART appro_mm
   TOOL LEFT_SPATULA
   robot_busy = 0
@@ -633,7 +815,7 @@ listen:
     RETURN
   END
   robot_busy = 1
-  SPEED 20 ALWAYS                        ; 復歸使用較低安全速度
+  SPEED 30 MM/S ALWAYS   ; 復歸使用較低安全速度 (★ 絕對速度，待現場測試調整)
   LMOVE HOME_LEFT
   robot_busy = 0
   CALL SEND_LINE("OK")
