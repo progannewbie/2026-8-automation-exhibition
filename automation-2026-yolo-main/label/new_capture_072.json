@@ -1,0 +1,36 @@
+{
+  "version": "7.0.4",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "CORN",
+      "points": [
+        [
+          143.4957020057307,
+          294.5558739255015
+        ],
+        [
+          233.60989798625917,
+          326.90455966210135
+        ],
+        [
+          227.7363896848138,
+          343.2664756446992
+        ],
+        [
+          137.62219370428534,
+          310.91778990809934
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "oriented_rectangle",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "..\\images\\new_capture_072.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 640
+}

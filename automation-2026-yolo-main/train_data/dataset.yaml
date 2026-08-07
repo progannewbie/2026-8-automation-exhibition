@@ -1,0 +1,9 @@
+path: train_data
+
+train: images/train
+val: images/val
+
+names:
+  0: CUCUMBER
+  1: CORN
+  2: CARROT

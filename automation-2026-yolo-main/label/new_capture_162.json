@@ -1,0 +1,36 @@
+{
+  "version": "7.0.4",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "CUCUMBER",
+      "points": [
+        [
+          252.12249697732588,
+          46.93376616923654
+        ],
+        [
+          396.79083094555887,
+          71.63323782234957
+        ],
+        [
+          391.8889643407258,
+          100.3441707935142
+        ],
+        [
+          247.22063037249285,
+          75.64469914040117
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "oriented_rectangle",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "..\\images\\new_capture_162.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 640
+}
