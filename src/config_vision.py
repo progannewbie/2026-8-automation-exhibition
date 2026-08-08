@@ -19,15 +19,15 @@ class YOLOConfig:
     """YOLOv8 模型配置"""
 
     # 模型參數
-    MODEL_PATH = str(_SRC_DIR / "models" / "yolov8_smartcook_v1.pt")
-    CONFIDENCE_THRESHOLD = 0.7  # 信心閾值
+    MODEL_PATH = str(_SRC_DIR / "models" / "yolo26_smartcook_v3.pt")
+    CONFIDENCE_THRESHOLD = 0.3  # 信心閾值（v3 模型用 0.3）
     IOU_THRESHOLD = 0.5  # IoU 非極大值抑制閾值
-    
+
     # 類別定義
     CLASSES = {
         0: "CUCUMBER",      # 小黃瓜
         1: "CARROT",        # 紅蘿蔔
-        2: "CORN",          # 玉米筍
+        2: "ROMAINE",       # 羅曼生菜
     }
     
     CLASS_NAMES = {v: k for k, v in CLASSES.items()}  # 反向映射

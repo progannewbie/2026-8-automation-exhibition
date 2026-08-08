@@ -13,8 +13,8 @@ test_full_result.py 三支腳本共用的核心演算法），拿掉各自的 ma
    畫面裡其他同色物體，再算出完整 0–360° 角度，取代 YOLO OBB 本身只有 0–180° 週期
    的角度輸出（見 vision_skeleton.py 的 YOLODetector.detect() 說明）。
 
-★ HSV_PARAMS 目前只有 cucumber/baby_corn/carrot 三組色域，是換菜前「玉米筍」的配色，
-   還沒有羅曼生菜（葉菜）的色彩範圍，也還沒現場重新測試調整。
+★ HSV_PARAMS 目前有 cucumber/carrot 兩組色域。baby_corn（舊玉米筍）和 romaine（羅曼生菜）
+   暫時備用，羅曼生菜已改為直接進混拌區，不需要 tip detection。
 """
 
 import math
@@ -44,8 +44,8 @@ HSV_PARAMS = {
 # YOLO 類別名稱 → HSV_PARAMS 的 key（搭配 YOLO 使用時查表用）
 CLASS_TO_HSV_KEY = {
     "CUCUMBER": "cucumber",
-    "CORN": "baby_corn",
     "CARROT": "carrot",
+    "ROMAINE": "baby_corn",  # 羅曼生菜暫用 baby_corn 參數（現已改為直接進混拌區，不需 tip detection）
 }
 
 KERNEL = np.ones((5, 5), np.uint8)

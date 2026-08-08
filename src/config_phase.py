@@ -244,9 +244,9 @@ class MenuRecipes:
     
     RECIPE_4_SALAD = {
         "name": "菜色 4: 生菜沙拉完整流程",
-        "description": "小黃瓜→暫放 → 羅曼生菜→暫放 → 紅蘿蔔→混拌區 → 取回暫放 → 翻炒 → 沙拉盤",
+        "description": "小黃瓜→暫放 → 紅蘿蔔→混拌區 → 羅曼生菜→混拌區 → 取回暫放 → 翻炒 → 沙拉盤",
         "continuous": True,  # ⚠️ 必須連續執行
-        "estimated_time_sec": 165,  # ~2.75 分鐘（羅曼生菜新增切割步驟）
+        "estimated_time_sec": 140,  # ~2.33 分鐘（生菜不切）
         "phases": [
             # ================================================================
             # 步驟 1: 小黃瓜 → 切 → 暫放等待區1
@@ -272,30 +272,7 @@ class MenuRecipes:
             ),
 
             # ================================================================
-            # 步驟 2: 羅曼生菜 → 切 → 暫放等待區2
-            # ================================================================
-
-            PhaseInstruction(
-                phase=Phase.PICKUP,
-                action="PICKUP",
-                location="PICKUP_ROMAINE",
-                params={"arm": "F60_F"},
-            ),
-            PhaseInstruction(
-                phase=Phase.CHOP,
-                action="CHOP",
-                location="WORK_CHOP_ZONE",
-                params=FOOD_CUT_PARAMS["ROMAINE"].__dict__,
-            ),
-            PhaseInstruction(
-                phase=Phase.PLACE,
-                action="PLACE",
-                location="WAIT_ZONE_2",
-                params={"source": "WORK_CHOP_ZONE", "method": "SCOOP"},
-            ),
-
-            # ================================================================
-            # 步驟 3: 紅蘿蔔 → 切 → 直接進混拌區
+            # 步驟 2: 紅蘿蔔 → 切 → 直接進混拌區
             # ================================================================
 
             PhaseInstruction(
@@ -318,6 +295,23 @@ class MenuRecipes:
             ),
 
             # ================================================================
+            # 步驟 3: 羅曼生菜 → 直接進混拌區（不切）
+            # ================================================================
+
+            PhaseInstruction(
+                phase=Phase.PICKUP,
+                action="PICKUP",
+                location="PICKUP_ROMAINE",
+                params={"arm": "F60_F"},
+            ),
+            PhaseInstruction(
+                phase=Phase.PLACE,
+                action="PLACE",
+                location="MIX_ZONE",
+                params={"source": "PICKUP_ROMAINE", "method": "SCOOP"},
+            ),
+
+            # ================================================================
             # 步驟 4: 取回等待區1(小黃瓜) → 混拌區
             # ================================================================
 
@@ -326,17 +320,6 @@ class MenuRecipes:
                 action="PLACE",
                 location="MIX_ZONE",
                 params={"source": "WAIT_ZONE_1", "method": "SCOOP"},
-            ),
-
-            # ================================================================
-            # 步驟 5: 取回等待區2(羅曼生菜) → 混拌區
-            # ================================================================
-
-            PhaseInstruction(
-                phase=Phase.PLACE,
-                action="PLACE",
-                location="MIX_ZONE",
-                params={"source": "WAIT_ZONE_2", "method": "SCOOP"},
             ),
 
             # ================================================================

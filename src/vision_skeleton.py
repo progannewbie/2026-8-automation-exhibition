@@ -511,7 +511,7 @@ class VisionSystem:
         避免視覺子系統本身的問題連帶擋住整條取料流程。
 
         Args:
-            food_type: 期望偵測到的食材類別（例如 "CUCUMBER"、"CARROT"、"CORN"）
+            food_type: 期望偵測到的食材類別（例如 "CUCUMBER"、"CARROT"、"ROMAINE"）
 
         Returns:
             True：偵測到該食材，或確認能力目前不可用；False：確實沒偵測到
@@ -562,9 +562,9 @@ class VisionSystem:
         取得食材在現實世界中的座標
         
         Args:
-            food_name: 食材名稱 ("CUCUMBER", "CARROT", "CORN")
+            food_name: 食材名稱 ("CUCUMBER", "CARROT", "ROMAINE")
             image: 輸入圖像
-        
+
         Returns:
             (x_mm, y_mm) 或 None 如果未檢測到食材
         """
@@ -589,7 +589,7 @@ class VisionSystem:
         0-180° 週期角度（或非 OBB 模型的長寬估計值），見 YOLODetector.detect()。
 
         Args:
-            food_name: 食材名稱 ("CUCUMBER", "CARROT", "CORN")
+            food_name: 食材名稱 ("CUCUMBER", "CARROT", "ROMAINE")
             image: 輸入圖像
 
         Returns:

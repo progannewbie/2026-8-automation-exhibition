@@ -505,6 +505,17 @@ listen:
     RETURN
   END
 
+  ; 根據菜色設定下壓高度，生菜不支援（已改為直接進混拌區）
+  SCASE .$food OF
+  SVALUE "CUCUMBER":
+    press_mm = 15.0    ; 小黃瓜
+  SVALUE "CARROT":
+    press_mm = 12.0    ; 紅蘿蔔（較硬，減少壓力）
+  ANY:
+    CALL SEND_LINE("ERROR,E4005")  ; 其他菜色不支援
+    RETURN
+  END
+
   robot_busy = 1
   SPEED 50 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
   LAPPRO PRESS_CHOP_ZONE, appro_mm
@@ -512,7 +523,7 @@ listen:
 
   i = 0
   DO
-    DRAW 0, 0, -press_down_mm           ; 先壓住食材
+    DRAW 0, 0, -press_mm           ; 先壓住食材
 
     CALL SYNC_STEP(ok)                  ; sync A：通知 F60_F 已壓好，可以下刀
     IF ok == 0 THEN
@@ -528,8 +539,8 @@ listen:
       RETURN
     END
 
-    DRAW 0, 0, press_down_mm            ; 鬆開，準備下一刀
-    DRAW .thick, 0, 0                   ; 隨切割步進 (改用 CHOP 傳入的實際厚度，不再寫死)
+    DRAW 0, 0, press_mm            ; 鬆開，準備下一刀
+    DRAW .thick, 0, 0                   ; 隨切割步進
     i = i + 1
   UNTIL i >= .cuts
 
