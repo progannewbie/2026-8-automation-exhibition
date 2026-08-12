@@ -42,7 +42,7 @@
   flip_down_mm = 90.0
   pour_tilt_deg = 90.0
   converge_dx = 0.0      ; PICKUP 集中階段：F60_R 往中心平移量 (現場試出的值)
-  converge_dy = -30.0
+  converge_dy = 30
   chop_spread_dx = 0.0    ; PICKUP 階段 5 散開階段：F60_R 往外平移量 (★ 佔位值，待現場測試)
   chop_spread_dy = 30.0
 
@@ -269,6 +269,8 @@ listen:
     CALL DO_READY($fld[2])
   SVALUE "IOTEST":
     CALL DO_IOTEST($fld[2])
+  SVALUE "DO_PREPARE":
+      CALL DO_PREPARE
   ANY :
     CALL SEND_LINE("ERROR,E4021")
   END
@@ -319,285 +321,305 @@ listen:
   SIGNAL -sig_out_step
   .ok = ok1
 .END
-; .x_mm/.y_mm/.angle_deg：PC 端 YOLO+手眼標定即時算出的食材座標
 .PROGRAM DO_PICKUP(.$location, .$arm, .x_mm, .y_mm, .angle_deg)
-  IF .$arm <> "F60_F" THEN
-    CALL SEND_LINE("ERROR,E4003")
+  IF .$arm <> "F60_R" THEN
+    CALL SEND_LINE ("ERROR,E4003")
     RETURN
   END
-
-  ; WAIT_ZONE 已移除：暫存區的搬運改由 DO_PLACE 的來源參數處理，不再需要先 PICKUP 取回。
   found = 1
   IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
-    POINT target_pt = TRANS(.x_mm, .y_mm, 0, 0, 0, 0) + PICKUP_ORIGIN   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+    POINT target_pt = TRANS (.x_mm, .y_mm, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+    POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
   ELSE
-    found = 0
+    IF .$location == "WAIT_ZONE" THEN
+      POINT target_pt = wait_zone
+      POINT target_conv = SHIFT(target_pt BY -100,0,0)
+    ELSE
+      IF .$location == "MIX_ZONE" THEN
+        POINT target_pt = mix_zone
+        POINT target_conv = SHIFT(target_pt BY -100,0,0)
+      ELSE
+        found = 0
+      END
+    END
   END
-
   IF found == 0 THEN
-    CALL SEND_LINE("ERROR,E4002")
+    CALL SEND_LINE ("ERROR,E4002")
     RETURN
   END
-
   ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
   ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
   ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
-  POINT target_pt_appro = SHIFT(target_pt BY 0, 0, appro_mm)
+  POINT target_pt_appro = SHIFT (target_pt BY 0, 0, appro_mm)
   ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
   ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
   ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
-  POINT target_conv = target_pt + TRANS(converge_dx, converge_dy, 0, 0, 0, 0)
-
   robot_busy = 1
-  SPEED 70 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL ha_pickup                        ; PICKUP 專用姿勢/進退方向，結束前一定要切回 RIGHT_SPATULA
-
-  ; 階段 1: 就緒
+  SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
   LMOVE target_pt_appro
-  CALL SYNC_STEP(ok)
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
-    CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
     robot_busy = 0
     RETURN
   END
-
-  ; 階段 2: 下降
-  LMOVE target_pt
-  CALL SYNC_STEP(ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
-    robot_busy = 0
-    RETURN
-  END
-
-  ; 階段 3: 集中 (方向與 F60_F 相對，佔位示意，待現場調整)
+  ; 階段 2: 下降 — 一起下降到取料高度
   LMOVE target_conv
-  CALL SYNC_STEP(ok)
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
-    CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
     robot_busy = 0
     RETURN
   END
-
-  ; 階段 4: 抬起 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
+  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
+  LMOVE target_pt
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
   ; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
   ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
-  POINT depart_pt = SHIFT(target_conv BY 0, 0, appro_mm)
+  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
   LMOVE depart_pt
-  CALL SYNC_STEP(ok)
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
-    CALL SEND_LINE("ERROR,E4023")
-    TOOL RIGHT_SPATULA
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
     robot_busy = 0
     RETURN
   END
-
-  ; 階段 5: 移動至切割區 — 對應 F60_F 的 WORK_CHOP_ZONE，本臂用壓點偏移 PRESS_CHOP_ZONE。
-  ; 比照階段 1-4 拆成 4 個子階段。
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
-    ; 階段 5a: 就緒 — 兩臂移到切割區正上方
-    POINT chop_appro_pt = SHIFT(PRESS_CHOP_ZONE BY 0, 0, appro_mm)
-    LMOVE chop_appro_pt
-    CALL SYNC_STEP(ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
-
-    ; 階段 5b: 下降 — 下降到放置高度
-    LMOVE PRESS_CHOP_ZONE
-    CALL SYNC_STEP(ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
-
-    ; 階段 5c: 散開 — 兩臂往外移動放開食材 (集中動作的相反，沿 TOOL 座標系移動)
-    POINT chop_spread_pt = PRESS_CHOP_ZONE + TRANS(chop_spread_dx, chop_spread_dy, 0, 0, 0, 0)
-    LMOVE chop_spread_pt
-    CALL SYNC_STEP(ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
-
-    ; 階段 5d: 抬起 — 兩臂抬起離開切割區
-    POINT chop_depart_pt = SHIFT(chop_spread_pt BY 0, 0, appro_mm)
-    LMOVE chop_depart_pt
-    CALL SYNC_STEP(ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
-  END
-
-  TOOL RIGHT_SPATULA
-  robot_busy = 0
-  CALL SEND_LINE("OK")
-.END
-; 現場手動測試用，跳過 SYNC_STEP，單臂直接跑一次 PICKUP_ORIGIN 附近的移動序列，
-; 保留現狀不修改：.$location 在這支測試程式沒有參數可用，階段 5 那個 IF 恆為 false。
-.PROGRAM DO_PICKUP_test()
-  TOOL ha_pickup
-  LMOVE PICKUP_ORIGIN
-  POINT target_pt = TRANS(90, 0, 0, 0, 0, 0) + PICKUP_ORIGIN
-  POINT target_pt = target_pt + TRANS(0, 0, 0, 0, 0, 0)
-  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
-  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
-  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
-  POINT target_pt_appro = SHIFT(target_pt BY 0, 0, 50)
-  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
-  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
-  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
-  POINT target_pt_conve = target_pt + TRANS(0, -30, 0, 0, 0, 0)
-  robot_busy = 1
-  SPEED 70 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL ha_pickup                        ; PICKUP 專用姿勢/進退方向，結束前一定要切回 RIGHT_SPATULA
-  ; 階段 1: 就緒
-  ;LMOVE target_pt_appro
-  ; 階段 2: 下降
-  LMOVE target_pt
-  ; 階段 3: 集中 (方向與 F60_F 相對，佔位示意，待現場調整)
-  LMOVE target_pt_conve
-  ; 階段 4: 抬起 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
-  ; 用 target_pt_conve 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
-  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
-  POINT depart_pt = SHIFT(target_pt_conve BY 0, 0, appro_mm)
-  LMOVE depart_pt
-  ; 階段 5: 移動至切割區 — 對應 F60_F 的 WORK_CHOP_ZONE，本臂用壓點偏移 PRESS_CHOP_ZONE
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
-    POINT chop_appro_pt = SHIFT(PRESS_CHOP_ZONE BY 0, 0, appro_mm)
-    LMOVE chop_appro_pt
-    CALL SYNC_STEP(ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
-    LMOVE PRESS_CHOP_ZONE
-    CALL SYNC_STEP(ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
-  END
-  TOOL RIGHT_SPATULA
-  robot_busy = 0
-  CALL SEND_LINE("OK")
 .END
 .PROGRAM DO_CHOP(.$food, .cuts, .thick)
   IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
-    CALL SEND_LINE("ERROR,E4005")
+    CALL SEND_LINE ("ERROR,E4005")
     RETURN
   END
-
-  ; 根據菜色設定下壓高度，生菜不支援（已改為直接進混拌區）
+  ; 色O聣叨龋瞬支援迅臑直M^
   SCASE .$food OF
-  SVALUE "CUCUMBER":
-    press_mm = 15.0    ; 小黃瓜
-  SVALUE "CARROT":
-    press_mm = 12.0    ; 紅蘿蔔（較硬，減少壓力）
-  ANY:
-    CALL SEND_LINE("ERROR,E4005")  ; 其他菜色不支援
-    RETURN
+    SVALUE "CUCUMBER":
+      press_mm = 15    ; 小S
+    SVALUE "CARROT":
+      press_mm = 20    ; t}N^硬p賶
+any:
+      CALL SEND_LINE ("ERROR,E4005"); 色支援
+      RETURN
   END
-
   robot_busy = 1
-  SPEED 50 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LAPPRO PRESS_CHOP_ZONE, appro_mm
-  LMOVE PRESS_CHOP_ZONE
-
+  SPEED 50 MM/s ALWAYS   ;  ^俣龋Fy試{
+  TOOL right_spatula
+  LMOVE home_right
+  break
+  LMOVE press_chop_zone
   i = 0
   DO
-    DRAW 0, 0, -press_mm           ; 先壓住食材
-
-    CALL SYNC_STEP(ok)                  ; sync A：通知 F60_F 已壓好，可以下刀
+    DRAW 0, 0, -press_mm; 葔住食
+    CALL SYNC_STEP (ok); sync A通知 F60_F 褖茫碌
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
+      CALL SEND_LINE ("ERROR,E4023")
       robot_busy = 0
       RETURN
     END
-
-    CALL SYNC_STEP(ok)                  ; sync B：等 F60_F 切完這一刀
+    CALL SYNC_STEP (ok); sync B F60_F @一
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
+      CALL SEND_LINE ("ERROR,E4023")
       robot_busy = 0
       RETURN
     END
-
-    DRAW 0, 0, press_mm            ; 鬆開，準備下一刀
-    DRAW .thick, 0, 0                   ; 隨切割步進
+    DRAW 0, 0, press_mm; _蕚一
+    DRAW .thick, 0, 0; S懈畈組
     i = i + 1
   UNTIL i >= .cuts
-
-  LDEPART appro_mm
-  robot_busy = 0
-  CALL SEND_LINE("OK")
-.END
-; F60_R 只在 POUR 時參與 (跟 F60_F 在目的地一起傾倒)，不需要真的搬到來源撈取，
-; 來源參數只做驗證用；SCOOP/PUSH 是 F60_F 單獨執行，PC 端不會把這兩種方式送給 F60_R。
-.PROGRAM DO_PLACE(.$source, .$location, .$method)
-  IF .$source <> "MIX_ZONE" THEN
-    CALL SEND_LINE("ERROR,E4002")
+  ;褯]牟玫
+  LMOVE level_per;戏c
+  break
+  LMOVE level_tg;陆
+  break
+  CALL SYNC_STEP (ok);直鄣同一叨
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
     RETURN
   END
-
+  ;
+  LMOVE level_ho
+  break
+  CALL SYNC_STEP (ok); 直奂
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;抬
+  LMOVE level_up
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;戏c
+  LMOVE level2_per
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;陆
+  LMOVE level2_tg
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;_
+  LMOVE level2_ho
+  break
+  CALL SYNC_STEP (ok); 直奂
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;抬
+  LMOVE level2_up
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  LMOVE right_spatula
+  CALL SYNC_STEP (ok); 直奂
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
+.END
+.PROGRAM DO_PLACE(.$source, .$location, .$method)
+  ; 解析目的地
   found = 1
-  IF .$location == "MIX_ZONE" THEN
-    POINT target_pt = MIX_ZONE
+  IF .$location == "WAIT_ZONE_1" THEN
+    POINT target_pt = wait_zone_1
+    POINT target_up = wait_zone_up
   ELSE
-    IF .$location == "SALAD_BOWL" THEN
-      POINT target_pt = SALAD_BOWL
+    IF .$location == "MIX_ZONE" THEN
+      POINT target_pt = mix_zone
+      POINT target_up = mix_zone_up
     ELSE
-      found = 0
+      IF .$location == "SALAD_BOWL" THEN
+        POINT target_pt = salad_bowl
+        POINT target_up = salad_bowl_up
+      ELSE
+        IF .$location == "WORK_CHOP_ZONE" THEN
+          POINT target_pt = work_zone
+          POINT target_up = work_zone_up
+        ELSE
+          found = 0
+        END
+      END
     END
   END
-
   IF found == 0 THEN
-    CALL SEND_LINE("ERROR,E4002")
+    CALL SEND_LINE ("ERROR,E4002")
     RETURN
   END
-  IF .$method <> "POUR" THEN
-    CALL SEND_LINE("ERROR,E4001")
+  IF .$method <> "POUR" AND .$method <> "SCOOP" AND .$method <> "PUSH" THEN
+    CALL SEND_LINE ("ERROR,E4001")
     RETURN
   END
-
   robot_busy = 1
-  SPEED 70 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL ha_pickup                        ; PLACE 專用姿勢/進退方向，結束前一定要切回 RIGHT_SPATULA
-  LAPPRO target_pt, appro_mm
-  LMOVE target_pt
-
-  IF .$method == "POUR" THEN
-    CALL SYNC_STEP(ok)                  ; 與 F60_F 會合，一起傾倒
+  SPEED 70 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  TOOL ha_pickup; PLACE 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm );上方點
+  POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
+  ;切割區步驟
+  IF .$location == "WORK_CHOP_ZONE" THEN
+    ;切割區上方
+    LMOVE chop_rep
+    BREAK
+    SPEED 35 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    C1MOVE chop_rep1
+    BREAK
+    SPEED 35 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    C2MOVE chop_appro_per
+    BREAK
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
-      TOOL RIGHT_SPATULA
+      CALL SEND_LINE ("ERROR,E4023")
+      TOOL left_spatula
       robot_busy = 0
       RETURN
+      ; 下降
+      LMOVE press_chop_zo
+      BREAK
+      IF ok == 0 THEN
+        CALL SEND_LINE ("ERROR,E4023")
+        TOOL left_spatula
+        robot_busy = 0
+        RETURN
+      END
+      ;釋放
+      LMOVE chop_spread_pt
+      BREAK
+      IF ok == 0 THEN
+        CALL SEND_LINE ("ERROR,E4023")
+        TOOL left_spatula
+        robot_busy = 0
+        RETURN
+      END
+      ;抬起離開目的地
+      LMOVE chop_depart_pt
+      BREAK
+      IF ok == 0 THEN
+        CALL SEND_LINE ("ERROR,E4023")
+        TOOL left_spatula
+        robot_busy = 0
+        RETURN
+      END
+      ;回到原點
+      TOOL left_spatula
+      LMOVE home_left
+      BREAK
+      IF ok == 0 THEN
+        CALL SEND_LINE ("ERROR,E4023")
+        TOOL left_spatula
+        robot_busy = 0
+        RETURN
+      END
+      GOTO 20
     END
-    TDRAW 0, 0, 0, 0, pour_tilt_deg, 0, 20      ; 雙鏟對合傾倒手勢 (角度依治具調整)
-    TDRAW 0, 0, 0, 0, -pour_tilt_deg, 0, 20
+    
   END
-
-  LDEPART appro_mm
-  TOOL RIGHT_SPATULA
+  ; 階段 1: 目的地上方點
+  LMOVE target_per
+  BREAK
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 2: 釋放 (依方式)
+  LMOVE target_up
+  BREAK
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  20
+  TOOL left_spatula
   robot_busy = 0
-  CALL SEND_LINE("OK")
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_RTURN45(.ok)
   LMOVE rturn45_ready
@@ -747,6 +769,7 @@ listen:
 .END
 .PROGRAM DO_STOP()
   BRAKE
+  CALL loveheart
   SIGNAL -sig_out_step
   robot_busy = 0
   CALL SEND_LINE("OK")
@@ -778,13 +801,197 @@ listen:
     CALL SEND_LINE("OK")
   END
 .END
+.PROGRAM DO_PICKUP_test()
+  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+  ;拿菜區域
+  LMOVE pickup_origin
+  POINT target_pt = pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+  POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
+  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
+  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
+  LMOVE target_pt_appro
+  LMOVE target_conv
+  LMOVE target_pt
+  LMOVE depart_pt
+  ;等待區域
+  LMOVE wait_zone
+  POINT target_pt = wait_zone  ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+  POINT target_conv = SHIFT(target_pt BY 100,0,0)
+  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
+  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
+  LMOVE target_pt_appro
+  LMOVE target_conv
+  LMOVE target_pt
+  LMOVE depart_pt
+  ;混拌區域
+  LMOVE mix_zone
+  POINT target_pt = mix_zone  ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+  POINT target_conv = SHIFT(target_pt BY 100,0,0)
+  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
+  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
+  LMOVE target_pt_appro
+  LMOVE target_conv
+  LMOVE target_pt
+  LMOVE depart_pt
+  
+.END
+.PROGRAM pg0812 ()
+  IF .$arm <> "F60_R" THEN
+    CALL SEND_LINE ("ERROR,E4003")
+    RETURN
+  END
+  found = 1
+  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+    POINT target_pt = TRANS (.x_mm, .y_mm, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+    POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
+  ELSE
+    IF .$location == "WAIT_ZONE" THEN
+      POINT target_pt = wait_zone
+      POINT target_conv = SHIFT(target_pt BY -100,0,0)
+    ELSE
+      IF .$location == "MIX_ZONE" THEN
+        POINT target_pt = mix_zone
+        POINT target_conv = SHIFT(target_pt BY -100,0,0)
+      ELSE
+        found = 0
+      END
+    END
+  END
+  IF found == 0 THEN
+    CALL SEND_LINE ("ERROR,E4002")
+    RETURN
+  END
+  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
+  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
+  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
+  POINT target_pt_appro = SHIFT (target_pt BY 0, 0, appro_mm)
+  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
+  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
+  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
+  robot_busy = 1
+  SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
+  LMOVE target_pt_appro
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 2: 下降 — 一起下降到取料高度
+  LMOVE target_conv
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
+  LMOVE target_pt
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
+  ; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
+  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
+  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
+  LMOVE depart_pt
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+.END
+.PROGRAM DO_PLACE_test() #0
+  ;TOOL ha_pickup
+  ;LMOVE work_chop_zone
+  ;LMOVE wait_zone_1
+  ;LMOVE mix_zone
+  ;LMOVE salad_bowl
+  ;LMOVE work_chop_pu
+  ;LMOVE wait_zone_pu
+  ;LMOVE mix_zone_pu
+  ;LMOVE salad_bowl_pu
+  ;LMOVE chop_rep
+  ;C1MOVE chop_rep1
+  ;C2MOVE chop_appro_per
+  ;LMOVE press_chop_zo
+  ;LMOVE chop_spread_pt
+  ;LMOVE chop_depart_pt
+  ;LMOVE home_right
+  ;POINT pour_per = SHIFT (target_pt BY 0, 0, appro_mm)
+  ;LMOVE pour_per
+  ;LMOVE pour_pt
+  ;LMOVE pour_pu
+  ;POINT pour_up = SHIFT (pour_pu BY 0, 0, appro_mm)
+  ;LMOVE pour_up
+  ;
+  TOOL ha_pickup
+  ;等待區
+  LMOVE wait_zone_1
+  LMOVE wait_zone_up
+  POINT target_pt = wait_zone_1
+  POINT target_up = wait_zone_up
+  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm );上方點
+  POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
+  LMOVE target_per
+  LMOVE target_pt
+  LMOVE target_up
+  ;混拌區
+  LMOVE mix_zone
+  LMOVE mix_zone_up
+  POINT target_pt = mix_zone
+  POINT target_up = mix_zone_up
+  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm );上方點
+  POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
+  LMOVE target_per
+  LMOVE target_pt
+  LMOVE target_up
+  LMOVE target_out
+  ;上菜區
+  LMOVE salad_bowl
+  LMOVE salad_bowl_up
+  POINT target_pt = salad_bowl
+  POINT target_up = salad_bowl_up
+  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm );上方點
+  POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
+  LMOVE target_per
+  LMOVE target_pt
+  LMOVE target_up
+  LMOVE target_out
+  ;切菜區
+  LMOVE work_zone
+  LMOVE work_zone_up
+  POINT target_pt = work_zone
+  POINT target_up = work_zone_up
+  LMOVE chop_rep
+  C1MOVE chop_rep1
+  C2MOVE chop_appro_pt
+  LMOVE work_chop_zone
+  LMOVE chop_spread_pt
+  LMOVE chop_depart_pt
+ 
+.END
 .PROGRAM Comment___ () ; Comments for IDE. Do not use.
 	; @@@ PROJECT @@@
 	; @@@ PROJECTNAME @@@
 	; F60_R_右臂_GBK
 	; @@@ HISTORY @@@
 	; 01.08.2026 18:24:57
-	;
+	; 
+	; 11.08.2026 17:19:01
+	; 
+	; 12.08.2026 15:31:51
+	; 
 	; @@@ INSPECTION @@@
 	; @@@ CONNECTION @@@
 	; Rs07_R
@@ -792,7 +999,7 @@ listen:
 	; 23
 	; @@@ PROGRAM @@@
 	; 0:INIT_SWITCHES:F
-	; .PC
+	; .PC 
 	; 0:INIT_CONST:F
 	; 0:INIT_POINTS:F
 	; 0:INIT_TOOL:F
@@ -802,45 +1009,53 @@ listen:
 	; 0:CLEAN_SOCKET:F
 	; 0:OPEN_LISTEN:F
 	; 0:WAIT_ACCEPT:F
-	; .accepted
+	; .accepted 
 	; 0:DO_HANDSHAKE:F
-	; .ok
+	; .ok 
 	; 0:RECV_LINE:F
-	; .rok
+	; .rok 
 	; 0:SEND_LINE:F
 	; 0:SPLIT_CSV:F
 	; 0:DISPATCH:F
 	; 0:WAIT_SIGNAL:F
-	; .sig_no
-	; .timeout_sec
-	; .ok
+	; .sig_no 
+	; .timeout_sec 
+	; .ok 
 	; 0:WAIT_SIGNAL_OFF:F
-	; .sig_no
-	; .timeout_sec
-	; .ok
+	; .sig_no 
+	; .timeout_sec 
+	; .ok 
 	; 0:DO_IOTEST:F
-	; .op
+	; .op 
 	; 0:SYNC_STEP:F
-	; .ok
+	; .ok 
 	; 0:DO_PICKUP:F
+	; .x_mm 
+	; .y_mm 
+	; .angle_deg 
 	; 0:DO_CHOP:F
-	; .cuts
-	; .thick
+	; .cuts 
+	; .thick 
 	; 0:DO_PLACE:F
 	; 0:DO_RTURN45:F
-	; .ok
+	; .ok 
 	; 0:DO_RTURN90:F
-	; .ok
+	; .ok 
 	; 0:DO_RTURN135:F
-	; .ok
+	; .ok 
 	; 0:DO_FLIP:F
-	; .cycles
-	; .speed_pct
+	; .cycles 
+	; .speed_pct 
 	; 0:DO_HOME:F
 	; 0:DO_STOP:F
 	; 0:DO_RESET:F
 	; 0:DO_STATUS:F
 	; 0:DO_READY:F
+	; 0:DO_PICKUP_test:F
+	; 0:pg0812:F
+	; .x_mm 
+	; .y_mm 
+	; 0:DO_PLACE_test:F
 	; @@@ TRANS @@@
 	; @@@ JOINTS @@@
 	; @@@ REALS @@@
