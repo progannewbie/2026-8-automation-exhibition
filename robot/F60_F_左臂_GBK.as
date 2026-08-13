@@ -3417,6 +3417,10 @@ F60_F_左臂_GBK
 @@@ HISTORY @@@
 01.08.2026 18:24:50
 06.08.2026 13:07:47
+12.08.2026 15:42:35
+
+13.08.2026 09:38:19
+
 @@@ INSPECTION @@@
 @@@ CONNECTION @@@
 Rs07_F
@@ -3481,24 +3485,33 @@ Rs07_F
 0:arm_dispatch:F
 0:arm_responder:F
 0:atest_1:F
+.t 
 0:autohome:F
 0:break:F
 0:cake:F
+.k 
 0:cake_check:F
 0:cake_point:F
+.i 
 0:clean:F
 0:cleanup_old_soc:F
 0:close_socket:F
 0:do_chop_test:F
+.cuts 
+.thick 
 0:do_place_test:F
 0:ethernet_test:F
+.n 
 0:fry_burger:F
 0:fry_lunchmeat:F
 0:get:F
+.n 
 0:get_ok_netosw:F
 0:hb:F
 0:init:F
+.PC 
 0:init1222:F
+.PC 
 0:lcon120:F
 0:lcon150:F
 0:lcon30:F
@@ -3515,12 +3528,15 @@ Rs07_F
 0:main1222:F
 0:oldsocket:F
 0:open_socket:F
+.er_count 
 0:point_teach:F
 0:recv:F
+.num 
 0:remove:F
 0:remove_1:F
 0:remove_2:F
 0:send:F
+.ret 
 0:teach:F
 0:test_timer:F
 0:pg0811:F
@@ -3669,38 +3685,38 @@ TOOL: NULL
 	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
 .END
 .PROGRAM MAIN() #0
-	CALL heartput
-	CALL INIT_SWITCHES
-	CALL INIT_CONST
-	;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
-	CALL INIT_TOOL
-	SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-	ACCURACY 1
-	SIGNAL -sig_out_step
-	LMOVE home_left
-	CALL CLEAN_SOCKET
-	CALL OPEN_LISTEN
-	DO
-		CALL WAIT_ACCEPT (accepted)
-		IF accepted == 1 THEN
-			sock_open_flag = 1
-			$rxbuf = ""
-			CALL DO_HANDSHAKE (hs_ok)
-			IF hs_ok == 1 THEN
-				conn_lost = 0
-				DO
-					CALL RECV_LINE ($line, rok)
-					IF rok == 0 THEN
-						conn_lost = 1
-					ELSE
-						CALL SPLIT_CSV ($line)
-						CALL DISPATCH
-					END
-				UNTIL conn_lost == 1
-			END
-			CALL DISCONNECT
-		END
-	UNTIL 1 == 0
+  CALL heartput
+  CALL INIT_SWITCHES
+  CALL INIT_CONST
+  ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
+  CALL INIT_TOOL
+  SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  ACCURACY 1
+  SIGNAL -sig_out_step
+  LMOVE home_left
+  CALL CLEAN_SOCKET
+  CALL OPEN_LISTEN
+  DO
+    CALL WAIT_ACCEPT (accepted)
+    IF accepted == 1 THEN
+      sock_open_flag = 1
+      $rxbuf = ""
+      CALL DO_HANDSHAKE (hs_ok)
+      IF hs_ok == 1 THEN
+        conn_lost = 0
+        DO
+          CALL RECV_LINE ($line, rok)
+          IF rok == 0 THEN
+            conn_lost = 1
+          ELSE
+            CALL SPLIT_CSV ($line)
+            CALL DISPATCH
+          END
+        UNTIL conn_lost == 1
+      END
+      CALL DISCONNECT
+    END
+  UNTIL 1 == 0
 .END
 .PROGRAM DISCONNECT() #48
 	TCP_CLOSE cret, sock_id
@@ -3886,7 +3902,7 @@ listen:
 	SIGNAL -sig_out_step
 	.ok = ok1
 .END
-.PROGRAM DO_PICKUP(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #24
+.PROGRAM DO_PICKUP(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #40
   IF .$arm <> "F60_F" THEN
     CALL SEND_LINE ("ERROR,E4003")
     RETURN
@@ -3898,11 +3914,11 @@ listen:
   ELSE
     IF .$location == "WAIT_ZONE" THEN
       POINT target_pt = wait_zone
-      POINT target_conv = SHIFT(target_pt BY -100,0,0)
+      POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
     ELSE
       IF .$location == "MIX_ZONE" THEN
         POINT target_pt = mix_zone
-        POINT target_conv = SHIFT(target_pt BY -100,0,0)
+        POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
       ELSE
         found = 0
       END
@@ -3961,6 +3977,9 @@ listen:
     robot_busy = 0
     RETURN
   END
+  TOOL left_spatula
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_CHOP(.$food,.cuts,.thick) #0
   IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
@@ -3978,26 +3997,32 @@ listen:
   break
   JMOVE #work_chop_zone
   break
+  CALL SYNC_STEP (ok);直鄣同一叨
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
   i = 0
   DO
-    CALL SYNC_STEP (ok); sync A F60_R 食模碌
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023"); I/O 號r (p)
-      robot_busy = 0
-      RETURN
-    END
+    ;CALL SYNC_STEP (ok); sync A F60_R 食模碌
+    ;IF ok == 0 THEN
+    ;  CALL SEND_LINE ("ERROR,E4023"); I/O 號r (p)
+    ;  robot_busy = 0
+    ;  RETURN
+    ;END
     LMOVE chop_per[i]
     break
     LMOVE chop_1[i]
     break
     LMOVE chop_per[i]
     break
-    ;CALL SYNC_STEP (ok)                  ; sync B通知 F60_R @辏琠M
-    ;IF ok == 0 THEN
-    ;  CALL SEND_LINE ("ERROR,E4023")
-    ;  robot_busy = 0
-    ;  RETURN
-    ;END
+    CALL SYNC_STEP (ok)                  ; sync B通知 F60_R @辏琠M
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
     DRAW .thick, 0, 0; M一位
     i = i + 1
   UNTIL i >= .cuts
@@ -4051,6 +4076,7 @@ listen:
   END
   ;抬
   LMOVE level2_up
+  BREAK
   CALL SYNC_STEP (ok); 直奂
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
@@ -4058,7 +4084,7 @@ listen:
     RETURN
   END
   LMOVE #work_chop_zone
-  break
+  BREAK
   TOOL left_spatula
   JMOVE home_left
   robot_busy = 0
@@ -4069,7 +4095,7 @@ listen:
     RETURN
   END
 .END
-.PROGRAM DO_PLACE(.$source,.$location,.$method) #0
+.PROGRAM DO_PLACE(.$source,.$location,.$method) #13
   ; 解析目的地
   found = 1
   IF .$location == "WAIT_ZONE_1" THEN
@@ -4084,7 +4110,7 @@ listen:
         POINT target_pt = salad_bowl
         POINT target_up = salad_bowl_up
       ELSE
-        IF .$location == "work_zone" THEN
+        IF .$location == "WORK_CHOP_ZONE" THEN
           POINT target_pt = work_zone
           POINT target_up = work_zone_up
         ELSE
@@ -4104,19 +4130,19 @@ listen:
   robot_busy = 1
   SPEED 70 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
   TOOL ha_pickup; PLACE 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm );上方點
+  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm);上方點
   POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
   ;切割區步驟
-  IF .$location == "work_zone" THEN
+  IF .$location == "WORK_CHOP_ZONE" THEN
     ;切割區上方
     LMOVE chop_rep
-    BREAK
-    SPEED 35 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    break
+    SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C1MOVE chop_rep1
-    BREAK
-    SPEED 35 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    break
+    SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C2MOVE chop_appro_pt
-    BREAK
+    break
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4124,8 +4150,9 @@ listen:
       RETURN
     END
     ; 下降
+    SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     LMOVE work_chop_zone
-    BREAK
+    break
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4134,7 +4161,7 @@ listen:
     END
     ;釋放
     LMOVE chop_spread_pt
-    BREAK
+    break
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4143,7 +4170,7 @@ listen:
     END
     ;抬起離開目的地
     LMOVE chop_depart_pt
-    BREAK
+    break
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4153,7 +4180,7 @@ listen:
     ;回到原點
     TOOL left_spatula
     LMOVE home_left
-    BREAK
+    break
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4171,27 +4198,8 @@ listen:
     robot_busy = 0
     RETURN
   END
-  ; 階段 2: 下降到目的地
-  LMOVE target_per
-  BREAK
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 3: 釋放 (依方式)
+  ; 階段 2: 釋放 (依方式)
   LMOVE target_up
-  BREAK
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  
-  ; 階段4: 抬起離開目的地
-  LMOVE target_out
   BREAK
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
@@ -5207,7 +5215,6 @@ exit_end:
   LMOVE work_chop_zone
   LMOVE chop_spread_pt
   LMOVE chop_depart_pt
-.END
 .END
 .PROGRAM ethernet_test() #0
 	; *******************************************************************
@@ -6725,7 +6732,7 @@ connect:
 .END
 .PROGRAM DO_PREPARE ()
   CALL heartput
-  BREAK
+  break
   CALL INIT_TOOL
   SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
   ACCURACY 1

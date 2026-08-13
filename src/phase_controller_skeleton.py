@@ -278,10 +278,17 @@ class PhaseController:
                 if not self._validate_command(cmd, CommandParser.validate_pickup):
                     return False
 
-                logger.info(f"  取料: {location} (雙臂協同，主導臂: {arm})")
+                logger.info(f"  取料: {location} (雙臂協同)")
 
+                # 各臂的 AS DO_PICKUP 都會檢查 arm 欄位是不是自己
+                # （左臂要 "F60_F"、右臂要 "F60_R"），不符就回 ERROR,E4003。
+                # 送同一個字串給兩邊必定有一邊被拒，所以各自帶自己的名稱。
+                cmds = {
+                    a: PickupCommand.create(location, a, x_mm, y_mm, angle_deg)
+                    for a in ("F60_F", "F60_R")
+                }
                 # PICKUP 兩臂會逐階段用 SYNC_STEP 會合，指令必須同時送給兩邊
-                responses = self.comms.send_command_dual(cmd)
+                responses = self.comms.send_command_dual(cmds)
                 if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
                     logger.info(f"  ✓ 取料成功")
                     return True
@@ -337,23 +344,16 @@ class PhaseController:
         if not self._validate_command(cmd, CommandParser.validate_place):
             return False
 
-        # 只有 POUR（雙鏟一起傾倒）需要兩臂用 SYNC_STEP 會合；
-        # SCOOP/PUSH 是 F60_F 單獨搬運（F60_R 的 AS 程式對這兩種方式不會合，
-        # 也不認得 WAIT_ZONE 這類暫存位置），維持只送 F60_F
-        dual = (method == "POUR")
-
+        # 一律雙臂。食材是夾在兩支鏟子中間搬運的，只送左臂的話右臂不動，
+        # 東西會掉。兩臂的 AS DO_PLACE 都有完整的目的地分支（WAIT_ZONE_1 /
+        # MIX_ZONE / SALAD_BOWL / WORK_CHOP_ZONE），SCOOP/PUSH/POUR 都收。
         for attempt in range(max_retries):
             try:
-                logger.info(f"  放置: {source} → {location} (方式: {method}{'，雙臂協同' if dual else ''})")
+                logger.info(f"  放置: {source} → {location} (方式: {method}，雙臂協同)")
 
-                if dual:
-                    responses = self.comms.send_command_dual(cmd)
-                    ok = responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK"
-                    response_desc = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
-                else:
-                    response = self.comms.send_command("F60_F", cmd)
-                    ok = response == "OK"
-                    response_desc = response
+                responses = self.comms.send_command_dual(cmd)
+                ok = responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK"
+                response_desc = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
 
                 if ok:
                     logger.info(f"  ✓ 放置完成")
@@ -401,20 +401,24 @@ class PhaseController:
         return False
     
     def _handle_home(self, location: str, params: Dict, max_retries: int) -> bool:
-        """處理復歸"""
-        arm = params.get("arm", "F60_F")
-        cmd = HomeCommand.create(arm)
+        """處理復歸（兩臂都要回原點）"""
+        # AS 的 DO_HOME 會檢查 arm == $this_arm，各臂只認自己的名稱，
+        # 所以兩邊各送各的。食譜裡的 params["arm"] 只是主導臂標示，
+        # 不代表只復歸那一支——收工時兩臂都得回原點。
+        cmds = {a: HomeCommand.create(a) for a in ("F60_F", "F60_R")}
 
-        if not self._validate_command(cmd, CommandParser.validate_home):
-            return False
+        for c in cmds.values():
+            if not self._validate_command(c, CommandParser.validate_home):
+                return False
 
         # 復歸失敗是致命的，不允許重試
         try:
-            logger.info(f"  復歸: {arm} → {location}")
+            logger.info(f"  復歸: F60_F + F60_R → {location}")
 
-            response = self.comms.send_command(arm, cmd)
-            
-            if response == "OK":
+            responses = self.comms.send_command_dual(cmds)
+            response = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
+
+            if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
                 logger.info(f"  ✓ 復歸完成")
                 return True
             else:

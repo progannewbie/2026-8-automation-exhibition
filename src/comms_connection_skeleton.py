@@ -407,24 +407,34 @@ class CommsManager:
             logger.error(f"未知的 arm_id: {arm_id}")
             return None
 
-    def send_command_dual(self, cmd: str) -> Dict[str, Optional[str]]:
+    def send_command_dual(self, cmd) -> Dict[str, Optional[str]]:
         """
-        同時送同一筆指令給 F60_F 與 F60_R（各自在自己的執行緒平行送出）
+        同時送指令給 F60_F 與 F60_R（各自在自己的執行緒平行送出）
 
-        PICKUP / CHOP / PLACE(POUR) / FLIP 這幾種動作，兩台控制器的 AS
-        程式會逐階段用 SYNC_STEP 訊號互相等待對方。若用 send_command()
-        依序送（先送 F60_F、等回應、再送 F60_R），等於變相把兩邊的動作
-        時間疊加，而且先收到指令的那台會在 SYNC_STEP 卡住等對方，直到
-        PC 端真的把指令送到另一邊才會繼續——這裡改用兩個執行緒同時送出，
-        兩邊控制器才會幾乎同時進入各自的 SYNC_STEP 交握。
+        PICKUP / CHOP / PLACE / FLIP 這幾種動作，兩台控制器的 AS 程式會逐
+        階段用 SYNC_STEP 訊號互相等待對方。若用 send_command() 依序送（先送
+        F60_F、等回應、再送 F60_R），先收到指令的那台會在 SYNC_STEP 卡住等
+        對方，而 PC 端又卡在 recv() 等它回應 → 死結，直到 AS 端
+        timeout_io_sec(30s) 逾時。所以一定要兩個執行緒同時送出。
+
+        Args:
+            cmd: 字串 → 兩臂送同一筆指令
+                 dict  → {"F60_F": 指令, "F60_R": 指令} 各臂送各自的指令。
+                         PICKUP / HOME 需要這個形式，因為 AS 端會檢查指令裡的
+                         arm 欄位是不是自己，送錯會回 ERROR,E4003。
 
         Returns:
             {"F60_F": 回應或 None, "F60_R": 回應或 None}
         """
+        if isinstance(cmd, str):
+            cmds = {"F60_F": cmd, "F60_R": cmd}
+        else:
+            cmds = cmd
+
         responses: Dict[str, Optional[str]] = {}
 
         def _call(arm_id: str):
-            responses[arm_id] = self.send_command(arm_id, cmd)
+            responses[arm_id] = self.send_command(arm_id, cmds[arm_id])
 
         threads = [threading.Thread(target=_call, args=(arm_id,)) for arm_id in ('F60_F', 'F60_R')]
         for t in threads:

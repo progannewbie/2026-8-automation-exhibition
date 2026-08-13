@@ -56,6 +56,10 @@ class PickupCommand:
         "PICKUP_CARROT",
         "PICKUP_ROMAINE",
         "WAIT_ZONE",  # 菜色 4 完整流程：從等待區取回暫放的食材
+        # CHOP / FLIP 結束後食材是躺在檯面上的，要再夾起來才能搬走。
+        # AS 的 DO_PICKUP 沒有 WORK_CHOP_ZONE 分支，但教點 mix_zone 與
+        # work_zone 是同一個座標（實測差 0.005mm），所以走 MIX_ZONE 這條。
+        "MIX_ZONE",
     ]
 
     # 這幾個位置的座標由 YOLO + 手眼標定即時算出；其餘位置忽略 X/Y/ANGLE，用教點
@@ -149,11 +153,19 @@ class PlaceCommand:
 
     FORMAT = "PLACE,<SOURCE>,<LOCATION>,<METHOD>"
 
+    # ⚠️ AS 端的 DO_PLACE 完全沒有使用 source 參數（只出現在 .PROGRAM 宣告行，
+    #    函式內一次都沒讀），實際只看 location。這裡保留 source 是給 PC 端
+    #    閱讀流程與寫 log 用，所以清單要涵蓋所有「食材可能被夾起來的地方」，
+    #    也就是 PICKUP 的合法位置 + 各暫存/工作區。
     VALID_SOURCES = [
         "WORK_CHOP_ZONE",
         "WAIT_ZONE_1",
         "WAIT_ZONE_2",
         "MIX_ZONE",
+        "WAIT_ZONE",
+        "PICKUP_CUCUMBER",
+        "PICKUP_CARROT",
+        "PICKUP_ROMAINE",
     ]
 
     VALID_LOCATIONS = [
@@ -162,6 +174,9 @@ class PlaceCommand:
         "WAIT_ZONE_2",
         "MIX_ZONE",
         "WASTE_CORNER",
+        # PICKUP 取料後要先送進切割區才能 CHOP（DO_PICKUP 舊版的
+        # 「階段 5：移動至切割區」已移除，改由 DO_PLACE 負責）
+        "WORK_CHOP_ZONE",
     ]
 
     VALID_METHODS = {

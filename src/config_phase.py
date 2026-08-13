@@ -125,17 +125,33 @@ class PhaseInstruction:
 
 
 class MenuRecipes:
-    """菜色食譜與流程"""
-    
+    """
+    菜色食譜與流程
+
+    ⚠️ 搬運一律是 PICKUP + PLACE 一對
+       AS 的 DO_PICKUP 只負責「雙臂夾起食材」，DO_PLACE 只負責「搬到目的地放下」。
+       DO_PICKUP 舊版有「階段 5：移動至切割區」會自己搬過去，現行版本已移除，
+       所以每次移動食材都要先 PICKUP 夾起、再 PLACE 放下，不能只下一句 PLACE。
+
+    ⚠️ DO_PLACE 完全不使用 source 參數
+       AS 端只看 location，source 僅供 PC 端閱讀與紀錄用。因此「從 A 搬到 B」
+       必須寫成 PICKUP(A) + PLACE(B) 兩步，不能靠 PLACE 的 source 指定來源。
+
+    ⚠️ 切割區與混拌區是同一個座標
+       教點 work_zone 與 mix_zone 實測差 0.005mm，是同一個物理位置。所以：
+       - 切完後要夾起食材，用 PICKUP(MIX_ZONE)（DO_PICKUP 沒有 WORK_CHOP_ZONE 分支）
+       - 最後一個切的食材切完不必搬，原地就是混拌區
+    """
+
     # ========================================================================
     # 菜色 1: 小黃瓜單品
     # ========================================================================
-    
+
     RECIPE_1_CUCUMBER = {
         "name": "菜色 1: 小黃瓜",
-        "description": "取小黃瓜 → 切 → 放沙拉盤",
+        "description": "取小黃瓜 → 送進切割區 → 切 → 夾起 → 倒沙拉盤",
         "continuous": False,
-        "estimated_time_sec": 35,
+        "estimated_time_sec": 50,
         "phases": [
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -144,16 +160,29 @@ class MenuRecipes:
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
+                phase=Phase.PLACE,
+                action="PLACE",
+                location="WORK_CHOP_ZONE",
+                params={"source": "PICKUP_CUCUMBER", "method": "SCOOP"},
+            ),
+            PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
             ),
+            # 切完食材是躺在檯面上的，要先夾起來才能搬
+            PhaseInstruction(
+                phase=Phase.PICKUP,
+                action="PICKUP",
+                location="MIX_ZONE",
+                params={"arm": "F60_F"},
+            ),
             PhaseInstruction(
                 phase=Phase.PLACE_FINAL,
                 action="PLACE",
                 location="SALAD_BOWL",
-                params={"source": "WORK_CHOP_ZONE", "method": "POUR"},
+                params={"source": "MIX_ZONE", "method": "POUR"},
             ),
             PhaseInstruction(
                 phase=Phase.HOME,
@@ -163,16 +192,16 @@ class MenuRecipes:
             ),
         ],
     }
-    
+
     # ========================================================================
     # 菜色 2: 紅蘿蔔單品
     # ========================================================================
 
     RECIPE_2_CARROT = {
         "name": "菜色 2: 紅蘿蔔",
-        "description": "取紅蘿蔔 → 切 → 放沙拉盤",
+        "description": "取紅蘿蔔 → 送進切割區 → 切 → 夾起 → 倒沙拉盤",
         "continuous": False,
-        "estimated_time_sec": 35,
+        "estimated_time_sec": 50,
         "phases": [
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -181,16 +210,28 @@ class MenuRecipes:
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
+                phase=Phase.PLACE,
+                action="PLACE",
+                location="WORK_CHOP_ZONE",
+                params={"source": "PICKUP_CARROT", "method": "SCOOP"},
+            ),
+            PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CARROT"].__dict__,
             ),
             PhaseInstruction(
+                phase=Phase.PICKUP,
+                action="PICKUP",
+                location="MIX_ZONE",
+                params={"arm": "F60_F"},
+            ),
+            PhaseInstruction(
                 phase=Phase.PLACE_FINAL,
                 action="PLACE",
                 location="SALAD_BOWL",
-                params={"source": "WORK_CHOP_ZONE", "method": "POUR"},
+                params={"source": "MIX_ZONE", "method": "POUR"},
             ),
             PhaseInstruction(
                 phase=Phase.HOME,
@@ -200,16 +241,19 @@ class MenuRecipes:
             ),
         ],
     }
-    
+
     # ========================================================================
     # 菜色 3: 羅曼生菜單品
     # ========================================================================
+    # ⚠️ 生菜不切：AS 的 DO_CHOP 只認得 CUCUMBER / CARROT，
+    #    送 ROMAINE 進去會落到 SCASE 的 ANY 分支回 ERROR,E4005。
+    #    夾起來之後直接倒進沙拉盤。
 
     RECIPE_3_ROMAINE = {
         "name": "菜色 3: 羅曼生菜",
-        "description": "取羅曼生菜 → 切 → 放沙拉盤",
+        "description": "取羅曼生菜 → 直接倒沙拉盤（葉菜不切）",
         "continuous": False,
-        "estimated_time_sec": 35,
+        "estimated_time_sec": 25,
         "phases": [
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -218,16 +262,10 @@ class MenuRecipes:
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
-                phase=Phase.CHOP,
-                action="CHOP",
-                location="WORK_CHOP_ZONE",
-                params=FOOD_CUT_PARAMS["ROMAINE"].__dict__,
-            ),
-            PhaseInstruction(
                 phase=Phase.PLACE_FINAL,
                 action="PLACE",
                 location="SALAD_BOWL",
-                params={"source": "WORK_CHOP_ZONE", "method": "POUR"},
+                params={"source": "PICKUP_ROMAINE", "method": "POUR"},
             ),
             PhaseInstruction(
                 phase=Phase.HOME,
@@ -237,19 +275,20 @@ class MenuRecipes:
             ),
         ],
     }
-    
+
     # ========================================================================
     # 菜色 4: 生菜沙拉完整流程（連續執行）
     # ========================================================================
-    
+
     RECIPE_4_SALAD = {
         "name": "菜色 4: 生菜沙拉完整流程",
-        "description": "小黃瓜→暫放 → 紅蘿蔔→混拌區 → 羅曼生菜→混拌區 → 取回暫放 → 翻炒 → 沙拉盤",
+        "description": "小黃瓜→暫放 → 紅蘿蔔→留在混拌區 → 生菜→混拌區 → 取回小黃瓜 → 翻炒 → 沙拉盤",
         "continuous": True,  # ⚠️ 必須連續執行
-        "estimated_time_sec": 140,  # ~2.33 分鐘（生菜不切）
+        "estimated_time_sec": 180,
         "phases": [
             # ================================================================
-            # 步驟 1: 小黃瓜 → 切 → 暫放等待區1
+            # 步驟 1-5: 小黃瓜 → 切 → 夾起 → 暫放等待區1
+            # 小黃瓜必須搬走，把切割區讓給紅蘿蔔
             # ================================================================
 
             PhaseInstruction(
@@ -259,20 +298,33 @@ class MenuRecipes:
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
+                phase=Phase.PLACE,
+                action="PLACE",
+                location="WORK_CHOP_ZONE",
+                params={"source": "PICKUP_CUCUMBER", "method": "SCOOP"},
+            ),
+            PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
             ),
             PhaseInstruction(
+                phase=Phase.PICKUP,
+                action="PICKUP",
+                location="MIX_ZONE",
+                params={"arm": "F60_F"},
+            ),
+            PhaseInstruction(
                 phase=Phase.PLACE,
                 action="PLACE",
                 location="WAIT_ZONE_1",
-                params={"source": "WORK_CHOP_ZONE", "method": "SCOOP"},
+                params={"source": "MIX_ZONE", "method": "SCOOP"},
             ),
 
             # ================================================================
-            # 步驟 2: 紅蘿蔔 → 切 → 直接進混拌區
+            # 步驟 6-8: 紅蘿蔔 → 切
+            # 紅蘿蔔是最後一個切的，切完留在原地就已經在混拌區，不必搬
             # ================================================================
 
             PhaseInstruction(
@@ -282,20 +334,20 @@ class MenuRecipes:
                 params={"arm": "F60_F"},
             ),
             PhaseInstruction(
+                phase=Phase.PLACE,
+                action="PLACE",
+                location="WORK_CHOP_ZONE",
+                params={"source": "PICKUP_CARROT", "method": "SCOOP"},
+            ),
+            PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CARROT"].__dict__,
             ),
-            PhaseInstruction(
-                phase=Phase.PLACE,
-                action="PLACE",
-                location="MIX_ZONE",
-                params={"source": "WORK_CHOP_ZONE", "method": "SCOOP"},
-            ),
 
             # ================================================================
-            # 步驟 3: 羅曼生菜 → 直接進混拌區（不切）
+            # 步驟 9-10: 羅曼生菜 → 直接進混拌區（不切）
             # ================================================================
 
             PhaseInstruction(
@@ -312,18 +364,25 @@ class MenuRecipes:
             ),
 
             # ================================================================
-            # 步驟 4: 取回等待區1(小黃瓜) → 混拌區
+            # 步驟 11-12: 取回等待區的小黃瓜 → 混拌區
+            # DO_PICKUP 的分支名稱是 WAIT_ZONE（不是 WAIT_ZONE_1）
             # ================================================================
 
+            PhaseInstruction(
+                phase=Phase.PICKUP,
+                action="PICKUP",
+                location="WAIT_ZONE",
+                params={"arm": "F60_F"},
+            ),
             PhaseInstruction(
                 phase=Phase.PLACE,
                 action="PLACE",
                 location="MIX_ZONE",
-                params={"source": "WAIT_ZONE_1", "method": "SCOOP"},
+                params={"source": "WAIT_ZONE", "method": "SCOOP"},
             ),
 
             # ================================================================
-            # 步驟 6: 翻炒
+            # 步驟 13: 翻炒
             # ================================================================
 
             PhaseInstruction(
@@ -334,9 +393,16 @@ class MenuRecipes:
             ),
 
             # ================================================================
-            # 步驟 7: 倒沙拉盤
+            # 步驟 14-15: 夾起拌好的沙拉 → 倒沙拉盤
+            # 翻炒完沙拉躺在混拌區，跟切完一樣要先夾起來
             # ================================================================
 
+            PhaseInstruction(
+                phase=Phase.PICKUP,
+                action="PICKUP",
+                location="MIX_ZONE",
+                params={"arm": "F60_F"},
+            ),
             PhaseInstruction(
                 phase=Phase.PLACE_FINAL,
                 action="PLACE",
@@ -345,7 +411,7 @@ class MenuRecipes:
             ),
 
             # ================================================================
-            # 步驟 8: 復歸
+            # 步驟 16: 復歸
             # ================================================================
 
             PhaseInstruction(
@@ -364,21 +430,20 @@ class MenuRecipes:
 
 # 狀態轉移規則：
 #
-# INIT → PICKUP → CHOP → PLACE / PLACE_FINAL
-#                       ↓
-#                   FLIP (可選)
-#                       ↓
-#                 PLACE_FINAL
-#                       ↓
-#                     HOME
-#                       ↓
-#                     DONE
+# 搬運一律成對：PICKUP 夾起 → PLACE 放下。CHOP / FLIP 結束後食材是躺在
+# 檯面上的，要再 PICKUP 夾起來才能搬走，所以 CHOP 和 FLIP 的下一步是 PICKUP。
+#
+#   INIT → PICKUP → PLACE →─┬─→ CHOP → PICKUP → PLACE ...
+#                           │                      ↓
+#                           └──────────────→ FLIP → PICKUP → PLACE_FINAL
+#                                                                 ↓
+#                                                               HOME → DONE
 PHASE_TRANSITIONS = {
     Phase.INIT: [Phase.PICKUP],
-    Phase.PICKUP: [Phase.CHOP, Phase.PLACE],
-    Phase.CHOP: [Phase.PLACE, Phase.PLACE_FINAL],
-    Phase.PLACE: [Phase.PICKUP, Phase.FLIP, Phase.PLACE_FINAL],
-    Phase.FLIP: [Phase.PLACE_FINAL],
+    Phase.PICKUP: [Phase.PLACE, Phase.PLACE_FINAL],
+    Phase.PLACE: [Phase.CHOP, Phase.PICKUP, Phase.FLIP],
+    Phase.CHOP: [Phase.PICKUP],
+    Phase.FLIP: [Phase.PICKUP],
     Phase.PLACE_FINAL: [Phase.HOME],
     Phase.HOME: [Phase.DONE],
     Phase.DONE: [],
