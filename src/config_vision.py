@@ -170,9 +170,119 @@ class HandEyeCalibrationConfig:
         ], dtype=np.float32)
 
 
+class TableHomography:
+    """
+    檯面單應性標定（像素 → 手臂 mm）
+
+    相機固定在檯面上方、食材都躺在同一個平面上，這種情況不需要相機內參與
+    4×4 hand-eye 矩陣——像素平面到檯面平面之間就是一個 3×3 單應性矩陣，
+    直接用標定點對解出來即可。CoordinateTransform.calibrate_hand_eye 那條
+    路需要先標定相機內參，這裡不走那條。
+
+    2026-08-13 現場標定，3×3 網格 9 點（手動移動手臂到位後讀 YOLO 中心點）：
+
+        像素 (u,v)      手臂 (x,y) mm
+        238, 270    →      0,   0
+        163, 271    →   -100,   0
+         88, 275    →   -200,   0
+        237, 203    →      0, 100
+        160, 204    →   -100, 100
+         82, 202    →   -200, 100
+        232, 128    →      0, 200
+        155, 124    →   -100, 200
+         73, 123    →   -200, 200
+
+    手臂座標是相對 pickup_origin 的偏移量，正好對應 AS 端 DO_PICKUP 的
+    POINT target_pt = TRANS(x_mm, y_mm, 0,0,0,0) + pickup_origin。
+
+    ⚠️ 這組標定的殘差 RMS 2.13mm、最大 3.19mm。殘差與位置無相關性
+       （相關係數皆 <0.05），代表誤差來源是標定當下的隨機誤差（手動移動
+       手臂的定位誤差 + 像素座標讀到整數），不是模型不足。要再降低精度
+       只能重新標定時把這兩項做準，換模型沒有用。
+
+    ⚠️ 檯面尺度在畫面上從 1.33 mm/px 變到 1.22 mm/px（約 9%），透視相當
+       明顯，相機沒有垂直於檯面。純仿射（6 參數）殘差會放大到 RMS
+       4.36mm / 最大 6.33mm，所以一定要用單應性，不能用等比例縮放。
+    """
+
+    # (u, v, x_mm, y_mm)
+    CALIBRATION_POINTS = [
+        (238, 270,    0,   0),
+        (163, 271, -100,   0),
+        ( 88, 275, -200,   0),
+        (237, 203,    0, 100),
+        (160, 204, -100, 100),
+        ( 82, 202, -200, 100),
+        (232, 128,    0, 200),
+        (155, 124, -100, 200),
+        ( 73, 123, -200, 200),
+    ]
+
+    # 由上面 9 點以 SVD 解出，像素齊次座標左乘即得檯面 mm
+    H = np.array([
+        [+1.14848330e+00, -2.80287259e-02, -2.64617134e+02],
+        [-2.96440782e-02, -1.21990355e+00, +3.37337519e+02],
+        [-3.06154651e-04, -4.36675108e-04, +1.00000000e+00],
+    ], dtype=np.float64)
+
+    RMS_ERROR_MM = 2.13
+    MAX_ERROR_MM = 3.19
+
+    # 標定點涵蓋的像素範圍。單應性在這個範圍內是內插，超出去是外推——
+    # 透視項 (h31, h32) 會讓誤差隨距離快速放大，所以超界要示警。
+    U_RANGE = (73, 238)
+    V_RANGE = (123, 275)
+
+    @classmethod
+    def is_within_calibrated_area(cls, u: float, v: float, margin_px: float = 20.0) -> bool:
+        """像素座標是否落在標定過的範圍內（含容許外擴 margin_px）"""
+        return (cls.U_RANGE[0] - margin_px <= u <= cls.U_RANGE[1] + margin_px and
+                cls.V_RANGE[0] - margin_px <= v <= cls.V_RANGE[1] + margin_px)
+
+    @classmethod
+    def pixel_to_mm(cls, u: float, v: float) -> Tuple[float, float]:
+        """
+        YOLO 像素中心點 → 相對 pickup_origin 的手臂偏移量 (mm)
+
+        回傳值直接餵給 PICKUP 指令的 X_MM / Y_MM 欄位。
+        """
+        p = cls.H @ np.array([u, v, 1.0])
+        return float(p[0] / p[2]), float(p[1] / p[2])
+
+    @classmethod
+    def solve(cls, points=None) -> np.ndarray:
+        """
+        重新標定：從點對解出單應性矩陣
+
+        重測之後把新的 (u, v, x_mm, y_mm) 傳進來，取得新的 H 覆蓋上面的常數。
+        至少 4 點，實務上鋪滿工作範圍的 3×3 網格以上比較穩。
+        """
+        pts = points if points is not None else cls.CALIBRATION_POINTS
+        if len(pts) < 4:
+            raise ValueError(f"單應性至少需要 4 個點對，只給了 {len(pts)} 個")
+
+        rows = []
+        for u, v, x, y in pts:
+            rows.append([u, v, 1, 0, 0, 0, -x * u, -x * v, -x])
+            rows.append([0, 0, 0, u, v, 1, -y * u, -y * v, -y])
+        _, _, vt = np.linalg.svd(np.array(rows, dtype=np.float64))
+        h = vt[-1].reshape(3, 3)
+        return h / h[2, 2]
+
+    @classmethod
+    def residuals(cls, points=None):
+        """逐點殘差 (mm)，用來確認標定品質"""
+        pts = points if points is not None else cls.CALIBRATION_POINTS
+        out = []
+        for u, v, x, y in pts:
+            px_, py_ = cls.pixel_to_mm(u, v)
+            out.append((u, v, x, y, px_, py_, float(np.hypot(px_ - x, py_ - y))))
+        return out
+
+
 class CoordinateTransform:
     """座標轉換工具"""
-    
+
     @staticmethod
     def pixel_to_real(
         pixel_x: float,

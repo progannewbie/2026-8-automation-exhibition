@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>SmartCook</title>
+<style>
+  :root{
+    --bg:#0f1216; --card:#1a1f26; --card2:#222932;
+    --line:#2c3542; --text:#eef2f7; --dim:#8b98a8;
+    --accent:#4ade80; --accent-dk:#22c55e;
+    --warn:#f59e0b; --danger:#ef4444;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+    user-select:none; -webkit-user-select:none;
+  }
+
+  header{
+    padding:2.2vh 3vw; display:flex; align-items:center; justify-content:space-between;
+    border-bottom:1px solid var(--line); flex-shrink:0;
+  }
+  .brand{font-size:clamp(20px,2.6vh,32px); font-weight:700; letter-spacing:.05em;}
+  .brand span{color:var(--accent);}
+  .sim{
+    font-size:clamp(12px,1.6vh,18px); color:var(--warn);
+    border:1px solid var(--warn); border-radius:999px; padding:.4em 1em;
+  }
+
+  main{flex:1; display:flex; align-items:center; justify-content:center; padding:3vh 3vw;}
+  .screen{width:100%; max-width:1400px; display:none;}
+  .screen.on{display:block;}
+
+  /* ---------- 菜單 ---------- */
+  .title{text-align:center; font-size:clamp(22px,3.4vh,42px); margin-bottom:3vh; color:var(--dim);}
+  .grid{display:grid; grid-template-columns:repeat(2,1fr); gap:clamp(16px,2.4vh,32px);}
+  .dish{
+    background:var(--card); border:2px solid var(--line); border-radius:24px;
+    padding:clamp(20px,3.2vh,44px); text-align:center; cursor:pointer;
+    transition:transform .12s, border-color .12s, background .12s;
+  }
+  .dish:active{transform:scale(.97); border-color:var(--accent); background:var(--card2);}
+  .dish .icon{font-size:clamp(48px,9vh,110px); line-height:1.1;}
+  .dish .name{font-size:clamp(24px,4vh,48px); font-weight:700; margin:.3em 0 .15em;}
+  .dish .meta{font-size:clamp(13px,1.9vh,22px); color:var(--dim);}
+  .dish.off{opacity:.35; pointer-events:none;}
+
+  .banner{
+    margin-top:3vh; text-align:center; padding:1.6vh; border-radius:14px;
+    background:rgba(239,68,68,.12); border:1px solid var(--danger);
+    color:#fca5a5; font-size:clamp(14px,2vh,22px);
+  }
+
+  /* ---------- 確認 ---------- */
+  .confirm-box{text-align:center;}
+  .confirm-box .icon{font-size:clamp(60px,12vh,150px);}
+  .confirm-box h2{font-size:clamp(28px,5vh,60px); margin:.3em 0;}
+  .confirm-box .est{font-size:clamp(18px,2.6vh,30px); color:var(--dim); margin-bottom:2.4vh;}
+  .notice{
+    background:rgba(245,158,11,.1); border:1px solid var(--warn); color:#fcd34d;
+    border-radius:14px; padding:2vh 3vw; font-size:clamp(16px,2.4vh,28px);
+    margin:0 auto 4vh; max-width:800px; line-height:1.7;
+  }
+  .btn-row{display:flex; gap:clamp(14px,2.4vw,32px); justify-content:center;}
+  button{
+    font-family:inherit; border:none; border-radius:18px; cursor:pointer;
+    font-size:clamp(20px,3.2vh,36px); font-weight:700;
+    padding:clamp(16px,2.6vh,30px) clamp(32px,6vw,90px);
+    transition:transform .12s, filter .12s;
+  }
+  button:active{transform:scale(.96); filter:brightness(1.15);}
+  .primary{background:var(--accent); color:#06240f;}
+  .ghost{background:var(--card2); color:var(--text); border:2px solid var(--line);}
+  .danger{background:var(--danger); color:#fff;}
+
+  /* ---------- 執行中 ---------- */
+  .run{text-align:center;}
+  .run h2{font-size:clamp(26px,4.4vh,54px); margin-bottom:1.2vh;}
+  .step-text{
+    font-size:clamp(22px,3.6vh,44px); color:var(--accent);
+    min-height:1.5em; margin-bottom:3vh; font-weight:700;
+  }
+  .bar{
+    height:clamp(14px,2.2vh,28px); background:var(--card); border-radius:999px;
+    overflow:hidden; border:1px solid var(--line); margin-bottom:1.4vh;
+  }
+  .bar > i{
+    display:block; height:100%; width:0%; border-radius:999px;
+    background:linear-gradient(90deg,var(--accent-dk),var(--accent));
+    transition:width .4s ease;
+  }
+  .run-meta{
+    display:flex; justify-content:space-between; color:var(--dim);
+    font-size:clamp(14px,2.1vh,24px); margin-bottom:4vh;
+  }
+  .stop-hint{color:var(--dim); font-size:clamp(12px,1.7vh,18px); margin-top:1.6vh;}
+
+  /* ---------- 結果 ---------- */
+  .result{text-align:center;}
+  .result .mark{font-size:clamp(70px,14vh,180px); line-height:1;}
+  .result h2{font-size:clamp(28px,5vh,60px); margin:.2em 0;}
+  .result .sub{font-size:clamp(16px,2.4vh,28px); color:var(--dim); margin-bottom:3.4vh;}
+  .errbox{
+    background:rgba(239,68,68,.1); border:1px solid var(--danger); color:#fca5a5;
+    border-radius:14px; padding:1.8vh 3vw; margin:0 auto 3.4vh; max-width:900px;
+    font-size:clamp(14px,2vh,22px); line-height:1.6; word-break:break-all;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Smart<span>Cook</span></div>
+  {% if simulate %}<div class="sim">模擬模式 · 手臂不會動</div>{% endif %}
+</header>
+
+<main>
+  <!-- 菜單 -->
+  <section id="s-menu" class="screen on">
+    <div class="title">請選擇餐點</div>
+    <div class="grid">
+      {% for d in dishes %}
+      <div class="dish" data-key="{{ d.key }}" data-name="{{ d.name }}"
+           data-icon="{{ d.icon }}" data-min="{{ d.minutes }}">
+        <div class="icon">{{ d.icon }}</div>
+        <div class="name">{{ d.name }}</div>
+        <div class="meta">{{ d.desc }} · 約 {{ d.minutes }} 分鐘</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="menu-banner" class="banner" style="display:none"></div>
+  </section>
+
+  <!-- 確認 -->
+  <section id="s-confirm" class="screen">
+    <div class="confirm-box">
+      <div class="icon" id="c-icon"></div>
+      <h2 id="c-title"></h2>
+      <div class="est" id="c-est"></div>
+      <div class="notice">請確認食材已放入取料區，<br>並確認機台周圍淨空。</div>
+      <div class="btn-row">
+        <button class="ghost" onclick="show('menu')">取消</button>
+        <button class="primary" id="c-go">確定開始</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 執行中 -->
+  <section id="s-run" class="screen">
+    <div class="run">
+      <h2 id="r-name"></h2>
+      <div class="step-text" id="r-step"></div>
+      <div class="bar"><i id="r-bar"></i></div>
+      <div class="run-meta">
+        <span id="r-count"></span>
+        <span id="r-time"></span>
+      </div>
+      <div class="btn-row"><button class="danger" id="r-stop">停止</button></div>
+      <div class="stop-hint">停止會在目前動作結束後生效。緊急狀況請按實體急停按鈕。</div>
+    </div>
+  </section>
+
+  <!-- 結果 -->
+  <section id="s-result" class="screen">
+    <div class="result">
+      <div class="mark" id="d-mark"></div>
+      <h2 id="d-title"></h2>
+      <div class="sub" id="d-sub"></div>
+      <div class="errbox" id="d-err" style="display:none"></div>
+      <div class="btn-row"><button class="primary" onclick="backToMenu()">返回菜單</button></div>
+    </div>
+  </section>
+</main>
+
+<script>
+let pending = null;      // 待確認的菜色
+let lastState = "idle";
+
+const $ = id => document.getElementById(id);
+
+function show(name){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+  $("s-" + name).classList.add("on");
+}
+
+function mmss(sec){
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m + ":" + String(s).padStart(2, "0");
+}
+
+// 選菜 → 確認畫面
+document.querySelectorAll(".dish").forEach(el => {
+  el.addEventListener("click", () => {
+    pending = el.dataset.key;
+    $("c-icon").textContent = el.dataset.icon;
+    $("c-title").textContent = "確定要做「" + el.dataset.name + "」？";
+    $("c-est").textContent = "預計 " + el.dataset.min + " 分鐘";
+    show("confirm");
+  });
+});
+
+$("c-go").addEventListener("click", async () => {
+  if (!pending) return;
+  const btn = $("c-go");
+  btn.disabled = true; btn.textContent = "啟動中…";
+  try{
+    const r = await (await fetch("/api/start", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({choice: pending})
+    })).json();
+    if(!r.ok){ alert(r.msg || "無法開始"); show("menu"); }
+  } catch(e){ alert("連線失敗: " + e); show("menu"); }
+  btn.disabled = false; btn.textContent = "確定開始";
+  pending = null;
+});
+
+$("r-stop").addEventListener("click", async () => {
+  if(!confirm("確定要停止嗎？")) return;
+  const btn = $("r-stop");
+  btn.disabled = true; btn.textContent = "停止中…";
+  try{ await fetch("/api/stop", {method:"POST"}); }catch(e){}
+});
+
+async function backToMenu(){
+  try{ await fetch("/api/reset", {method:"POST"}); }catch(e){}
+  show("menu");
+}
+
+// 狀態輪詢
+async function poll(){
+  let st;
+  try{ st = await (await fetch("/api/status")).json(); }
+  catch(e){ return; }   // 連不上就跳過這輪，下一輪再試
+
+  // 系統沒就緒 → 菜色停用並顯示原因
+  const banner = $("menu-banner");
+  if(!st.ready){
+    document.querySelectorAll(".dish").forEach(d => d.classList.add("off"));
+    banner.style.display = "block";
+    banner.textContent = "⚠️ " + (st.init_error || "系統尚未就緒") + "（修好後重新啟動本程式）";
+  } else {
+    document.querySelectorAll(".dish").forEach(d => d.classList.remove("off"));
+    banner.style.display = "none";
+  }
+
+  if(st.state === "running"){
+    if(lastState !== "running") show("run");
+    $("r-name").textContent = st.recipe_name;
+    $("r-step").textContent = st.stopping ? "停止中，等待目前動作結束…" : st.step_text;
+    $("r-bar").style.width = st.percent + "%";
+    $("r-count").textContent = "第 " + st.step + " / " + st.total + " 步";
+    $("r-time").textContent = "已經過 " + mmss(st.elapsed);
+    const btn = $("r-stop");
+    btn.disabled = st.stopping;
+    btn.textContent = st.stopping ? "停止中…" : "停止";
+  }
+  else if(st.state === "done" || st.state === "failed"){
+    if(lastState !== st.state){
+      const ok = st.state === "done";
+      $("d-mark").textContent = ok ? "✓" : "✕";
+      $("d-mark").style.color = ok ? "var(--accent)" : "var(--danger)";
+      $("d-title").textContent = ok ? "完成！" : "未完成";
+      $("d-sub").textContent = st.recipe_name + " · 耗時 " + mmss(st.elapsed);
+      $("d-err").style.display = st.error ? "block" : "none";
+      $("d-err").textContent = st.error || "";
+      show("result");
+    }
+  }
+  else if(st.state === "idle"){
+    if(lastState !== "idle" && lastState !== null) show("menu");
+  }
+  lastState = st.state;
+}
+
+setInterval(poll, 700);
+poll();
+</script>
+</body>
+</html>

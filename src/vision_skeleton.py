@@ -13,7 +13,7 @@ import logging
 from config_vision import (
     YOLOConfig, YOLOOutput, ArUcoConfig, ArUcoOutput,
     HandEyeCalibrationConfig, CoordinateTransform, VisionPrecision,
-    VisionProcessingConfig
+    VisionProcessingConfig, TableHomography
 )
 import img_processing
 
@@ -421,51 +421,71 @@ class VisionSystem:
     整合的視覺系統
     
     職責：
-    1. 管理 YOLO、ArUco、Hand-eye calibration
+    1. 管理 YOLO、ArUco、座標標定
     2. 提供統一的食材檢測 API
     3. 座標轉換
+
+    座標轉換預設走 TableHomography（檯面單應性，2026-08-13 現場 9 點標定，
+    RMS 2.13mm）。食材都躺在同一個平面上，像素平面到檯面之間就是一個 3×3
+    單應性矩陣，不需要相機內參。只有在呼叫過 set_hand_eye_transform() 之後
+    才會改走 4×4 hand-eye 那條路。
     """
-    
+
     def __init__(self, camera_matrix: Optional[np.ndarray] = None):
         """初始化視覺系統"""
         self.yolo_detector = YOLODetector()
         self.aruco_detector = ArUcoDetector()
         self.calibrator = HandEyeCalibrator(camera_matrix)
-        
+
         logger.info("✓ 視覺系統已初始化")
-    
+        logger.info(f"  座標轉換: 檯面單應性 (RMS {TableHomography.RMS_ERROR_MM}mm, "
+                    f"最大 {TableHomography.MAX_ERROR_MM}mm)")
+
     def detect_foods(self, image: np.ndarray) -> List[Dict]:
         """
         檢測食材並轉換座標
-        
+
         Args:
             image: 輸入圖像
-        
+
         Returns:
-            食材檢測結果列表，座標已轉換為現實座標 (mm)
+            食材檢測結果列表，每筆都會有 center_x_mm / center_y_mm，
+            以及 coord_source 標示座標是用哪條路算的
         """
-        # 執行 YOLO 檢測
         detections = self.yolo_detector.detect(image)
-        
-        if not detections or self.calibrator.hand_eye_transform is None:
-            logger.warning("⚠️ 無法轉換座標 (標定未完成)")
+        if not detections:
             return detections
-        
-        # 轉換座標
+
+        # 有設定 hand-eye 才走那條；預設用檯面單應性
+        use_hand_eye = self.calibrator.hand_eye_transform is not None
+
         for detection in detections:
             pixel_x = detection['center_x_pixel']
             pixel_y = detection['center_y_pixel']
-            
-            real_x, real_y = CoordinateTransform.pixel_to_real(
-                pixel_x, pixel_y,
-                self.calibrator.camera_matrix,
-                self.calibrator.hand_eye_transform
-            )
-            
-            # 新增現實座標欄位
+
+            if use_hand_eye:
+                real_x, real_y = CoordinateTransform.pixel_to_real(
+                    pixel_x, pixel_y,
+                    self.calibrator.camera_matrix,
+                    self.calibrator.hand_eye_transform
+                )
+                detection['coord_source'] = 'hand_eye'
+            else:
+                real_x, real_y = TableHomography.pixel_to_mm(pixel_x, pixel_y)
+                detection['coord_source'] = 'table_homography'
+
+                # 標定範圍外是外推，透視項會讓誤差快速放大
+                if not TableHomography.is_within_calibrated_area(pixel_x, pixel_y):
+                    logger.warning(
+                        f"⚠️ {detection['class_name']} 在 ({pixel_x:.0f},{pixel_y:.0f})，"
+                        f"超出標定範圍 u{TableHomography.U_RANGE} v{TableHomography.V_RANGE}，"
+                        f"座標 ({real_x:.1f},{real_y:.1f})mm 是外推值，誤差可能遠大於 "
+                        f"{TableHomography.MAX_ERROR_MM}mm"
+                    )
+
             detection['center_x_mm'] = real_x
             detection['center_y_mm'] = real_y
-        
+
         return detections
     
     def capture_frame(self) -> Optional[np.ndarray]:
@@ -549,13 +569,18 @@ class VisionSystem:
     
     def set_hand_eye_transform(self, transform: np.ndarray):
         """
-        設定 Hand-eye 轉換矩陣
-        
+        設定 Hand-eye 轉換矩陣，並改由它接手座標轉換
+
+        ⚠️ 設定之後 detect_foods() 就不再走 TableHomography。hand-eye 需要
+           準確的相機內參才會準，而 config_vision.get_default_camera_matrix()
+           目前還是估計值（640×480、焦距 500）。除非內參已經標定過，否則
+           不要呼叫這支——預設的檯面單應性反而準得多。
+
         Args:
             transform: 4×4 轉換矩陣
         """
         self.calibrator.hand_eye_transform = transform
-        logger.info("✓ Hand-eye 轉換矩陣已設定")
+        logger.warning("⚠️ 已切換為 Hand-eye 轉換，不再使用檯面單應性")
     
     def get_location_mm(self, food_name: str, image: np.ndarray) -> Optional[Tuple[float, float]]:
         """

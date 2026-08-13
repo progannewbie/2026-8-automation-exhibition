@@ -49,20 +49,40 @@ class FoodCutParams:
     description: str            # 說明
 
 
+# ⚠️ cut_thickness_mm 一定要是 5.0，改別的值兩臂會走不同步。
+#
+#    左臂 DO_CHOP 的下刀位置是「絕對教點陣列」chop_1[i] / chop_per[i]，
+#    31 個點、固定 5.0mm 間距、總跨距 150mm。迴圈裡那句 DRAW .thick,0,0
+#    下一圈馬上被 LMOVE chop_per[i] 這個絕對點蓋掉，所以 .thick 對左臂
+#    完全沒有作用——切割位置是教點決定的，不是參數決定的。
+#
+#    但右臂 DO_CHOP 沒有絕對點，整段就是靠 DRAW .thick,0,0 累加步進。
+#    .thick 一旦不等於教點間距，兩臂每切一刀就多分開一點：
+#        .thick=11.3 時第 15 刀左臂在 +70mm、右臂在 +158mm，差 88mm，
+#        右臂等於壓在離刀子很遠的地方，完全沒壓到食材。
+#
+#    要改切片厚度只能重教 chop_1[] / chop_per[] 的間距，改這裡沒用。
+#
+#        刀刃行程 = num_cuts × 5.0mm
+#
+# ⚠️ AS 端 DO_CHOP 擋掉 cuts > 20，所以現況一次最多切 100mm。
+
+CHOP_STEP_MM = 5.0   # 必須等於左臂 chop_1[] 教點陣列的間距
+
 FOOD_CUT_PARAMS = {
     "CUCUMBER": FoodCutParams(
         food_type="CUCUMBER",
-        num_cuts=5,
-        cut_thickness_mm=4.0,
+        num_cuts=15,
+        cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="小黃瓜：5 片，每片 4mm",
+        description="小黃瓜：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切）",
     ),
     "CARROT": FoodCutParams(
         food_type="CARROT",
-        num_cuts=5,
-        cut_thickness_mm=4.0,
+        num_cuts=15,
+        cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="紅蘿蔔：5 片，每片 4mm",
+        description="紅蘿蔔：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切）",
     ),
     "ROMAINE": FoodCutParams(
         food_type="ROMAINE",

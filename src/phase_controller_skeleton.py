@@ -68,8 +68,20 @@ class PhaseController:
         
         self.is_continuous = False       # 是否連續執行
         self.total_estimated_time = 0    # 預估總時間
-        
+
+        # 停止要求。execute() 每跑完一個階段會檢查一次。
+        # ⚠️ 只能在「階段與階段之間」生效——單一階段送出去之後，PC 端是卡在
+        #    recv() 等手臂回應，而 send_command 的 socket_lock 也被佔著，
+        #    沒辦法插隊送 STOP。切割那種要 4 分鐘的階段，按下去要等它跑完。
+        #    真正的緊急停止是實體急停按鈕，這個旗標不能當安全裝置用。
+        self.cancel_requested = False
+
         logger.info("✓ PhaseController 已初始化")
+
+    def request_cancel(self):
+        """要求在目前階段結束後停止（非緊急停止，見 cancel_requested 說明）"""
+        self.cancel_requested = True
+        logger.warning("⚠️ 收到停止要求，會在目前階段結束後中止")
     
     # ========================================================================
     # 菜色選擇與初始化
@@ -123,22 +135,28 @@ class PhaseController:
             return False
         
         self.start_time = time.time()
+        self.cancel_requested = False
         logger.info(f"\n{'='*60}")
         logger.info(f"開始執行: {self.current_recipe['name']}")
         logger.info(f"{'='*60}\n")
-        
+
         try:
             # 初始化手臂
             if not self._initialize_arms():
                 logger.error("✗ 手臂初始化失敗")
                 return False
-            
+
             # 執行各階段
             for i, phase_instr in enumerate(self.phases):
+                if self.cancel_requested:
+                    logger.warning(f"⚠️ 使用者要求停止，在第 {i+1} 階段前中止")
+                    self._handle_home("HOME_LEFT", {}, 1)
+                    return False
+
                 self.current_phase_index = i
-                
+
                 logger.info(f"\n[{i+1}/{len(self.phases)}] 階段: {phase_instr.phase.value}")
-                
+
                 if not self._execute_phase(phase_instr):
                     logger.error(f"✗ 階段執行失敗: {phase_instr.phase.value}")
                     

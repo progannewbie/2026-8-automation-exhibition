@@ -25,8 +25,11 @@ PROGRAM_NAME = "SmartCook"
 PROGRAM_VERSION = "1.0.0"
 PROGRAM_DATE = "2026/7/23"
 
-LOG_DIR = "logs"
-STATS_DIR = "stats"
+# 綁在 main.py 所在的目錄，不隨當前工作目錄改變——否則在 軟體規劃\ 底下跑
+# 會落在 軟體規劃\logs\、在 src\ 底下跑會落在 src\logs\，找 log 要猜位置。
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(_BASE_DIR, "logs")
+STATS_DIR = os.path.join(_BASE_DIR, "stats")
 
 RECONNECT_RETRIES = 3
 RECONNECT_DELAY_SEC = 2.0

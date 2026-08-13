@@ -183,9 +183,10 @@ class RobotController:
             return False
 
         self.out("配置：x=0, y=0, angle=0（固定參數）")
-        self.out("切割區與混拌區教的是同一個座標，切完不搬就等於already在混拌區")
-        self.out("  小黃瓜  ：取料 → 切割區 → 切 5 刀 4mm → 夾起 → 暫放區1（讓出切割區）")
-        self.out("  紅蘿蔔  ：取料 → 切割區 → 切 5 刀 4mm →（留在原地＝混拌區）")
+        self.out("切割區與混拌區教的是同一個座標，切完不搬就等於已經在混拌區")
+        self.out("食材長 170mm，切 15 刀 × 5mm = 前段 75mm，尾段不切")
+        self.out("  小黃瓜  ：取料 → 切割區 → 切 15 刀 5mm → 夾起 → 暫放區1（讓出切割區）")
+        self.out("  紅蘿蔔  ：取料 → 切割區 → 切 15 刀 5mm →（留在原地＝混拌區）")
         self.out("  羅曼生菜：取料 → 混拌區（不切）")
         self.out("  取回    ：暫放區1 → 混拌區\n")
 
@@ -203,7 +204,10 @@ class RobotController:
             return False
         time.sleep(2)
 
-        if not self.send_cmd("CHOP,CUCUMBER,5,4", timeout=180):
+        # 步進值必須是 5 — 左臂的下刀位置是絕對教點 chop_1[i]（固定 5mm 間距），
+        # 右臂則是靠 DRAW .thick 累加。兩者不一致的話右臂會壓不到食材。
+        # 15 刀 × 5mm = 75mm，約 4 分鐘（實測 5 刀 79 秒），逾時要放到 420 秒。
+        if not self.send_cmd("CHOP,CUCUMBER,15,5", timeout=420):
             self.emergency_home()
             return False
         time.sleep(2)
@@ -235,7 +239,7 @@ class RobotController:
 
         # 紅蘿蔔切完就留在原地 — 切割區跟混拌區是同一個座標，不需要再搬一次。
         # 小黃瓜要搬走是因為得把切割區讓給紅蘿蔔，紅蘿蔔是最後一個切的所以留著。
-        if not self.send_cmd("CHOP,CARROT,5,4", timeout=180):
+        if not self.send_cmd("CHOP,CARROT,15,5", timeout=420):
             self.emergency_home()
             return False
         time.sleep(2)

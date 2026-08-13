@@ -3,6 +3,11 @@ SmartCook 連線配置 (Connection Configuration)
 連線層參數、IP白名單、TCP協議定義
 """
 
+import os
+
+# src/ 目錄的絕對路徑。日誌位置綁在這裡，不隨當前工作目錄改變。
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # ============================================================================
 # 1. TCP 連線參數
 # ============================================================================
@@ -112,7 +117,9 @@ AS_ERROR_CODES = {
 # ============================================================================
 
 LOGGING_CONFIG = {
-    'connection_log': 'logs/connection.log',
+    # 絕對路徑：comms 模組在 import 時就會建目錄並開檔，用相對路徑的話
+    # 會跟著當前工作目錄跑，在哪裡下指令就在哪裡長出一個 logs/
+    'connection_log': os.path.join(_BASE_DIR, 'logs', 'connection.log'),
     'verbose': True,  # 詳細日誌模式
     'log_format': '[%(asctime)s] %(levelname)s | %(message)s',
 }
