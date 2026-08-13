@@ -24276,7 +24276,7 @@ JT1       JT2       JT3       JT4       JT5       JT6
   flip_down_mm = 90.0
   pour_tilt_deg = 90.0
   converge_dx = 0.0      ; PICKUP 集中階段：F60_R 往中心平移量 (現場試出的值)
-  converge_dy = 30
+  converge_dy = 40
   chop_spread_dx = 0.0    ; PICKUP 階段 5 散開階段：F60_R 往外平移量 (★ 佔位值，待現場測試)
   chop_spread_dy = 30.0
 
@@ -24332,9 +24332,6 @@ JT1       JT2       JT3       JT4       JT5       JT6
   TOOL RIGHT_SPATULA
   POINT ha_pickup = TRANS(-50, -320, 50, -90, 38, 90)   ; PICKUP/PLACE 專用鏟具姿勢 (現場已教點)
 .END
-.PROGRAM heartput()
-  JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[-30.054,54.056,-92.937,-8.3188,18.918,-169.17]
-.END
 .PROGRAM MAIN()
   CALL heartput
   CALL INIT_SWITCHES
@@ -24369,6 +24366,9 @@ JT1       JT2       JT3       JT4       JT5       JT6
       CALL DISCONNECT
     END
   UNTIL 1 == 0
+.END
+.PROGRAM heartput()
+  JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[-30.054,54.056,-92.937,-8.3188,18.918,-169.17]
 .END
 .PROGRAM DISCONNECT()
   TCP_CLOSE cret, sock_id
@@ -24583,7 +24583,7 @@ listen:
   ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
   ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
   ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
-  POINT target_pt_appro = SHIFT (target_pt BY 0, 0, appro_mm)
+  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
   ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
   ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
   ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
@@ -24638,13 +24638,12 @@ listen:
     CALL SEND_LINE ("ERROR,E4005")
     RETURN
   END
-  ; 色O聣叨龋瞬支援迅臑直M^
   SCASE .$food OF
     SVALUE "CUCUMBER":
       press_mm = 15    ; 小S
     SVALUE "CARROT":
-      press_mm = 20    ; t}N^硬p賶
-any:
+      press_mm = 25
+    ANY :
       CALL SEND_LINE ("ERROR,E4005"); 色支援
       RETURN
   END
@@ -24789,10 +24788,10 @@ any:
     ;切割區上方
     LMOVE chop_rep
     BREAK
-    SPEED 35 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    SPEED 40 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C1MOVE chop_rep1
     BREAK
-    SPEED 35 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    SPEED 40 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C2MOVE chop_appro_per
     BREAK
     IF ok == 0 THEN
@@ -25049,7 +25048,7 @@ any:
   TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
   ;拿菜區域
   LMOVE pickup_origin
-  POINT target_pt = pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+  POINT target_pt = TRANS ( -28.25,   33.64, 0, 0, 0, 0) + pickup_origin  ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
   POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
   POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
   POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
@@ -25249,8 +25248,8 @@ any:
 	; 0:INIT_CONST:F
 	; 0:INIT_POINTS:F
 	; 0:INIT_TOOL:F
-	; 0:heartput:F
 	; 0:MAIN:F
+	; 0:heartput:F
 	; 0:DISCONNECT:F
 	; 0:CLEAN_SOCKET:F
 	; 0:OPEN_LISTEN:F
