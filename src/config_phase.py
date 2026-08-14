@@ -141,7 +141,7 @@ class PhaseInstruction:
     location: str               # 位置 (PICKUP_CUCUMBER, SALAD_BOWL 等)
     params: Optional[Dict] = None  # 額外參數
     retries: int = 3            # 重試次數
-    timeout_sec: float = 30.0   # 超時時間 (秒)
+    timeout_sec: float = 500.0   # 超時時間 (秒)
 
 
 class MenuRecipes:
@@ -190,6 +190,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
+                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
             ),
             # 切完食材是躺在檯面上的，要先夾起來才能搬
             PhaseInstruction(
@@ -240,6 +241,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CARROT"].__dict__,
+                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
             ),
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -328,6 +330,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
+                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
             ),
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -364,6 +367,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CARROT"].__dict__,
+                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
             ),
 
             # ================================================================

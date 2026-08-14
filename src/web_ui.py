@@ -22,6 +22,7 @@ import os
 import sys
 import threading
 import time
+from datetime import datetime
 from typing import Dict, Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +31,31 @@ from flask import Flask, jsonify, render_template, request
 
 from config_phase import MENU, get_recipe, get_phases, Phase
 
+_BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_DIR = os.path.join(_BASE_DIR, "logs")
+
 logger = logging.getLogger(__name__)
+
+
+def _setup_logging() -> str:
+    """設定日誌：同時輸出到檔案與終端機"""
+    os.makedirs(LOG_DIR, exist_ok=True)
+    log_path = os.path.join(LOG_DIR, datetime.now().strftime("web_ui_%Y%m%d_%H%M%S.log"))
+
+    formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
+
+    file_handler = logging.FileHandler(log_path, encoding="utf-8")
+    file_handler.setFormatter(formatter)
+
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)
+    root_logger.addHandler(file_handler)
+    root_logger.addHandler(console_handler)
+
+    return log_path
 
 # ============================================================================
 # 菜單顯示資料
@@ -303,8 +328,8 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=5000)
     args = ap.parse_args()
 
-    logging.basicConfig(level=logging.INFO,
-                        format="[%(asctime)s] [%(levelname)s] %(message)s")
+    log_path = _setup_logging()
+    logger.info(f"日誌檔案: {log_path}")
 
     runner = RobotRunner(simulate=args.simulate)
     if not runner.initialize():

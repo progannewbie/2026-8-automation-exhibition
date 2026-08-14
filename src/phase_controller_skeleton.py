@@ -273,6 +273,11 @@ class PhaseController:
         # WAIT_ZONE 這類暫存區沒有視覺目標，維持送 0,0,0（AS 端會忽略，用教點）
         expected_food = location if location in PickupCommand.VISION_LOCATIONS else None
         expected_food = expected_food[len("PICKUP_"):] if expected_food else None
+        # v3 模型類別已改名為 LETTUCE，但 PICKUP_ROMAINE 這個教點名稱是燒在
+        # 機械手臂 .as 程式裡的，不能跟著改，所以只在這裡把送進視覺比對的
+        # 食材名稱轉成模型認得的名字。
+        if expected_food == "ROMAINE":
+            expected_food = "LETTUCE"
 
         for attempt in range(max_retries):
             try:
