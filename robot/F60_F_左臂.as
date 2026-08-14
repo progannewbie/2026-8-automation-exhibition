@@ -3421,6 +3421,8 @@ F60_F_左臂_GBK
 
 13.08.2026 09:38:19
 
+14.08.2026 14:49:09
+
 @@@ INSPECTION @@@
 @@@ CONNECTION @@@
 Rs07_F
@@ -3685,7 +3687,7 @@ TOOL: NULL
 	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
 .END
 .PROGRAM MAIN() #0
-  CALL heartput
+  ;CALL heartput
   CALL INIT_SWITCHES
   CALL INIT_CONST
   ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
@@ -3936,7 +3938,7 @@ listen:
   ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
   ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
   robot_busy = 1
-  SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  SPEED 100 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
   TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
   ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
   LMOVE target_pt_appro
@@ -4137,22 +4139,25 @@ listen:
     ;切割區上方
     LMOVE chop_rep
     break
-    SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    SIGNAL sig_out_step
+    SWAIT sig_in_step
+    SIGNAL -sig_out_step
+    SPEED 100 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C1MOVE chop_rep1
-    break
-    SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    SIGNAL sig_out_step
+    SWAIT sig_in_step
+    SIGNAL -sig_out_step
+    SPEED 100 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C2MOVE chop_appro_pt
     break
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      TOOL left_spatula
-      robot_busy = 0
-      RETURN
-    END
+    SIGNAL sig_out_step
+    SWAIT sig_in_step
+    SIGNAL -sig_out_step
     ; 下降
     SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     LMOVE work_chop_zone
     break
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4162,6 +4167,7 @@ listen:
     ;釋放
     LMOVE chop_spread_pt
     break
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4171,6 +4177,7 @@ listen:
     ;抬起離開目的地
     LMOVE chop_depart_pt
     break
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4181,6 +4188,7 @@ listen:
     TOOL left_spatula
     LMOVE home_left
     break
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL left_spatula
@@ -4192,6 +4200,7 @@ listen:
   ; 階段 1: 目的地上方點
   LMOVE target_per
   break
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     TOOL left_spatula
@@ -4201,6 +4210,18 @@ listen:
   ; 階段 2: 釋放 (依方式)
   LMOVE target_up
   break
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  
+  TOOL left_spatula
+  LMOVE home_left
+  break
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     TOOL left_spatula
@@ -4287,53 +4308,55 @@ listen:
 	.ok = s
 .END
 .PROGRAM DO_FLIP(.cycles,.speed_pct) #0
-	IF .cycles < 1 OR .cycles > 20 THEN
-		CALL SEND_LINE ("ERROR,E4005")
-		RETURN
-	END
-	IF .speed_pct < 1 OR .speed_pct > 100 THEN
-		CALL SEND_LINE ("ERROR,E4005")
-		RETURN
-	END
-	robot_busy = 1
-	SPEED .speed_pct ALWAYS
-	BASE ba_flip
-	TOOL ha_flip
-	i = 0
-	DO
-		; 階段 1：90°/90° 配對
-		CALL DO_LTURN90 (ok)
-		IF ok == 0 THEN
-			CALL SEND_LINE ("ERROR,E4023")
-			BASE ba
-			TOOL left_spatula
-			robot_busy = 0
-			RETURN
-		END
-		; 階段 2：135°/45° 配對 (本臂 135°)
-		CALL DO_LTURN135 (ok)
-		IF ok == 0 THEN
-			CALL SEND_LINE ("ERROR,E4023")
-			BASE ba
-			TOOL left_spatula
-			robot_busy = 0
-			RETURN
-		END
-		; 階段 3：45°/135° 配對 (本臂 45°)
-		CALL DO_LTURN45 (ok)
-		IF ok == 0 THEN
-			CALL SEND_LINE ("ERROR,E4023")
-			BASE ba
-			TOOL left_spatula
-			robot_busy = 0
-			RETURN
-		END
-		i = i + 1
-	UNTIL i >= .cycles
-	BASE ba
-	TOOL left_spatula
-	robot_busy = 0
-	CALL SEND_LINE ("OK")
+  IF .cycles < 1 OR .cycles > 20 THEN
+    CALL SEND_LINE ("ERROR,E4005")
+    RETURN
+  END
+  IF .speed_pct < 1 OR .speed_pct > 100 THEN
+    CALL SEND_LINE ("ERROR,E4005")
+    RETURN
+  END
+  robot_busy = 1
+  BASE ba_flip
+  TOOL ha_flip
+  break
+  SWAIT 1001
+  i = 0
+  DO
+    ; 階段 1：90°/90° 配對
+    CALL DO_LTURN90 (ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      BASE ba
+      TOOL left_spatula
+      robot_busy = 0
+      RETURN
+    END
+    ; 階段 2：135°/45° 配對 (本臂 135°)
+    CALL DO_LTURN135 (ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      BASE ba
+      TOOL left_spatula
+      robot_busy = 0
+      RETURN
+    END
+    ; 階段 3：45°/135° 配對 (本臂 45°)
+    CALL DO_LTURN45 (ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      BASE ba
+      TOOL left_spatula
+      robot_busy = 0
+      RETURN
+    END
+    i = i + 1
+  UNTIL i >= .cycles
+  BASE ba
+  TOOL left_spatula
+   LMOVE home_left
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_HOME(.$arm) #0
 	IF .$arm <> $this_arm THEN

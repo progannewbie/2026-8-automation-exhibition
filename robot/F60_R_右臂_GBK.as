@@ -24331,9 +24331,11 @@ JT1       JT2       JT3       JT4       JT5       JT6
   POINT RIGHT_SPATULA = TRANS(-50, -230, 50, 90, 40, -90)    ; 右鏟工具座標 (原程式 rs_r.as init1222()，沿用同一支鏟具)
   TOOL RIGHT_SPATULA
   POINT ha_pickup = TRANS(-50, -320, 50, -90, 38, 90)   ; PICKUP/PLACE 專用鏟具姿勢 (現場已教點)
+  POINT ba_flip = TRANS (43, 0, 0, 0, -90, 0)   ; PTEACH: 翻炒用 BASE，待手動校點
+  POINT ha_flip = TRANS (-50, -230, 50, 90, 40, -90)   ; PTEACH: 翻炒用 TOOL，待手動校點
 .END
 .PROGRAM MAIN()
-  CALL heartput
+  ;CALL heartput
   CALL INIT_SWITCHES
   CALL INIT_CONST
   ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
@@ -24504,6 +24506,8 @@ listen:
     CALL DO_IOTEST($fld[2])
   SVALUE "DO_PREPARE":
       CALL DO_PREPARE
+  SVALUE "DO_CLEAN":
+      CALL DO_CLEAN
   ANY :
     CALL SEND_LINE("ERROR,E4021")
   END
@@ -24588,7 +24592,7 @@ listen:
   ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
   ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
   robot_busy = 1
-  SPEED 50 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
+  SPEED   100 MM/S ALWAYS   ; ★ 絕對速度，待現場測試調整
   TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
   ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
   LMOVE target_pt_appro
@@ -24640,102 +24644,89 @@ listen:
   END
   SCASE .$food OF
     SVALUE "CUCUMBER":
-      press_mm = 15    ; 小S
+      press_mm = 15    ;黃瓜下降高度
     SVALUE "CARROT":
-      press_mm = 25
+      press_mm = 25    ;紅蘿蔔下降高度
     ANY :
-      CALL SEND_LINE ("ERROR,E4005"); 色支援
+      CALL SEND_LINE ("ERROR,E4005");收到資料異常
       RETURN
   END
   robot_busy = 1
-  SPEED 50 MM/s ALWAYS   ;  ^俣龋Fy試{
+  SPEED 50 MM/s ALWAYS   ;  絕對速度
   TOOL right_spatula
   LMOVE home_right
   break
   LMOVE press_chop_zone
-  CALL SYNC_STEP (ok);直鄣同一叨
+  CALL SYNC_STEP (ok);抵達準備點
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
   i = 0
-  DO
-    DRAW 0, 0, -press_mm; 葔住食
-    CALL SYNC_STEP (ok); sync A通知 F60_F 褖茫碌
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      robot_busy = 0
-      RETURN
-    END
-    CALL SYNC_STEP (ok); sync B F60_F @一
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      robot_busy = 0
-      RETURN
-    END
-    DRAW 0, 0, press_mm; _蕚一
-    DRAW .thick, 0, 0; S懈畈組
-    i = i + 1
-  UNTIL i >= .cuts
-  ;褯]牟玫
-  LMOVE level_per;戏c
+  DRAW 0, 0, -press_mm
+  SWAIT 1001
+  DRAW 0, 0, press_mm 
+  ;廢料去除
+  LMOVE level_per;準備點上方
   break
-  LMOVE level_tg;陆
+  LMOVE level_tg;下降準備點
   break
-  CALL SYNC_STEP (ok);直鄣同一叨
+  CALL SYNC_STEP (ok);已到點位
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
   ;
-  LMOVE level_ho
+  LMOVE level_ho;集中
   break
-  CALL SYNC_STEP (ok); 直奂
+  CALL SYNC_STEP (ok); 已到集中
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
-  ;抬
-  LMOVE level_up
+  LMOVE level_up;抬升
+  CALL SYNC_STEP (ok); 已到集中
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
-  ;戏c
+  ;丟棄點上方
   LMOVE level2_per
+  CALL SYNC_STEP (ok); 已到集中
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
-  ;陆
+  ;丟棄點
   LMOVE level2_tg
+  CALL SYNC_STEP (ok); 已到集中
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
-  ;_
-  LMOVE level2_ho
-  break
-  CALL SYNC_STEP (ok); 直奂
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  ;抬
-  LMOVE level2_up
-  BREAK
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
+  ;丟棄
+  ;LMOVE level2_ho
+  ;break
+  ;CALL SYNC_STEP (ok); 直奂
+  ;IF ok == 0 THEN
+  ;  CALL SEND_LINE ("ERROR,E4023")
+  ;  robot_busy = 0
+  ;  RETURN
+  ;END
+  ;抬升
+  ;LMOVE level2_up
+  ;BREAK
+  ;IF ok == 0 THEN
+  ;  CALL SEND_LINE ("ERROR,E4023")
+  ;  robot_busy = 0
+  ;  RETURN
+  ;END
   LMOVE HOME_RIGHT
   CALL SYNC_STEP (ok); 直奂
   IF ok == 0 THEN
@@ -24788,22 +24779,23 @@ listen:
     ;切割區上方
     LMOVE chop_rep
     BREAK
-    SPEED 40 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    SWAIT sig_in_step 
+    PULSE sig_out_step,0.1
+    SPEED 25 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C1MOVE chop_rep1
     BREAK
-    SPEED 40 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    SWAIT sig_in_step 
+    PULSE sig_out_step,0.1
+    SPEED 55 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C2MOVE chop_appro_per
     BREAK
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      TOOL RIGHT_SPATULA
-      robot_busy = 0
-      RETURN
-    END
+    SWAIT sig_in_step 
+    PULSE sig_out_step,0.1
     ; 下降
     SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     LMOVE press_chop_zo
     BREAK
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL RIGHT_SPATULA
@@ -24813,6 +24805,7 @@ listen:
     ;釋放
     LMOVE chop_spread_pt
     BREAK
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL RIGHT_SPATULA
@@ -24822,6 +24815,7 @@ listen:
     ;抬起離開目的地
     LMOVE chop_depart_pt
     BREAK
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL RIGHT_SPATULA
@@ -24832,6 +24826,7 @@ listen:
     TOOL RIGHT_SPATULA
     LMOVE HOME_RIGHT
     BREAK
+    CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
       TOOL RIGHT_SPATULA
@@ -24844,6 +24839,7 @@ listen:
   ; 階段 1: 目的地上方點
   LMOVE target_per
   BREAK
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     TOOL RIGHT_SPATULA
@@ -24853,6 +24849,18 @@ listen:
   ; 階段 2: 釋放 (依方式)
   LMOVE target_up
   BREAK
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL RIGHT_SPATULA
+    robot_busy = 0
+    RETURN
+  END
+  
+  TOOL RIGHT_SPATULA
+  LMOVE HOME_RIGHT
+  BREAK
+  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     TOOL RIGHT_SPATULA
@@ -24860,7 +24868,6 @@ listen:
     RETURN
   END
   20
-  TOOL RIGHT_SPATULA
   robot_busy = 0
   CALL SEND_LINE ("OK")
 .END
@@ -24908,7 +24915,8 @@ listen:
     .ok = 0
     RETURN
   END
-
+  LMOVE rturn90_turn_1
+  BREAK
   LMOVE rturn90_down
   BREAK
   LMOVE rturn90_ready
@@ -24944,60 +24952,63 @@ listen:
   CALL SYNC_STEP(s)
   .ok = s
 .END
-.PROGRAM DO_FLIP(.cycles, .speed_pct)
+.PROGRAM DO_FLIP(.cycles,.speed_pct) #0
   IF .cycles < 1 OR .cycles > 20 THEN
-    CALL SEND_LINE("ERROR,E4005")
+    CALL SEND_LINE ("ERROR,E4005")
     RETURN
   END
   IF .speed_pct < 1 OR .speed_pct > 100 THEN
-    CALL SEND_LINE("ERROR,E4005")
+    CALL SEND_LINE ("ERROR,E4005")
     RETURN
   END
-
   robot_busy = 1
-  SPEED .speed_pct ALWAYS
+  JMOVE #flip_end
+  JMOVE #flip_ready
   BASE ba_flip
   TOOL ha_flip
-
+  BREAK
+  PULSE 1,0.1
   i = 0
   DO
     ; 階段 1：90°/90° 配對
-    CALL DO_RTURN90(ok)
+    CALL DO_RTURN90 (ok)
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
+      CALL SEND_LINE ("ERROR,E4023")
       BASE ba
-      TOOL RIGHT_SPATULA
+      TOOL right_spatula
       robot_busy = 0
       RETURN
     END
-
     ; 階段 2：135°/45° 配對 (本臂 45°)
-    CALL DO_RTURN45(ok)
+    CALL DO_RTURN45 (ok)
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
+      CALL SEND_LINE ("ERROR,E4023")
       BASE ba
-      TOOL RIGHT_SPATULA
+      TOOL right_spatula
       robot_busy = 0
       RETURN
     END
-
     ; 階段 3：45°/135° 配對 (本臂 135°)
-    CALL DO_RTURN135(ok)
+    CALL DO_RTURN135 (ok)
     IF ok == 0 THEN
-      CALL SEND_LINE("ERROR,E4023")
+      CALL SEND_LINE ("ERROR,E4023")
       BASE ba
-      TOOL RIGHT_SPATULA
+      TOOL right_spatula
       robot_busy = 0
       RETURN
     END
-
     i = i + 1
   UNTIL i >= .cycles
-
+  LMOVE #flip_ready
+  BREAK
+  JMOVE #flip_end
+  BREAK
   BASE ba
-  TOOL RIGHT_SPATULA
+  TOOL right_spatula
+  JMOVE HOME_RIGHT
+  BREAK
   robot_busy = 0
-  CALL SEND_LINE("OK")
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_HOME(.$arm)
   IF .$arm <> $this_arm THEN
@@ -25011,7 +25022,8 @@ listen:
   CALL SEND_LINE("OK")
 .END
 .PROGRAM DO_STOP()
-  BRAKE
+  TOOL RIGHT_SPATULA
+  LMOVE HOME_RIGHT
   CALL loveheart
   SIGNAL -sig_out_step
   robot_busy = 0
@@ -25224,6 +25236,131 @@ listen:
   LMOVE chop_depart_pt
  
 .END
+.PROGRAM DO_CLEAN () ; 清理檯面
+	; *******************************************************************
+	;
+	; Program:      DO_CLEAN
+	; Comment:      
+	; Author:       User
+	;
+	; Date:         2026/8/13
+	;
+	; *******************************************************************
+	;
+	
+.END
+.PROGRAM DO_CHOP_0814 (.$food,.cuts,.thick) ; 
+  IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
+    CALL SEND_LINE ("ERROR,E4005")
+    RETURN
+  END
+  SCASE .$food OF
+    SVALUE "CUCUMBER":
+      press_mm = 15    ;黃瓜下降高度
+    SVALUE "CARROT":
+      press_mm = 25    ;紅蘿蔔下降高度
+    ANY :
+      CALL SEND_LINE ("ERROR,E4005");收到資料異常
+      RETURN
+  END
+  robot_busy = 1
+  SPEED 50 MM/s ALWAYS   ;  絕對速度
+  TOOL right_spatula
+  LMOVE home_right
+  break
+  LMOVE press_chop_zone
+  CALL SYNC_STEP (ok);抵達準備點
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  i = 0
+  DO
+    DRAW 0, 0, -press_mm;壓住食物
+    CALL SYNC_STEP (ok); 壓好了
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
+    CALL SYNC_STEP (ok); sync B F60_F 
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
+    DRAW 0, 0, press_mm; 抬升
+    DRAW .thick, 0, 0; 後退一步
+    i = i + 1
+  UNTIL i >= .cuts
+  ;廢料去除
+  LMOVE level_per;準備點上方
+  break
+  LMOVE level_tg;下降準備點
+  break
+  CALL SYNC_STEP (ok);已到點位
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;
+  LMOVE level_ho;集中
+  break
+  CALL SYNC_STEP (ok); 已到集中
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  LMOVE level_up;抬升
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;丟棄點上方
+  LMOVE level2_per
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;丟棄點
+  LMOVE level2_tg
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ;丟棄
+  ;LMOVE level2_ho
+  ;break
+  ;CALL SYNC_STEP (ok); 直奂
+  ;IF ok == 0 THEN
+  ;  CALL SEND_LINE ("ERROR,E4023")
+  ;  robot_busy = 0
+  ;  RETURN
+  ;END
+  ;抬升
+  ;LMOVE level2_up
+  ;BREAK
+  ;IF ok == 0 THEN
+  ;  CALL SEND_LINE ("ERROR,E4023")
+  ;  robot_busy = 0
+  ;  RETURN
+  ;END
+  LMOVE HOME_RIGHT
+  CALL SYNC_STEP (ok); 直奂
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
+.END
 .PROGRAM Comment___ () ; Comments for IDE. Do not use.
 	; @@@ PROJECT @@@
 	; @@@ PROJECTNAME @@@
@@ -25236,6 +25373,8 @@ listen:
 	; 12.08.2026 15:31:51
 	; 
 	; 13.08.2026 09:38:23
+	; 
+	; 14.08.2026 19:11:07
 	; 
 	; @@@ INSPECTION @@@
 	; @@@ CONNECTION @@@
@@ -25271,7 +25410,6 @@ listen:
 	; .timeout_sec 
 	; .ok 
 	; 0:DO_IOTEST:F
-	; .op 
 	; 0:SYNC_STEP:F
 	; .ok 
 	; 0:DO_PICKUP:F
@@ -25301,6 +25439,10 @@ listen:
 	; .x_mm 
 	; .y_mm 
 	; 0:DO_PLACE_test:F
+	; 0:DO_CLEAN:F
+	; 0:DO_CHOP_0814:F
+	; .cuts 
+	; .thick 
 	; @@@ TRANS @@@
 	; @@@ JOINTS @@@
 	; @@@ REALS @@@
