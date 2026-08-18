@@ -3346,616 +3346,1140 @@ AUX_FTOOLSHAPE14    0     0.000     0.000     0.000     0.000     0.000     0.00
 AUX_FTOOLSHAPE15    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
 AUX_FTOOLSHAPE16    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
 AUX_FTOOLSHAPE17    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE18    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE19    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE20    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE21    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE22    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE23    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE24    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE25    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE26    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE27    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE28    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE29    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE30    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-AUX_FTOOLSHAPE31    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000
-IQ_FLT_FLG         0
-USB_KEYBOARD          0
-KEYBOARD_KEYMAP 
-VISLUB_PRODUCT 0,0,0,0,0,0,"墒戎"
-VISLUB_PROCESS 0,0,"供镍"
-VISLUB_SET[1] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[2] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[3] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[4] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[5] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[6] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[7] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[8] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[9] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[10] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[11] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[12] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[13] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[14] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[15] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[16] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[17] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[18] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[19] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[20] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[21] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[22] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[23] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[24] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[25] 0,0,0,0,0,0,0,0,1.000000,"",""
-VISLUB_SET[26] 0,0,0,0,0,0,0,0,1.000000,"",""
-WARN_USB_AVAILABLE_AREA       3072
-AUX_PANELLESS  255 255 255 255
-EESTOP_THRESHOLD          2
-EESTOP_ERROR_CODE       0
-EESTOP_DELAY_TIME      3.000
-TP_RECINHI      0   0   0
-TM_SET_I2_RESULT       0      0      0      0      0      0      0
-TM_SET_PEAK_RESULT       0      0      0      0      0      0      0
-TM_SET_SUCT_MTBRK_STD       0      0      0      0      0      0      0
-TM_SET_SUCT_MTBRK_LATEST       0      0      0      0      0      0      0
-TM_SET_REL_MTBRK_STD       0      0      0      0      0      0      0
-TM_SET_REL_MTBRK_LATEST       0      0      0      0      0      0      0
-TM_GET_I2_THRES       1      1      1      1      1      1      1
-TM_GET_PEAK_THRES       1      1      1      1      1      1      1
-TM_GET_SUCT_MTBRK_THRES       1      1      1      1      1      1      1
-TM_GET_REL_MTBRK_THRES       1      1      1      1      1      1      1
-TM_GET_REFER_DAYS      10
-TM_GET_JUDGE_DAYS      10
+AUX_FTOOLSHAPE18    0     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000     0.000 0, O) OX= WX= #[82.216, -86.736, 78.154, -87.973, -107.3, -22.265] ;finish2
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.928, 67.464, -87.852, -107.46, -18.609] ;finish3
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.944, -96.898, 62.283, -88.762, -107.97, -16.281] ;finish4
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.929, 67.464, -87.852, -107.46, -18.609] ;finish3
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.353, -83.413, 84.001, -90.848, -107.83, -24.894] ;finish0
+	stp = 18
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[85.713, -97.057, 20.797, -70.973, -75.273, 116.11] ;转向
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.784, -97.427, 20.024, -70.564, -74.368, 116.22] ;下降
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.624, -84.181, 59.964, -64.877, -83.801, 90.808] ;前推
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[88.968, -85.034, 74.193, -42.106, -97.312, 80.204] ;上翻
+	stp = 19
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[85.526, -76.072, 47.989, -69.437, -77.221, 110.06] ;转向
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.597, -76.235, 47.642, -68.893, -76.442, 109.96] ;下降
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.264, -68.602, 76.819, -64.455, -84.157, 89.572] ;前推
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[88.942, -69.711, 92.126, -47.275, -98.195, 77.694] ;上翻
+	stp = 20
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[88.77, -85.153, 94.879, -47.906, -88.031, 92.646] ;转向1
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.473, -85.243, 97.67, -43.581, -90.118, 90.676] ;下降
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[86.244, -87.926, 74.273, -47.226, -75.714, 105.6] ;前推
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[93.648, -87.924, 74.289, -54.621, -77.455, 107.04] ;上翻
+	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[88.906,-103.85,67.72,-50.834,-106.03,70.724] ;
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[85.311, -103.67, 67.854, -47.218, -105.22, 70.26] ;
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[86.432, -93.891, 62.765, -46.311, -95.26, 81.423] ;
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[89.089, -93.829, 62.987, -48.692, -96.126, 82.01] ;
+	stp = 21
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[97.977, -31.936, 129.95, -98.037, -112.49, -7.3299] ;stat6
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[78.213, -32.164, 129.33, -79.159, -106.35, -7.0917] ;line8 stat
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[81.716, -84.649, 82.293, -88.122, -107.25, -24.406] ;line8 over
+	stp = 22
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[86.073, -91.692, 70.53, -94.563, -117.12, -20.564] ;line8 up
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.508, -91.278, 71.944, -93.556, -116.59, -21.644] ;finish1
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[87.361, -99.175, 58.14, -93.251, -117.89, -15.1] ;finish1
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[82.216, -86.736, 78.154, -87.973, -107.3, -22.265] ;finish2
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.928, 67.464, -87.852, -107.46, -18.609] ;finish3
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.944, -96.898, 62.283, -88.762, -107.97, -16.281] ;finish4
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.929, 67.464, -87.852, -107.46, -18.609] ;finish3
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.353, -83.413, 84.001, -90.848, -107.83, -24.894] ;finish0
+	stp = 23
+	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[82.628, -49.019, 121, -89.975, -107.48, -27.58] ;finish0
 .END
-.SIG_COMMENT
+.PROGRAM hb() #3882
+	PRINT "KEEP"
+	RETURN
 .END
-.IDE_CMT
-@@@ PROJECT @@@
-@@@ PROJECTNAME @@@
-F60_F_左臂_GBK
-@@@ HISTORY @@@
-01.08.2026 18:24:50
-06.08.2026 13:07:47
-12.08.2026 15:42:35
-
-13.08.2026 09:38:19
-
-14.08.2026 14:49:09
-
-15.08.2026 18:45:59
-
-16.08.2026 11:48:08
-
-@@@ INSPECTION @@@
-@@@ CONNECTION @@@
-Rs07_F
-192.168.5.2
-23
-@@@ PROGRAM @@@
-0:INIT_SWITCHES:F
-.PC 
-0:INIT_CONST:F
-0:INIT_POINTS:F
-0:INIT_TOOL:F
-0:heartput:F
-0:MAIN:F
-0:DISCONNECT:F
-0:CLEAN_SOCKET:F
-0:OPEN_LISTEN:F
-0:WAIT_ACCEPT:F
-.accepted 
-0:DO_HANDSHAKE:F
-.ok 
-0:RECV_LINE:F
-.rok 
-0:SEND_LINE:F
-0:SPLIT_CSV:F
-0:DISPATCH:F
-0:WAIT_SIGNAL:F
-.sig_no 
-.timeout_sec 
-.ok 
-0:DO_PLACE:F
-0:WAIT_SIGNAL_OFF:F
-.sig_no 
-.timeout_sec 
-.ok 
-0:DO_IOTEST:F
-.op 
-0:SYNC_STEP:F
-.ok 
-0:DO_PICKUP:F
-.x_mm 
-.y_mm 
-.angle_deg 
-0:DO_CHOP:F
-.cuts 
-.thick 
-0:DO_LTURN45:F
-.ok 
-0:DO_LTURN90:F
-.ok 
-0:DO_LTURN135:F
-.ok 
-0:DO_FLIP:F
-.cycles 
-.speed_pct 
-0:DO_HOME:F
-0:DO_STOP:F
-0:DO_RESET:F
-0:DO_STATUS:F
-0:DO_READY:F
-0:DO_PICKUP_test:F
-0:arm_client:F
-0:arm_dispatch:F
-0:arm_responder:F
-0:atest_1:F
-.t 
-0:autohome:F
-0:break:F
-0:cake:F
-.k 
-0:cake_check:F
-0:cake_point:F
-.i 
-0:clean:F
-0:cleanup_old_soc:F
-0:close_socket:F
-0:do_chop_test:F
-.cuts 
-.thick 
-0:do_place_test:F
-0:ethernet_test:F
-.n 
-0:fry_burger:F
-0:fry_lunchmeat:F
-0:get:F
-.n 
-0:get_ok_netosw:F
-0:hb:F
-0:init:F
-.PC 
-0:init1222:F
-.PC 
-0:lcon120:F
-0:lcon150:F
-0:lcon30:F
-0:lcon60:F
-0:lcon90:F
-0:loveheart:F
-0:lpull120:F
-0:lpull150:F
-0:lpull30:F
-0:lpull60:F
-0:lturn135:F
-0:lturn45:F
-0:lturn90:F
-0:main1222:F
-0:oldsocket:F
-0:open_socket:F
-.er_count 
-0:point_teach:F
-0:recv:F
-.num 
-0:remove:F
-0:remove_1:F
-0:remove_2:F
-0:send:F
-.ret 
-0:teach:F
-0:test_timer:F
-0:pg0811:F
-0:DO_PREPARE:F
-0:point_move:F
-0:DO_CON45:F
-.ok 
-0:DO_CON90:F
-.ok 
-0:DO_CON135:F
-.ok 
-0:DO_FLIP_teach:F
-.cycles 
-.speed_pct 
-0:teach_origin:F
-@@@ TRANS @@@
-@@@ JOINTS @@@
-@@@ REALS @@@
-@@@ STRINGS @@@
-@@@ INTEGER @@@
-@@@ SIGNALS @@@
-@@@ TOOLS @@@
-@@@ BASE @@@
-@@@ FRAME @@@
-@@@ BOOL @@@
-@@@ DEFAULTS @@@
-BASE: NULL
-TOOL: NULL
-.END
-.INTER_PANEL_D
-0,1,"原点","","","",10,15,4,15,2001,0
-28,8,"t","测试","",10,15,2,1,0
-35,8,"qf","鱼肉","",10,15,2,1,0
-36,8,"qb","牛肉","",10,15,2,1,0
-37,8,"qe","蛋","",10,15,2,1,0
-38,8,"qv","蔬菜","",10,15,2,1,0
-.END
-.INTER_PANEL_TITLE
-"",0
-"",0
-"",0
-"",0
-"",0
-"",0
-"",0
-"",0
-.END
-.INTER_PANEL_COLOR_D
-182,3,224,244,28,159,252,255,251,255,0,31,2,241,52,219,
-.END
-.PROGRAM INIT_SWITCHES() #30
-	CP ON                    ; 連續軌跡制御動作 有效 — LMOVE/DRAW 連續動作(切割、翻炒)平滑銜接需要
-	CHECK.HOLD OFF           ; 暫停狀態下小鍵盤啟動 無效
-	CYCLE.STOP OFF           ; 外部暫停時自動運轉停止 無效
-	MESSAGES ON              ; 訊息輸出 有效 — 本程式大量用 PRINT 除錯訊息，需要開啟才看得到
-	OX.PREOUT ON             ; OX信號輸出時機 動作開始時
-	PREFETCH.SIGINS OFF      ; AS輸出入信號先讀取 禁止
-	QTOOL OFF                ; 教導時TOOL資料先自動切換 無效 — 本程式有 LEFT_SPATULA/ha_flip 兩組 TOOL，教點時避免自動切換造成教到錯的座標系
-	RPS ON                   ; 外部程式選擇 有效
-	SCREEN ON                ; 畫面表示制御一時停止 有效
-	REP_ONCE OFF             ; REPEAT回數 連續
-	STP_ONCE OFF             ; STEP實行 連續
-	AUTOSTART.PC ON          ; 控制電源ON時PC1自動開始 — 展場斷電重開後自動執行 MAIN，不需人工按 EXECUTE
-	AUTOSTART2.PC ON         ; 控制電源ON時PC2自動開始
-	AUTOSTART3.PC OFF        ; 控制電源ON時PC3自動開始
-	AUTOSTART4.PC OFF        ; 控制電源ON時PC4自動開始
-	AUTOSTART5.PC OFF        ; 控制電源ON時PC5自動開始
-	ERRSTART.PC OFF          ; ERROR時PC開始 無效
-	DISPIO_01 OFF            ; IO表示方式 O,X
-	ABS.SPEED ON             ; 絕對速度動作 有效 — 不受各控制器 monitor speed 旋鈕影響，雙臂真正等速
-	SLOW_START OFF           ; 低速START機能 無效
-	AFTER.WAIT.TMR OFF       ; 簡易WX開始Timing 軸一致後
-.END
-.PROGRAM INIT_CONST() #27
-  ; 手臂識別
-  $this_arm = "F60_F"
-  ; --- TCP 通訊參數 ---
-  port = 9000
-  max_length = 255
-  tout_accept = 5      ; TCP_ACCEPT 逾時 (秒)，逾時後回到迴圈重新等待
-  tout_recv = 10        ; TCP_RECV 逾時 (秒)，PC 端心跳每 3 秒一次
-  tout_send = 5
-  ; --- i/O 訊號編號 (雙臂共用同一組交握訊號，電控已確認為最終配線值) ---
-  ; 依 AS 語言慣例，外部輸出訊號用小號碼，外部輸入訊號從 1001 起算
-  ; (參照 AS Language Reference Manual 6.7 節 ON/SIGNAL 可用訊號範圍)。
-  sig_out_step = 1        ; 輸出: 本臂完成目前階段 → F60_R
-  sig_in_step = 1001       ; 輸入: F60_R 完成目前階段 ← F60_R
-  ; --- 動作參數 (可依現場試切調整，單位 mm/deg) ---
-  appro_mm = 50
-  chop_down_mm = 40
-  flip_up_mm = 90
-  pour_tilt_deg = 90
-  converge_dx = 0e+00      ; PICKUP 集中階段：F60_F 往中心平移量 (現場試出的值)
-  converge_dy = 35
-  chop_spread_dx = 0e+00    ; PICKUP 階段 5 散開階段：F60_F 往外平移量 (★ 佔位值，待現場測試)
-  chop_spread_dy = 30
-  scoop_dx = 0e+00          ; PLACE 撈取階段：鏟面滑入食材下方的位移量 (★ 佔位值，待現場設計確認)
-  scoop_dy = 20
-  scoop_tilt_deg = 60   ; PLACE 釋放階段 (SCOOP)：傾倒角度 (★ 佔位值，待現場測試)
-  ; --- 逾時設定 (秒) ---
-  timeout_io_sec = 30
-  timeout_flip = 30
-  robot_busy = 0
-  $rxbuf = ""
-.END
-.PROGRAM INIT_POINTS() #0
-	POINT origin = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 檯面左下角基準點 (須在 BASE ba 生效後教點，見 INIT_TOOL)
-	POINT pickup_origin = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 取料區專用基準點，供 DO_PICKUP 視覺座標換算用，待手動校點
-	; --- 以下 X,Y,Z,Angle 皆為佔位 0，待 CALIBRATION_POINTS.csv 標定完成後填入 ---
-	POINT pickup_cucumber = origin + TRANS (0, 0, 0, 0, 0, 0)   ; X,Y,Z,Angle ← CSV
-	POINT pickup_carrot = origin + TRANS (0, 0, 0, 0, 0, 0)     ; X,Y,Z,Angle ← CSV
-	POINT pickup_romaine = origin + TRANS (0, 0, 0, 0, 0, 0)       ; X,Y,Z,Angle ← CSV
-	POINT wait_zone_1 = origin + TRANS (0, 0, 0, 0, 0, 0)       ; X,Y,Z ← CSV (暫放小黃瓜)
-	POINT wait_zone_2 = origin + TRANS (0, 0, 0, 0, 0, 0)       ; X,Y,Z ← CSV (暫放羅曼生菜)
-	POINT mix_zone = origin + TRANS (0, 0, 0, 0, 0, 0)          ; X,Y,Z ← CSV
-	POINT work_chop_zone = origin + TRANS (0, 0, 0, 0, 0, 0)    ; X,Y,Z ← CSV
-	POINT work_flip_zone = origin + TRANS (0, 0, 0, 0, 0, 0)    ; X,Y,Z ← CSV
-	POINT salad_bowl = origin + TRANS (0, 0, 0, 0, 0, 0)        ; X,Y,Z ← CSV (ArUco ID 102 輔助標定)
-	POINT waste_corner = origin + TRANS (0, 0, 0, 0, 0, 0)      ; X,Y,Z ← CSV
-	; home_left 在相機拍不到的高處，與檯面座標系無關，維持獨立絕對點
-	; ★ 目前為零值佔位：MAIN() 開機第一件事就是 LMOVE home_left，
-	; 在現場用示教盒實際教點覆蓋前，執行到這裡會是未驗證的位置，勿通電後直接 EXECUTE
-	POINT home_left = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH (手工標定，示教盒)
-	; -----------------------------------------------------------------
-	; 翻炒動作點位 (lturn45/90/135)，架構參考 原程式/rs_f.as 裡的
-	; lturn45()/lturn90()/lturn135()。這些點位跟本檔案其他點位使用的
-	; BASE ba / TOOL left_spatula 不是同一個座標系，是在專屬的
-	; ba_flip (BASE) / ha_flip (TOOL) 底下教的，只能在 DO_FLIP 裡切到
-	; ba_flip/ha_flip 之後才能用，用完要切回來。
-	; 以下皆為佔位值，待現場手動示教。
-	; -----------------------------------------------------------------
-	POINT ba_flip = TRANS (0, -39, 0, 90, 90, 0)   ; PTEACH: 翻炒用 BASE，待手動校點
-	POINT ha_flip = TRANS (50, -230, 50, -90, 240, 90)   ; PTEACH: 翻炒用 TOOL，待手動校點
-	;  POINT lturn45_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn45_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn45_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;
-	;  POINT lturn90_ready = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn90_down  = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn90_turn  = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;
-	;  POINT lturn135_ready  = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn135_down   = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn135_turn   = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn135_turn10 = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-	;  POINT lturn135_turn20 = TRANS(0,0,0,0,0,0)   ; PTEACH: 待手動校點
-.END
-.PROGRAM INIT_TOOL() #30
+.PROGRAM init() #72;
+	; /*********************************************************
+	; FUNCTION :  初期设定程式
+	; *********************************************************/
+	10
+	; --- 系 统 开 关 ------------------------------------------
+	CP ON;                   连续轨迹制御动作             有效
+	CHECK.HOLD OFF;          暂停状态下小键盘启动         无效
+	CYCLE.STOP OFF;          外部暂停时自动运转停止       无效
+	MESSAGES ON;             讯息输出                     有效
+	OX.PREOUT ON;            OX信号输出时机         动作开始时
+	PREFETCH.SIGINS OFF;     AS输出入信号先读取           禁止
+	QTOOL OFF;               教导时TOOL资料先自动切换     无效
+	RPS ON;                  外部程式选择                 有效
+	SCREEN ON;               画面表示制御一时停止         有效
+	REP_ONCE OFF;            REPEAT回数                   连续
+	STP_ONCE OFF;            STEP实行                     连续
+	AUTOSTART.PC ON;        制御电源ON时PC1开始          无效
+	AUTOSTART2.PC ON;       制御电源ON时PC2开始          无效
+	AUTOSTART3.PC OFF;       制御电源ON时PC3开始          无效
+	AUTOSTART4.PC OFF;       制御电源ON时PC4开始          无效
+	AUTOSTART5.PC OFF;       制御电源ON时PC5开始          无效
+	ERRSTART.PC OFF;         ERROR时PC开始                无效
+	DISPIO_01 OFF;           IO表示方式                    O,X
+	ABS.SPEED OFF;           绝对速度动作                 无效
+	SLOW_START OFF;          低速START机能                无效
+	AFTER.WAIT.TMR OFF;      简易WX开始Timing         轴一致後
+	; ----------------------------------------------------------
+	t_pul = 0.1 ;            触发时间(脉冲信号)             秒
+	t_pul2 = 1;               等待时间(脉冲信号)             秒
+	t_ans = 0.1 ;          等待时间(信号交握)             秒
+	t_wai[1] = 5;         等待时间(输送带取料许可信号等待) 秒
+	t_wai[2] = 30;           等待时间(模具放料许可信号等待) 秒
+	t_wai[3] = 3600;           等待时间(模具取料许可信号等待) 秒
+	t_von = 1.5;               真空ON待机时间                 秒
+	t_voff = 0.5;            真空OFF待机时间                秒
+	t_blow = 0.5;            吹气时间                       秒
+	sp1 = 50;                 速度变更                       ％
+	sp2 = 500;                速度变更
+	sp3 = 500; ％
+	sp4 = 1000;                速度变更                       ％
+	sp5 = 50;                速度变更                       ％
+	msg_max = 100;           系统履历显示最大数
+	max = 50
+	min = 10
+	qf = 1
+	qb = 1
+	qe = 1
+	qv = 1
+	; ----------------------------------------------------------
 	BASE NULL
-	POINT ba = TRANS (0, -39, 0, 90, 90, 0)                    ; 基礎座標 (原程式 rs_f.as init1222())
-	BASE ba
-	POINT left_spatula = TRANS (50, -230, 50, -90, 240, 90)    ; 左鏟工具座標 (原程式 rs_f.as init1222()，沿用同一支鏟具)
-	TOOL left_spatula
-	POINT ha_pickup = TRANS (50, -320, 50, -90, 30, 90)   ; PICKUP/PLACE 專用鏟具姿勢 (現場已教點)
+	TOOL NULL
+	POINT ba = TRANS (0, 0, 0, 90, 90, 0);              基础坐标设定
+	BASE ba;                                      基础坐标定义
+	POINT ha = TRANS (50, -230, 50, -90, 240, 90);             磨头工具坐标
+	TOOL ha;                                      工具坐标设定
+	SPEED 100 ALWAYS;        速度设定(全体)                 ％
+	ACCURACY 0 ALWAYS;     精度设定(全体)                 mm
+	ACCEL 100 ALWAYS;        加速度设定(全体)               ％
+	DECEL 100 ALWAYS;        减速度设定(全体)               ％
+	100
 .END
-.PROGRAM heartput() #5
-	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
+.PROGRAM init1222() #535473
+	; /*********************************************************
+	; FUNCTION :  初期设定程式
+	; *********************************************************/
+	10
+	; --- 系 统 开 关 ------------------------------------------
+	CP ON;                   连续轨迹制御动作             有效
+	CHECK.HOLD OFF;          暂停状态下小键盘启动         无效
+	CYCLE.STOP OFF;          外部暂停时自动运转停止       无效
+	MESSAGES ON;             讯息输出                     有效
+	OX.PREOUT ON;            OX信号输出时机         动作开始时
+	PREFETCH.SIGINS OFF;     AS输出入信号先读取           禁止
+	QTOOL OFF;               教导时TOOL资料先自动切换     无效
+	RPS ON;                  外部程式选择                 有效
+	SCREEN ON;               画面表示制御一时停止         有效
+	REP_ONCE OFF;            REPEAT回数                   连续
+	STP_ONCE OFF;            STEP实行                     连续
+	AUTOSTART.PC ON;        制御电源ON时PC1开始          无效
+	AUTOSTART2.PC ON;       制御电源ON时PC2开始          无效
+	AUTOSTART3.PC OFF;       制御电源ON时PC3开始          无效
+	AUTOSTART4.PC OFF;       制御电源ON时PC4开始          无效
+	AUTOSTART5.PC OFF;       制御电源ON时PC5开始          无效
+	ERRSTART.PC OFF;         ERROR时PC开始                无效
+	DISPIO_01 OFF;           IO表示方式                    O,X
+	ABS.SPEED OFF;           绝对速度动作                 无效
+	SLOW_START OFF;          低速START机能                无效
+	AFTER.WAIT.TMR OFF;      简易WX开始Timing         轴一致後
+	; ----------------------------------------------------------
+	t_pul = 0.1 ;            触发时间(脉冲信号)             秒
+	t_pul2 = 1;               等待时间(脉冲信号)             秒
+	t_ans = 0.1 ;          等待时间(信号交握)             秒
+	t_wai[1] = 5;         等待时间(输送带取料许可信号等待) 秒
+	t_wai[2] = 30;           等待时间(模具放料许可信号等待) 秒
+	t_wai[3] = 3600;           等待时间(模具取料许可信号等待) 秒
+	t_von = 1.5;               真空ON待机时间                 秒
+	t_voff = 0.5;            真空OFF待机时间                秒
+	t_blow = 0.5;            吹气时间                       秒
+	sp1 = 300;                 速度变更                       ％
+	sp2 = 300;                速度变更
+	sp3 = 600; ％
+	sp4 = 1000;                速度变更                       ％
+	sp5 = 500;                速度变更                       ％
+	msg_max = 100;           系统履历显示最大数
+	max = 50
+	min = 10
+	qf = 1
+	qb = 1
+	qe = 1
+	qv = 1
+	; ----------------------------------------------------------
+	BASE NULL
+	TOOL NULL
+	POINT ba = TRANS (0, -39, 0, 90, 90, 0);              基础坐标设定
+	BASE ba;                                      基础坐标定义
+	POINT ha = TRANS (50, -230, 50, -90, 240, 90);             磨头工具坐标
+	TOOL ha;                                      工具坐标设定
+	SPEED 100 ALWAYS;        速度设定(全体)                 ％
+	ACCURACY 0 ALWAYS;     精度设定(全体)                 mm
+	ACCEL 100 ALWAYS;        加速度设定(全体)               ％
+	DECEL 100 ALWAYS;        减速度设定(全体)               ％
+	100
 .END
-.PROGRAM MAIN() #0
-  ;CALL heartput
-  CALL INIT_SWITCHES
-  CALL INIT_CONST
-  ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
-  CALL INIT_TOOL
-  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  ACCURACY 1
-  SIGNAL -sig_out_step
-  LMOVE home_left
-  CALL CLEAN_SOCKET
-  CALL OPEN_LISTEN
-  DO
-    CALL WAIT_ACCEPT (accepted)
-    IF accepted == 1 THEN
-      sock_open_flag = 1
-      $rxbuf = ""
-      CALL DO_HANDSHAKE (hs_ok)
-      IF hs_ok == 1 THEN
-        conn_lost = 0
-        DO
-          CALL RECV_LINE ($line, rok)
-          IF rok == 0 THEN
-            conn_lost = 1
-          ELSE
-            CALL SPLIT_CSV ($line)
-            CALL DISPATCH
-          END
-        UNTIL conn_lost == 1
-      END
-      CALL DISCONNECT
-    END
-  UNTIL 1 == 0
+.PROGRAM lcon120() #28
+	; *******************************************************************
+	; 从上层往中间集中
+	; *******************************************************************
+	;
+	10
+	PRINT "lcon120"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 8:;con30
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 11
+			SPEED sp3 MM/s
+			LMOVE icon120_ready;准备点
+			break
+		VALUE 3, 4, 5, 6, 10, 11:;turn 45,90,135 con 60,90,120
+			stp = 11
+			SPEED sp3 MM/s
+			LMOVE icon120_ready;准备点
+			break
+	END
+	stp = 11
+	LMOVE icon120_ready;准备点
+	break
+	st = 4
+	SPEED sp3 MM/s
+	LMOVE icon120_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE icon120_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE icon120_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lcon120_over"
+	break
+	RETURN
 .END
-.PROGRAM DISCONNECT() #48
-	TCP_CLOSE cret, sock_id
-	sock_open_flag = 0
+.PROGRAM lcon150() #0
+	; *******************************************************************
+	; 从上层往中间集中
+	; *******************************************************************
+	;
+	10
+	PRINT "lcon150"
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	;CASE st OF
+	;  VALUE 0, 5:;从起点移动
+	;    SPEED sp3 MM/s
+	;    JMOVE icon120_ready;准备点
+	;    break
+	;  VALUE 1, 6:;从30度移动
+	;    SPEED sp3 MM/s
+	;    JMOVE icon60_ready;准备点
+	;    break
+	;    SPEED sp3 MM/s
+	;    JMOVE icon90_ready;准备点
+	;    break
+	;    SPEED sp3 MM/s
+	;    JMOVE icon120_ready;准备点
+	;    break
+	;    SPEED sp3 MM/s
+	;    JMOVE icon150_ready;准备点
+	;    break
+	;  VALUE 2, 3, 7:;从60,90度移动
+	;    SPEED sp3 MM/s
+	;    JMOVE icon90_ready;准备点
+	;    break
+	;    SPEED sp3 MM/s
+	;    JMOVE icon120_ready;准备点
+	;    break
+	;    SPEED sp3 MM/s
+	;    JMOVE icon150_ready;准备点
+	;    break
+	;  VALUE 4, 8:;从120度移动
+	;    SPEED sp3 MM/s
+	;    JMOVE icon150_ready;准备点
+	;    break
+	;END
+	LMOVE icon150_ready;准备点
+	break
+	st = 5
+	SPEED sp3 MM/s
+	LMOVE icon150_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE icon150_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE icon150_ready;抬升
+	break
+	PRINT "lcon150_over"
 .END
-.PROGRAM CLEAN_SOCKET() #29
+.PROGRAM lcon30() #2
+	; *******************************************************************
+	; 从下层往中间集中
+	; *******************************************************************
+	;
+	10
+	PRINT "lcon30"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 5, 6, 8:;turn45,con30,60
+			stp = 8
+			SPEED sp3 MM/s
+			LMOVE icon30_ready;准备点
+			break
+		VALUE 3, 10:;turn 90,con 90
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 8
+			SPEED sp3 MM/s
+			LMOVE icon30_ready;准备点
+			break
+		VALUE 4, 11:;turn 135 ,con120
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 8
+			SPEED sp3 MM/s
+			LMOVE icon30_ready;准备点
+			break
+	END
+	stp = 8
+	SPEED sp3 MM/s
+	LMOVE icon30_ready;准备点
+	break
+	st = 1
+	SPEED sp2 MM/s
+	LMOVE icon30_down;下降
+	break
+	SPEED sp2 MM/s
+	LMOVE icon30_con;集中
+	break
+	SPEED sp2 MM/s
+	LMOVE icon30_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lcon30_over"
+	break
+	RETURN
+.END
+.PROGRAM lcon60() #32
+	; *******************************************************************
+	; 从下层往中间集中
+	; *******************************************************************
+	;
+	PRINT "lcon60"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 3, 5, 6, 8, 10, 11:;turn45,con30,60
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+		VALUE 4:
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+	END
+	stp = 6
+	JMOVE icon60_ready;准备点
+	break
+	st = 2
+	SPEED sp3 MM/s
+	LMOVE icon60_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE icon60_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE icon60_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lcon60_over"
+	break
+	RETURN
+.END
+.PROGRAM lcon90() #28
+	; *******************************************************************
+	; 从中层往中间集中
+	; *******************************************************************
+	;
+	10
+	PRINT "lcon90"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 8:;con30
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 10
+			SPEED sp3 MM/s
+			LMOVE icon90_ready;准备点
+			break
+		VALUE 3, 4, 5, 6, 10, 11:;turn 45,90, con 60,90,120,135
+			stp = 10
+			SPEED sp3 MM/s
+			LMOVE icon90_ready;准备点
+			break
+	END
+	stp = 10
+	JMOVE icon90_ready;准备点
+	break
+	st = 3
+	SPEED sp3 MM/s
+	LMOVE icon90_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE icon90_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE icon90_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lcon90_over"
+	break
+	RETURN
+.END
+.PROGRAM loveheart() #9
+	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.684,104.25,-26.709,-9.0548,30.918] ;
+	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[171.18,-59.262,89.202,-2.6095,-1.032,2.0986] ;
+.END
+.PROGRAM lpull120() #0
+	; *******************************************************************
+	; 从下层往中间集中
+	; *******************************************************************
+	;
+	PRINT "lpull120"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 8:;con30
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 11
+			SPEED sp3 MM/s
+			LMOVE icon120_ready;准备点
+			break
+		VALUE 3, 4, 5, 6, 10, 11:;turn 45,90,135 con 60,90,120
+			stp = 11
+			SPEED sp3 MM/s
+			LMOVE icon120_ready;准备点
+			break
+	END
+	stp = 11
+	SPEED sp3 MM/s
+	LMOVE icon120_ready;准备点
+	break
+	st = 1
+	SPEED sp3 MM/s
+	LMOVE lpull120_ready;准备点
+	break
+	stp = 25
+	SPEED sp3 MM/s
+	LMOVE lpull120_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull120_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull120_ready;抬升
+	break
+	stp = 11
+	SPEED sp3 MM/s
+	LMOVE icon120_ready;抬升
+	break
+	PRINT "get_over"
+	break
+	RETURN
+.END
+.PROGRAM lpull150() #0
+	; *******************************************************************
+	; 从下层往中间集中
+	; *******************************************************************
+	;
+	PRINT "lpull150"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 8:;con30
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 4
+			SPEED sp3 MM/s
+			LMOVE lturn135_ready;准备点
+			break
+		VALUE 3, 4, 5, 10, 11:;turn 45,90,135con90,120
+			stp = 4
+			SPEED sp3 MM/s
+			LMOVE lturn135_ready;准备点
+			break
+		VALUE 6:;con 60,
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 4
+			SPEED sp3 MM/s
+			LMOVE lturn135_ready;准备点
+			break
+	END
+	stp = 4
+	SPEED sp3 MM/s
+	LMOVE icon150_ready;准备点
+	break
+	st = 1
+	SPEED sp3 MM/s
+	LMOVE lpull150_ready;准备点
+	break
+	stp = 26
+	SPEED sp3 MM/s
+	LMOVE lpull150_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull150_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull150_ready;抬升
+	break
+	stp = 4
+	SPEED sp3 MM/s
+	LMOVE icon150_ready;抬升
+	break
+	PRINT "get_over"
+	break
+	RETURN
+.END
+.PROGRAM lpull30() #15
+	; *******************************************************************
+	; 从下层往中间集中
+	; *******************************************************************
+	;
+	PRINT "lpull30"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 5, 6, 8:;turn45,con30,60
+			stp = 8
+			SPEED sp3 MM/s
+			LMOVE icon30_ready;准备点
+			break
+		VALUE 3, 10:;turn 90,con 90
+			stp = 6
+			SPEED sp3 MM/s
+			JMOVE icon60_ready;准备点
+			break
+			stp = 8
+			SPEED sp3 MM/s
+			LMOVE icon30_ready;准备点
+			break
+		VALUE 4, 11:;turn 135 ,con120
+			stp = 3
+			SPEED sp3 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 6
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 8
+			SPEED sp3 MM/s
+			LMOVE icon30_ready;准备点
+			break
+	END
+	stp = 8
+	SPEED sp3 MM/s
+	LMOVE icon30_ready;准备点
+	break
+	st = 1
+	SPEED sp3 MM/s
+	LMOVE lpull30_ready;准备点
+	break
+	stp = 9
+	SPEED sp3 MM/s
+	LMOVE lpull30_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull30_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull30_ready;抬升
+	break
+	stp = 8
+	SPEED sp3 MM/s
+	LMOVE icon30_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "get_over"
+	break
+	RETURN
+.END
+.PROGRAM lpull60() #0
+	; *******************************************************************
+	; 从下层往中间集中
+	; *******************************************************************
+	;
+	10
+	PRINT "get"
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE st OF
+		VALUE 0, 2:;从起始点到
+			SPEED sp3 MM/s
+			LMOVE icon60_ready;准备点
+			break
+		VALUE 1, 3, 6, 7:;从30,90移动
+			SPEED sp3 MM/s
+			JMOVE icon60_ready;准备点
+			break
+		VALUE 4, 5, 8:;从120,150度移动
+			SPEED sp3 MM/s
+			JMOVE icon120_ready;准备点
+			break
+			SPEED sp3 MM/s
+			C1MOVE icon90_ready;准备点
+			break
+			SPEED sp3 MM/s
+			C2MOVE icon60_ready;准备点
+			break
+	END
+	LMOVE icon60_ready;准备点
+	break
+	st = 2
+	SPEED sp3 MM/s
+	LMOVE lpull60_ready;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull60_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull60_con;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull60_down;退后
+	break
+	SPEED sp3 MM/s
+	LMOVE lpull60_ready;抬升
+	break
+	SPEED sp3 MM/s
+	LMOVE icon60_ready;抬升
+	break
+	PRINT "get_over"
+.END
+.PROGRAM lturn135() #16
+	; *******************************************************************
+	;从下层往中间翻面
+	; *******************************************************************
+	;
+	PRINT "lturn135"
+	CALL init1222
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	20
+	CASE stp OF
+		VALUE 8:;con30
+			stp = 6
+			SPEED sp4 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 3
+			SPEED sp4 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 4
+			SPEED sp4 MM/s
+			LMOVE lturn135_ready;准备点
+			break
+		VALUE 3, 4, 5, 10, 11:;turn 45,90,135con90,120
+			stp = 4
+			SPEED sp4 MM/s
+			LMOVE lturn135_ready;准备点
+			break
+		VALUE 6:;con 60,
+			stp = 3
+			SPEED sp4 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+			stp = 4
+			SPEED sp4 MM/s
+			LMOVE lturn135_ready;准备点
+			break
+	END
+	stp = 4
+	SPEED sp3 MM/s
+	JMOVE lturn135_ready;准备点
+	SWAIT 1001
+	PULSE 1, t_ans
+	break
+	st = 8
+	SPEED sp3 MM/s
+	LMOVE lturn135_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lturn135_turn;集中
+	break
+	SPEED sp3 MM/s
+	LMOVE lturn135_turn10;翻面
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	SPEED sp3 MM/s
+	LMOVE lturn135_turn20;翻面
+	break
+	SPEED sp4 MM/s
+	LMOVE lturn135_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lturn135_over"
+	break
+	RETURN
+.END
+.PROGRAM lturn45() #16
+	; *******************************************************************
+	;从下层往中间翻面
+	; *******************************************************************
+	;
+	10
+	PRINT "lturn45"
+	CALL init1222
+	20
+	SPEED sp3 MM/s
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 3, 4, 5, 6, 8, 10, 11:;turn45,90,135,con30,60,90,120
+			stp = 5
+			SPEED sp4 MM/s
+			LMOVE lturn45_ready;准备点
+			break
+	END
+	stp = 5
+	SPEED sp3 MM/s
+	LMOVE lturn45_ready;准备点
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	st = 6
+	SPEED sp3 MM/s
+	LMOVE lturn45_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lturn45_turn;集中
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	SPEED sp4 MM/s
+	LMOVE lturn45_down;下降
+	break
+	SPEED sp4 MM/s
+	LMOVE lturn45_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lturn45_over"
+	break
+	RETURN
+.END
+.PROGRAM lturn90() #43
+	; *******************************************************************
+	;从下层往中间翻面
+	; *******************************************************************
+	;
+	PRINT "lturn90"
+	CALL init1222
+	SPEED sp3 MM/s
+	20
+	ABS.SPEED ON
+	CASE stp OF
+		VALUE 8:;con30
+			stp = 6
+			SPEED sp4 MM/s
+			LMOVE icon60_ready;准备点
+			break
+			stp = 3
+			SPEED sp4 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+		VALUE 1, 3, 4, 5, 6, 10, 11: ;turn45,90,135,con60,90,120
+			SPEED sp4 MM/s
+			LMOVE lturn90_ready;准备点
+			break
+	END
+	stp = 3
+	SPEED sp3 MM/s
+	JMOVE lturn90_ready;准备点
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	st = 7
+	SPEED sp3 MM/s
+	LMOVE lturn90_down;下降
+	break
+	SPEED sp3 MM/s
+	LMOVE lturn90_turn;集中
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	SPEED sp4 MM/s
+	LMOVE lturn90_down;下降
+	break
+	SPEED sp4 MM/s
+	LMOVE lturn90_ready;抬升
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	PRINT "lturn90_over"
+	break
+	RETURN
+.END
+.PROGRAM main1222() #2; 联动
+	CALL init1222;初始设定
+	RESET
+	CALL ethernet_test
+.END
+.PROGRAM oldsocket() #2;
 	IF sock_open_flag == 1 THEN
 		PRINT "偵測到上次殘留的連線 sock_id=", sock_id, "，先關閉再繼續"
 		CALL DISCONNECT
 	END
-	TCP_END_LISTEN eret, port
-	IF eret < 0 THEN
-		PRINT "TCP_END_LISTEN 啟動清理 回傳=", eret, "（本來就沒有殘留監聽，正常現象）"
-	ELSE
-		PRINT "TCP_END_LISTEN 啟動清理 成功，已釋放上次殘留的監聽狀態"
-	END
 .END
-.PROGRAM OPEN_LISTEN() #31
-	er_count = 0
-listen:
-	TCP_LISTEN lret, port
-	IF lret < 0 THEN
-		er_count = er_count + 1
-		PRINT "TCP_LISTEN error=", lret, " count=", er_count
-		GOTO listen
-	END
-	PRINT "TCP_LISTEN OK port=", port
-.END
-.PROGRAM WAIT_ACCEPT(.accepted) #1691
-	TCP_ACCEPT sock_id, port, tout_accept, client_ip[1]
+.PROGRAM open_socket() #69
+	.er_count = 0
+connect:
+	TCP_CONNECT sock_id, port, ip[1], tout_open
 	IF sock_id < 0 THEN
-		.accepted = 0
-	ELSE
-		PRINT "TCP_ACCEPT OK id=", sock_id
-		.accepted = 1
-	END
-.END
-.PROGRAM DO_HANDSHAKE(.ok) #49
-	CALL RECV_LINE ($line, rok)
-	IF rok == 0 THEN
-		.ok = 0
-		RETURN
-	END
-	IF $line == "connect" THEN
-		CALL SEND_LINE ("BOARD_ID,F60_CTRL_001")
-		.ok = 1
-	ELSE
-		CALL SEND_LINE ("ERROR,E4021")
-		.ok = 0
-	END
-.END
-.PROGRAM RECV_LINE(.$line,.rok) #170
-	DO
-		nl_pos = INSTR (1 , $rxbuf , $CHR (10))
-		IF nl_pos > 0 THEN
-			.$line = $LEFT ($rxbuf, nl_pos - 1)
-			$rxbuf = $MID ($rxbuf, nl_pos + 1, LEN ($rxbuf) - nl_pos)
-			.rok = 1
-			RETURN
-		END
-		TCP_RECV rret, sock_id, $recv_buf[1], recv_n, tout_recv, max_length
-		IF rret < 0 THEN
-			IF rret <> -34024 THEN   ; -34024 = E4024 通信逾時，只是暫時沒新資料，不是斷線
-				.rok = 0
-				RETURN
-			END
+		IF .er_count >= 5 THEN
+			PRINT "TCP_CONNECT failed 5 times, giving up."
 		ELSE
-			IF recv_n > 0 THEN
-				FOR i = 1 TO recv_n
-					$rxbuf = $rxbuf + $recv_buf[i]
-				END
-			END
+			.er_count = .er_count + 1
+			PRINT "TCP_CONNECT error=", sock_id, " count=", .er_count
+			GOTO connect
 		END
-	UNTIL 1 == 0
-.END
-.PROGRAM SEND_LINE(.$msg) #121
-	$send_buf[1] = .$msg + $CHR (10)
-	TCP_SEND sret, sock_id, $send_buf[1], 1, tout_send
-.END
-.PROGRAM SPLIT_CSV(.$line) #85
-	FOR i = 1 TO 8
-		$fld[i] = ""
+	ELSE
+		PRINT "TCP_CONNECT OK id=", sock_id
 	END
-	nfld = 0
-	$rest = .$line
-	DO
-		p = INSTR (1 , $rest , ",")
-		nfld = nfld + 1
-		IF p == 0 THEN
-			$fld[nfld] = $rest
-			$rest = ""
-		ELSE
-			$fld[nfld] = $LEFT ($rest, p - 1)
-			$rest = $MID ($rest, p + 1, LEN ($rest) - p)
+.END
+.PROGRAM point_teach() #0
+	CALL init1222
+	;lturn90
+	JMOVE lturn90_ready;准备点
+	LMOVE lturn90_down;下降
+	LMOVE lturn90_turn;集中
+	LMOVE lturn90_down;下降
+	LMOVE lturn90_ready;抬升
+	;lturn135
+	JMOVE lturn135_ready;准备点
+	LMOVE lturn135_down;下降
+	LMOVE lturn135_turn;集中
+	LMOVE lturn135_turn10;翻面
+	LMOVE lturn135_turn20;翻面
+	LMOVE lturn135_ready;抬升
+	;lturn45
+	LMOVE lturn45_ready;准备点
+	LMOVE lturn45_down;下降
+	LMOVE lturn45_turn;集中
+	LMOVE lturn45_down;下降
+	LMOVE lturn45_ready;抬升
+	;lpull30
+	LMOVE icon30_ready;准备点
+	LMOVE lpull30_ready;准备点
+	LMOVE lpull30_down;下降
+	LMOVE lpull30_con;集中
+	LMOVE lpull30_ready;抬升
+	LMOVE icon30_ready;抬升
+	;lcon120
+	LMOVE icon120_ready;准备点
+	LMOVE icon120_down;下降
+	LMOVE icon120_con;集中
+	LMOVE icon120_ready;抬升
+	;lcon90
+	JMOVE icon90_ready;准备点
+	LMOVE icon90_down;下降
+	LMOVE icon90_con;集中
+	LMOVE icon90_ready;抬升
+	;lcon60
+	JMOVE icon60_ready;准备点
+	LMOVE icon60_down;下降
+	LMOVE icon60_con;集中
+	LMOVE icon60_ready;抬升
+	;lcon30
+	LMOVE icon30_ready;准备点
+	LMOVE icon30_down;下降
+	LMOVE icon30_con;集中
+	LMOVE icon30_ready;抬升
+.END
+.PROGRAM recv() #2685
+	.num = 0
+	TCP_RECV rret, sock_id, $recv_buf[1], .num, tout_rec, max_length
+	IF rret < 0 THEN
+		$recv_buf[1] = ""
+		IF rret <> -34024 THEN
+			PRINT "TCP_RECV error=", rret
 		END
-	UNTIL $rest == "" OR nfld >= 8
+	END
 .END
-.PROGRAM DISPATCH() #74
-  IF $fld[1] == "HEARTBEAT" THEN
-    CALL SEND_LINE ("HEARTBEAT_ACK")
-    RETURN
-  END
-  IF robot_busy == 1 THEN
-    IF $fld[1] == "STOP" THEN
-      CALL DO_STOP
-    ELSE
-      CALL SEND_LINE ("BUSY")
-    END
-    RETURN
-  END
-  SCASE $fld[1] OF
-    SVALUE "PICKUP":
-      CALL DO_PICKUP ($fld[2], $fld[3], VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
-    SVALUE "CHOP":
-      CALL DO_CHOP ($fld[2], VAL ($fld[3]), VAL ($fld[4]))
-    SVALUE "PLACE":
-      CALL DO_PLACE ($fld[2], $fld[3], $fld[4])
-    SVALUE "FLIP":
-      CALL DO_FLIP (VAL ($fld[2]), VAL ($fld[3]))
-    SVALUE "HOME":
-      CALL DO_HOME ($fld[2])
-    SVALUE "STOP":
-      CALL DO_STOP
-    SVALUE "RESET":
-      CALL DO_RESET
-    SVALUE "STATUS":
-      CALL DO_STATUS ($fld[2])
-    SVALUE "READY":
-      CALL DO_READY ($fld[2])
-    SVALUE "IOTEST":
-      CALL DO_IOTEST ($fld[2])
-    SVALUE "DO_PREPARE":
-      CALL DO_PREPARE
-    ANY :
-      CALL SEND_LINE ("ERROR,E4021")
-  END
+.PROGRAM remove() #0
+	SWAIT 1001
+	PULSE 1, t_ans
+	SPEED sp1 MM/s
+	ABS.SPEED ON
+	stp = 23
+	SPEED sp1 MM/s
+	LMOVE #lclt_10;准备点
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	stp = 24
+	SPEED sp1 MM/s
+	LMOVE #lclt_20;定位
+	break
+	SWAIT 1001
+	SPEED sp1 MM/s
+	LMOVE #lclt_30;开刮
+	break
+	SPEED sp1 MM/s
+	LMOVE #lclt_31;开刮
+	break
+	SPEED sp1 MM/s
+	LMOVE #lclt_32;退开
+	break
+	SPEED sp1 MM/s
+	LMOVE #lclt_33;定位
+	break
+	PULSE 1, t_ans
+	TWAIT 1
+	SWAIT 1001
+	SPEED sp1 MM/s
+	LMOVE #lclt_40;退出
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	stp = 2
+	LMOVE #star
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	CALL loveheart
+	break
+	stp = 0
 .END
-.PROGRAM WAIT_SIGNAL(.sig_no,.timeout_sec,.ok) #347
+.PROGRAM remove_1() #12
+	;ABS.SPEED ON
+	;TWAIT 1
+	;break
+	;SWAIT 1001
+	;stp = 16
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[97.977, -31.936, 129.95, -98.037, -112.49, -7.3299] ;stat6
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[78.213, -32.164, 129.33, -79.159, -106.35, -7.0917] ;line8 stat
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[81.716, -84.649, 82.293, -88.122, -107.25, -24.406] ;line8 over
+	;stp = 17
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[86.073, -91.692, 70.53, -94.563, -117.12, -20.564] ;line8 up
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.508, -91.278, 71.944, -93.556, -116.59, -21.644] ;finish1
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[87.361, -99.175, 58.14, -93.251, -117.89, -15.1] ;finish1
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[82.216, -86.736, 78.154, -87.973, -107.3, -22.265] ;finish2
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.928, 67.464, -87.852, -107.46, -18.609] ;finish3
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.944, -96.898, 62.283, -88.762, -107.97, -16.281] ;finish4
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.929, 67.464, -87.852, -107.46, -18.609] ;finish3
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.353, -83.413, 84.001, -90.848, -107.83, -24.894] ;finish0
+	;stp = 6
+	;LINEAR 300. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[97.977, -31.936, 129.95, -98.037, -112.49, -7.3299] ;stat6
+	;break
+	;RETURN
+	CALL lcon120
+	CALL lcon90
+	CALL lcon60
+	CALL loveheart
+	SWAIT 1001
+	PULSE 1, t_ans
+.END
+.PROGRAM remove_2() #0
+	ABS.SPEED ON
+	stp = 16
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.921, -75.742, 78.361, -87.32, -96.422, -30.09] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[80.353, -80.517, 73.76, -84.108, -95.595, -30.42] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[75.804, -61.4, 111.84, -81.729, -96.676, -49.398] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[80.431, -73.75, 99.317, -75.792, -98.125, 12.001] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[81.286, -88.522, 80.837, -76.148, -97.353, 15.644] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[77.843, -88.441, 80.028, -73.215, -95.88, 16.288] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[77.917, -54.218, 103.52, -72.512, -92.74, 26.554] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[81.414, -53.928, 104.43, -75.776, -94.153, 26.318] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[97.977, -31.936, 129.95, -98.037, -112.49, -7.3299] ;stat6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[78.213, -32.164, 129.33, -79.159, -106.35, -7.0917] ;line8 stat
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[81.716, -84.649, 82.293, -88.122, -107.25, -24.406] ;line8 over
+	stp = 17
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[86.073, -91.692, 70.53, -94.563, -117.12, -20.564] ;line8 up
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.508, -91.278, 71.944, -93.556, -116.59, -21.644] ;finish1
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[87.361, -99.175, 58.14, -93.251, -117.89, -15.1] ;finish1
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[82.216, -86.736, 78.154, -87.973, -107.3, -22.265] ;finish2
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.928, 67.464, -87.852, -107.46, -18.609] ;finish3
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.944, -96.898, 62.283, -88.762, -107.97, -16.281] ;finish4
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.929, 67.464, -87.852, -107.46, -18.609] ;finish3
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.353, -83.413, 84.001, -90.848, -107.83, -24.894] ;finish0
+	stp = 6
+	LINEAR 200. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[97.977, -31.936, 129.95, -98.037, -112.49, -7.3299] ;stat6
+	break
+	PULSE 1, t_ans
+	SWAIT 1001
+	PULSE 1, t_ans
+	SPEED sp1 MM/s
+	ABS.SPEED ON
+	stp = 23
+	SPEED sp1 MM/s
+	LMOVE #lclt_10;准备点
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	stp = 24
+	SPEED sp1 MM/s
+	LMOVE #lclt_20;定位
+	break
+	SWAIT 1001
+	SPEED sp1 MM/s
+	LMOVE #lclt_30;开刮
+	break
+	SPEED sp1 MM/s
+	LMOVE #lclt_31;开刮
+	break
+	SPEED sp1 MM/s
+	LMOVE #lclt_32;退开
+	break
+	SPEED sp1 MM/s
+	LMOVE #lclt_33;定位
+	break
+	PULSE 1, t_ans
+	TWAIT 1
+	SWAIT 1001
+	SPEED sp1 MM/s
+	LMOVE #lclt_40;退出
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	stp = 2
+	LMOVE #star
+	break
+	SWAIT 1001
+	PULSE 1, t_ans
+	CALL loveheart
+	break
+	stp = 0
+	SWAIT 1001
+	PULSE 1, t_ans
+.END
+.PROGRAM send(.ret,.$data) #2686
+	$send_buf[1] = .$data
+	buf_n = 1
+	.ret = 1
+	TCP_SEND sret, sock_id, $send_buf[1], buf_n, tout
+	IF sret < 0 THEN
+		.ret = -1
+		PRINT "TCP_SEND error=", sret
+	END
+.END
+.PROGRAM teach() #0
+	CALL init
+	LMOVE fr1_f
+	LMOVE fr2_f
+	LMOVE fr3_f
+	LMOVE fr4_f
+	LMOVE fr15_f
+	LMOVE fr16_f
+	LMOVE fr14_f
+	LMOVE fr5_f
+	LMOVE fr6_f
+	LMOVE fr7_f
+	LMOVE fr8_f
+	POINT fr9_f = SHIFT (fr8_f BY 0, 0, 60)
+	LMOVE fr9_f
+	POINT fr10_f = SHIFT (fr9_f BY 0, 300, 0)
+	LMOVE fr10_f
+	POINT fr11_f = SHIFT (fr10_f BY 30, 0, -45)
+	LMOVE fr11_f
+	POINT fr12_f = SHIFT (fr11_f BY -50, 0, 0)
+	LMOVE fr12_f
+	POINT fr13_f = SHIFT (fr12_f BY 0, 0, 100)
+	LMOVE fr13_f
+.END
+.PROGRAM test_timer() #2
 	TIMER 1 = 0
-	WAIT SIG (.sig_no) OR TIMER (1) > .timeout_sec
-	IF SIG (.sig_no) THEN
-		.ok = 1
-	ELSE
-		.ok = 0
-	END
+	WAIT TIMER (1) > 5
+	PRINT "TIMER OK, elapsed=", TIMER (1)
 .END
-.PROGRAM DO_PLACE(.$source,.$location,.$method) #13
-  ; 解析目的地
-  ABS.SPEED ON
-  found = 1
-  IF .$location == "WAIT_ZONE_1" THEN
-    POINT target_pt = wait_zone_1
-    POINT target_up = wait_zone_up
-    POINT target_pu1 =wait_zone_pu1
-    POINT target_pu2 =wait_zone_pu2
-    POINT target_pu3 =wait_zone_pu3
-    POINT target_pu4 =wait_zone_pu4
-  ELSE
-    IF .$location == "MIX_ZONE" THEN
-      POINT target_pt = mix_zone
-      POINT target_up = mix_zone_up
-      POINT target_pu1 =mix_zone_pu1
-      POINT target_pu2 =mix_zone_pu2
-      POINT target_pu3 =mix_zone_pu3
-      POINT target_pu4 =mix_zone_pu4
-    ELSE
-      IF .$location == "SALAD_BOWL" THEN
-        POINT target_pt = salad_bowl
-        POINT target_up = salad_bowl_up
-        POINT target_pu1 =salad_bowl_pu1
-        POINT target_pu2 =salad_bowl_pu2
-        POINT target_pu3 =salad_bowl_pu3
-        POINT target_pu4 =salad_bowl_pu4
-      ELSE
-        IF .$location == "WORK_CHOP_ZONE" THEN
-          POINT target_pt = work_zone
-          POINT target_up = work_zone_up
-        ELSE
-          found = 0
-        END
-      END
-    END
-  END
-  IF found == 0 THEN
-    CALL SEND_LINE ("ERROR,E4002")
-    RETURN
-  END
-  IF .$method <> "POUR" AND .$method <> "SCOOP" AND .$method <> "PUSH" THEN
-    CALL SEND_LINE ("ERROR,E4001")
-    RETURN
-  END
-  robot_busy = 1
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL ha_pickup; PLACE 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm);上方點
-  POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
-  ;切割區步驟
-  IF .$location == "WORK_CHOP_ZONE" THEN
-    ;切割區上方
-    SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+.PROGRAM pg0811 ()
+  ; 階段 5: 移動至切割區 — 僅食材點位需要搬運，wait_zone/mix_zone 是暫存/混拌區，
+  ; 取出後由 PC 另外送 PLACE 指令處理，不進切割區。比照階段 1-4 拆成 4 個子階段。
+  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+    ; 階段 5a: 就緒 — 兩臂移到切割區正上方
+    SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     LMOVE chop_rep
     break
-    SIGNAL sig_out_step
-    SWAIT sig_in_step
-    SIGNAL -sig_out_step
     SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     C1MOVE chop_rep1
-    SIGNAL sig_out_step
-    SWAIT sig_in_step
-    SIGNAL -sig_out_step
+    break
     SPEED 75 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    POINT chop_appro_pt = SHIFT (work_chop_zone BY 0, 0, appro_mm)
     C2MOVE chop_appro_pt
     break
-    SIGNAL sig_out_step
-    SWAIT sig_in_step
-    SIGNAL -sig_out_step
-    ; 下降
-    SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    CALL SYNC_STEP (ok)
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      TOOL left_spatula
+      robot_busy = 0
+      RETURN
+    END
+    ; 階段 5b: 下降 — 下降到放置高度
+    SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
     LMOVE work_chop_zone
-    break
     CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
@@ -3963,10 +4487,9 @@ listen:
       robot_busy = 0
       RETURN
     END
-    ;釋放
-    SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    ; 階段 5c: 散開 — 兩臂往外移動放開食材 (集中動作的相反，沿 TOOL 座標系移動)
+    POINT chop_spread_pt = work_chop_zone + TRANS (chop_spread_dx, chop_spread_dy, 0, 0, 0, 0)
     LMOVE chop_spread_pt
-    break
     CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
@@ -3974,10 +4497,9 @@ listen:
       robot_busy = 0
       RETURN
     END
-    ;抬起離開目的地
-    SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+    ; 階段 5d: 抬起 — 兩臂抬起離開切割區
+    POINT chop_depart_pt = SHIFT (chop_spread_pt BY 0, 0, appro_mm)
     LMOVE chop_depart_pt
-    break
     CALL SYNC_STEP (ok)
     IF ok == 0 THEN
       CALL SEND_LINE ("ERROR,E4023")
@@ -3985,333 +4507,38 @@ listen:
       robot_busy = 0
       RETURN
     END
-    ;回到原點
-    SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-    TOOL left_spatula
-    LMOVE home_left
-    break
-    CALL SYNC_STEP (ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      TOOL left_spatula
-      robot_busy = 0
-      RETURN
-    END
-    GOTO 20
   END
-  ; 階段 1: 目的地上方點
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LMOVE target_pt
-  break
-  CALL SYNC_STEP (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 2: 釋放 (依方式)
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LMOVE target_up
-  break
-  TWAIT 1
-  ; 階段 3剝下: 釋放 (依方式)
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LMOVE target_pu1
-  break
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LMOVE target_pu2
-  break
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LMOVE target_pu3
-  break
-  SPEED 400 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  LMOVE target_pu4
-  break
-  SWAIT sig_in_step
-  PULSE sig_out_step, 0.1
-  
-  SPEED 600 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
   TOOL left_spatula
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
+.END
+.PROGRAM DO_PREPARE ()
+  CALL heartput
+  break
+  CALL INIT_TOOL
+  SPEED 50 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  ACCURACY 1
+  SIGNAL -sig_out_step
   LMOVE home_left
-  break
-  CALL SYNC_STEP (ok)
   IF ok == 0 THEN
     CALL SEND_LINE ("ERROR,E4023")
     TOOL left_spatula
     robot_busy = 0
     RETURN
   END
-  20
-  ABS.SPEED OFF
-  TOOL left_spatula
-  robot_busy = 0
-  CALL SEND_LINE ("OK")
 .END
-.PROGRAM WAIT_SIGNAL_OFF(.sig_no,.timeout_sec,.ok) #0
-	TIMER 1 = 0
-	WAIT (SIG (.sig_no) == 0) OR TIMER (1) > .timeout_sec
-	IF SIG (.sig_no) == 0 THEN
-		.ok = 1
-	ELSE
-		.ok = 0
-	END
-.END
-.PROGRAM DO_IOTEST(.$op) #0
-	; 純 i/O 接線測試，跳過 SYNC_STEP/動作流程，直接操作/讀取訊號腳位
-	IF .$op == "ON" THEN
-		SIGNAL sig_out_step
-		CALL SEND_LINE ("OK")
-	ELSE
-		IF .$op == "OFF" THEN
-			SIGNAL -sig_out_step
-			CALL SEND_LINE ("OK")
-		ELSE
-			IF .$op == "READ" THEN
-				IF SIG (sig_in_step) THEN
-					CALL SEND_LINE ("SIG,1")
-				ELSE
-					CALL SEND_LINE ("SIG,0")
-				END
-			ELSE
-				CALL SEND_LINE ("ERROR,E4001")
-			END
-		END
-	END
-.END
-.PROGRAM SYNC_STEP(.ok) #347
-	CALL WAIT_SIGNAL (sig_in_step, timeout_io_sec, ok1)
-	SIGNAL sig_out_step
-	TIMER 1 = 0
-	WAIT TIMER (1) > 0.1
-	SIGNAL -sig_out_step
-	.ok = ok1
-.END
-.PROGRAM DO_PICKUP(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #45
-  IF .$arm <> "F60_F" THEN
-    CALL SEND_LINE ("ERROR,E4003")
-    RETURN
+.PROGRAM point_move ()
+  FOR .t =1 TO 30
+    POINT chop_per[.t] = SHIFT (chop_per[.t] BY 0, 20 , 0)
+    POINT chop_1[.t] = SHIFT (chop_1[.t] BY 0, 20 , 0)
   END
-  found = 1
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
-    POINT target_pt = TRANS (.x_mm, .y_mm+20, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
-    POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
-  ELSE
-    IF .$location == "WAIT_ZONE" THEN
-      POINT target_pt = wait_zone
-      POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-    ELSE
-      IF .$location == "MIX_ZONE" THEN
-        POINT target_pt = mix_zone_pi
-        POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-      ELSE
-        found = 0
-      END
-    END
-  END
-  IF found == 0 THEN
-    CALL SEND_LINE ("ERROR,E4002")
-    RETURN
-  END
+  POINT level_ho = SHIFT (level_ho by 0 , 20, 0)
+  POINT level_up = SHIFT (level_up by 0, 20, 0)
+.END
+.PROGRAM DO_CON45 (.ok) ; 
   ABS.SPEED ON
-  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
-  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
-  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
-  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
-  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
-  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
-  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
-  robot_busy = 1
-  SPEED 600 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
-  LMOVE target_pt_appro
-  CALL SYNC_STEP (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 2: 下降 — 一起下降到取料高度
-  SPEED 200 MM/s ALWAYS
-  LMOVE target_conv
-  CALL SYNC_STEP (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
-  SPEED 600 MM/s ALWAYS
-  LMOVE target_pt
-  break
-  CALL SYNC_STEP (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
-  ; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
-  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
-  SPEED 200 MM/s ALWAYS
-  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
-  LMOVE depart_pt
-  CALL SYNC_STEP (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ABS.SPEED OFF
-  TOOL left_spatula
-  robot_busy = 0
-  CALL SEND_LINE ("OK")
-.END
-.PROGRAM DO_CHOP(.$food,.cuts,.thick) #0
-  IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
-    CALL SEND_LINE ("ERROR,E4004")
-    RETURN
-  END
-  IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
-    CALL SEND_LINE ("ERROR,E4005")
-    RETURN
-  END
-  robot_busy = 1
-  ABS.SPEED ON
-  SPEED 600 MM/s ALWAYS   ;  ^俣龋Fy試{
-  TOOL left_spatula
-  LMOVE home_left
-  break
-  SPEED 1000 MM/s ALWAYS 
-  JMOVE #work_chop_zone
-  break
-  CALL SYNC_STEP (ok);直鄣同一叨
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  i = 1
-  DO
-    ;CALL SYNC_STEP (ok); sync A F60_R 食模碌
-    ;IF ok == 0 THEN
-    ;  CALL SEND_LINE ("ERROR,E4023"); I/O 號r (p)
-    ;  robot_busy = 0
-    ;  RETURN
-    ;END
-    LMOVE chop_per[i]
-    break
-    LMOVE chop_1[i]
-    break
-    LMOVE chop_per[i]
-    break
-    
-    i = i + 1
-  UNTIL i >= .cuts
-  ;褯]牟玫
-  PULSE sig_out_step ,0.1
-  SPEED 200 MM/s ALWAYS 
-  LMOVE chop_1[i]
-  break
-  CALL SYNC_STEP (ok);直鄣同一叨
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  ;
-  SPEED 200 MM/s ALWAYS 
-  LMOVE level_ho
-  break
-  CALL SYNC_STEP (ok); 直奂
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  ;抬
-  SPEED 200 MM/s ALWAYS 
-  LMOVE level_up
-  break
-  CALL SYNC_STEP (ok); 直奂
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  ;戏c
-  SPEED 200 MM/s ALWAYS 
-  LMOVE level2_per
-  break
-  CALL SYNC_STEP (ok); 直奂
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  ;陆
-  SPEED 200 MM/s ALWAYS 
-  LMOVE level2_tg
-  break
-  CALL SYNC_STEP (ok); 直奂
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  ;_
-  ;SPEED 600 MM/s ALWAYS 
-  ;LMOVE level2_ho
-  ;break
-  ;CALL SYNC_STEP (ok); 直奂
-  ;IF ok == 0 THEN
-  ;  CALL SEND_LINE ("ERROR,E4023")
-  ;  robot_busy = 0
-  ;  RETURN
-  ;END
-  ;抬
-  ;SPEED 600 MM/s ALWAYS 
-  ;LMOVE level2_up
-  ;break
-  ;CALL SYNC_STEP (ok); 直奂
-  ;IF ok == 0 THEN
-  ;  CALL SEND_LINE ("ERROR,E4023")
-  ;  robot_busy = 0
-  ;  RETURN
-  ;END
-  SPEED 200 MM/s ALWAYS 
-  LMOVE #work_chop_zone
-  break
-  TOOL left_spatula
-  break
-  SPEED 200 MM/s ALWAYS 
-  JMOVE home_left
-  robot_busy = 0
-  SWAIT sig_in_step 
-  PULSE sig_out_step,0.1
-  robot_busy = 0
-  CALL SEND_LINE ("OK")
-.END
-.PROGRAM DO_LTURN45(.ok) #0
-  ABS.SPEED ON
-  SPEED 400 MM/s ALWAYS
+  SPEED 1000 MM/s ALWAYS
   LMOVE lturn45_ready
-  break
-  CALL SYNC_STEP (s)
-  IF s == 0 THEN
-    .ok = 0
-    RETURN
-  END
-  SPEED 400 MM/s ALWAYS
-  LMOVE lturn45_down
-  break
-  SPEED 400 MM/s ALWAYS
-  LMOVE lturn45_turn
   break
   CALL SYNC_STEP (s)
   IF s == 0 THEN
@@ -4319,16 +4546,29 @@ listen:
     RETURN
   END
   SPEED 1000 MM/s ALWAYS
-  LMOVE lturn45_down
+  ;LMOVE lturn45_down
+  LMOVE lcon45_down
   break
-  SPEED 600 MM/s ALWAYS
+  SPEED 400 MM/s ALWAYS
+  ;LMOVE lturn45_turn
+  LMOVE lcon45_turn
+  break
+  CALL SYNC_STEP (s)
+  IF s == 0 THEN
+    .ok = 0
+    RETURN
+  END
+  SPEED 400 MM/s ALWAYS
+  LMOVE lcon45_down
+  break
+  SPEED 1000 MM/s ALWAYS
   LMOVE lturn45_ready
   break
   ABS.SPEED OFF
   CALL SYNC_STEP (s)
   .ok = s
 .END
-.PROGRAM DO_LTURN90(.ok) #7
+.PROGRAM DO_CON90 (.ok) ;
   ABS.SPEED ON
   SPEED 1000 MM/s ALWAYS
   LMOVE lturn90_ready
@@ -4338,11 +4578,13 @@ listen:
     .ok = 0
     RETURN
   END
-  SPEED 400 MM/s ALWAYS
-  LMOVE lturn90_down
+  SPEED 1000 MM/s ALWAYS
+  ;LMOVE lturn90_down
+  LMOVE lcon90_down
   break
   SPEED 400 MM/s ALWAY
-  LMOVE lturn90_turn
+  ;LMOVE lturn90_turn
+  LMOVE lcon90_turn
   break
   CALL SYNC_STEP (s)
   IF s == 0 THEN
@@ -4350,7 +4592,7 @@ listen:
     RETURN
   END
   SPEED 400 MM/s ALWAY
-  LMOVE lturn90_down
+  LMOVE lcon90_down
   break
   SPEED 1000 MM/s ALWAY
   LMOVE lturn90_ready
@@ -4359,9 +4601,9 @@ listen:
   CALL SYNC_STEP (s)
   .ok = s
 .END
-.PROGRAM DO_LTURN135(.ok) #0
+.PROGRAM DO_CON135 (.ok) ; 
   ABS.SPEED ON
-  SPEED 600 MM/s ALWAYS
+  SPEED 1000 MM/s ALWAYS
   LMOVE lturn135_ready
   break
   CALL SYNC_STEP (s)
@@ -4369,1384 +4611,466 @@ listen:
     .ok = 0
     RETURN
   END
-  SPEED 600 MM/s ALWAYS
-  LMOVE lturn135_down
+  SPEED 1000 MM/s ALWAYS
+  ;LMOVE lturn135_down
+  LMOVE lcon135_down
   break
-  SPEED 600 MM/s ALWAYS
-  LMOVE lturn135_turn
-  break
-  SPEED 600 MM/s ALWAYS
-  LMOVE lturn135_turn10
+  SPEED 400 MM/s ALWAYS
+  ;LMOVE lturn135_turn
+  LMOVE lcon135_turn
   break
   CALL SYNC_STEP (s)
   IF s == 0 THEN
     .ok = 0
     RETURN
   END
-  SPEED 600 MM/s ALWAYS
-  LMOVE lturn135_turn20
+  SPEED 400 MM/s ALWAYS
+  LMOVE lcon135_down
   break
-  SPEED 600 MM/s ALWAYS
+  SPEED 1000 MM/s ALWAYS
   LMOVE lturn135_ready
   break
   ABS.SPEED OFF
   CALL SYNC_STEP (s)
   .ok = s
 .END
-.PROGRAM DO_FLIP(.cycles,.speed_pct) #0
-  IF .cycles < 1 OR .cycles > 20 THEN
-    CALL SEND_LINE ("ERROR,E4005")
-    RETURN
-  END
-  IF .speed_pct < 1 OR .speed_pct > 100 THEN
-    CALL SEND_LINE ("ERROR,E4005")
-    RETURN
-  END
-  ABS.SPEED ON
-  robot_busy = 1
-  SPEED 600 MM/s ALWAYS
+.PROGRAM DO_FLIP_teach (.cycles,.speed_pct) ;
   BASE ba_flip
   TOOL ha_flip
-  break
-  SWAIT 1001
-  i = 0
-  DO
-    ; 階段 1：90°/90° 配對
-    CALL DO_LTURN90 (ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      BASE ba
-      TOOL left_spatula
-      robot_busy = 0
-      RETURN
-    END
-    ; 階段 2：135°/45° 配對 (本臂 135°)
-    CALL DO_LTURN135 (ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      BASE ba
-      TOOL left_spatula
-      robot_busy = 0
-      RETURN
-    END
-    ; 階段 3：45°/135° 配對 (本臂 45°)
-    CALL DO_LTURN45 (ok)
-    IF ok == 0 THEN
-      CALL SEND_LINE ("ERROR,E4023")
-      BASE ba
-      TOOL left_spatula
-      robot_busy = 0
-      RETURN
-    END
-    i = i + 1
-  UNTIL i >= .cycles
   ; 階段 1：90°/90° 配對
-  CALL DO_CON45 (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    BASE ba
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
+  BASE ba_flip
+  TOOL ha_flip
+  LMOVE lturn90_ready
+  LMOVE lturn90_down
+  LMOVE lturn90_turn
+  LMOVE lturn90_down
+  LMOVE lturn90_ready
   ; 階段 2：135°/45° 配對 (本臂 135°)
-  CALL DO_CON135 (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    BASE ba
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
+  BASE ba_flip
+  TOOL ha_flip
+  LMOVE lturn135_ready
+  LMOVE lturn135_down
+  LMOVE lturn135_turn
+  LMOVE lturn135_turn10
+  LMOVE lturn135_turn20
+  LMOVE lturn135_ready
   ; 階段 3：45°/135° 配對 (本臂 45°)
-  CALL DO_CON90 (ok)
-  IF ok == 0 THEN
-    CALL SEND_LINE ("ERROR,E4023")
-    BASE ba
-    TOOL left_spatula
-    robot_busy = 0
-    RETURN
-  END
-  BASE ba
+  BASE ba_flip
+  TOOL ha_flip
+  LMOVE lturn45_ready
+  LMOVE lturn45_down
+  LMOVE lturn45_turn
+  LMOVE lturn45_down
+  LMOVE lturn45_ready
+  ; 階段 1：90°/90° 配對
+  BASE ba_flip
+  TOOL ha_flip
+  LMOVE lturn90_ready
+  LMOVE lcon90_down
+  LMOVE lcon90_turn
+  LMOVE lcon90_down
+  LMOVE lturn90_ready
+  ; 階段 2：135°/45° 配對 (本臂 135°)
+  BASE ba_flip
+  TOOL ha_flip
+  LMOVE lturn135_ready
+  LMOVE lcon135_down
+  LMOVE lcon135_turn
+  LMOVE lcon135_down
+  LMOVE lturn135_ready
+  ; 階段 3：45°/135° 配對 (本臂 45°)
+  BASE ba_flip
+  TOOL ha_flip
+  LMOVE lturn45_ready
+  LMOVE lcon45_down
+  LMOVE lcon45_turn
+  LMOVE lcon45_down
+  LMOVE lturn45_ready
+  ;
   TOOL left_spatula
-  SPEED 200 MM/s ALWAYS
   LMOVE home_left
   ABS.SPEED OFF
   robot_busy = 0
   CALL SEND_LINE ("OK")
 .END
-.PROGRAM DO_HOME(.$arm) #0
-	IF .$arm <> $this_arm THEN
-		CALL SEND_LINE ("ERROR,E4003")
-		RETURN
-	END
-	robot_busy = 1
-	SPEED 30 MM/s ALWAYS   ; 復歸使用較低安全速度 (★ 絕對速度，待現場測試調整)
-	LMOVE home_left
-	robot_busy = 0
-	CALL SEND_LINE ("OK")
+.PROGRAM teach_origin() #0; 原點
+  JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[93.383,-22.266,118.37,108.99,112.9,221.16] ;
+  JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[109.63,-81.125,97.004,39.523,87.91,273.71] ;
+  LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[110.94,-81.124,100.37,38.339,85.306,271.61]  ;
 .END
-.PROGRAM DO_STOP() #0
-  BRAKE
-  CALL loveheart
-  SIGNAL -sig_out_step
-  robot_busy = 0
-  CALL SEND_LINE ("OK")
+.PROGRAM DO_CLEAN ()
+  
 .END
-.PROGRAM DO_RESET() #0
-	robot_busy = 0
-	SIGNAL -sig_out_step
-	CALL SEND_LINE ("OK")
+.TRANS
+ba 0.000000 -39.000000 0.000000 90.000008 90.000008 0.000000
+ba_flip 0.000000 -39.000000 0.000000 90.000008 90.000008 0.000000
+ca_10 481.034973 551.823059 -244.598251 95.567825 9.148594 -97.579819
+ca_20 378.783264 489.339233 -300.314148 -96.437469 8.648026 -84.770317
+ca_30 378.823151 534.270630 -300.307343 -96.455627 8.649182 -84.749664
+chop_1[0] 329.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[1] 334.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[2] 339.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[3] 344.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[4] 349.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[5] 354.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[6] 359.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[7] 364.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[8] 369.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[9] 374.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[10] 379.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[11] 384.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[12] 389.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[13] 394.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[14] 399.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[15] 404.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[16] 409.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[17] 414.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[18] 419.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[19] 424.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[20] 429.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[21] 434.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[22] 439.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[23] 444.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[24] 449.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[25] 454.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[26] 459.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[27] 464.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[28] 469.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[29] 474.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_1[30] 479.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_appro_pt 505.749725 585.010498 -268.372131 92.020264 176.398041 -87.989914
+chop_depart_pt 505.752960 555.069702 -270.255707 92.020264 176.398041 -87.989914
+chop_origin 334.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
+chop_per[0] 329.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[1] 334.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[2] 339.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[3] 344.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[4] 349.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[5] 354.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[6] 359.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[7] 364.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[8] 369.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[9] 374.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[10] 379.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[11] 384.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[12] 389.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[13] 394.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[14] 399.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[15] 404.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[16] 409.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[17] 414.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[18] 419.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[19] 424.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[20] 429.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[21] 434.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[22] 439.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[23] 444.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[24] 449.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[25] 454.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[26] 459.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[27] 464.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[28] 469.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[29] 474.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_per[30] 479.105743 528.659119 -256.316650 153.032837 0.526956 -65.612526
+chop_rep 572.307678 440.545074 -277.584045 80.288933 176.397202 -11.521597
+chop_rep1 556.238770 545.337891 -277.087311 80.373009 176.397903 -59.176529
+chop_spread_pt 505.752960 555.069702 -320.255707 92.020264 176.398041 -87.989914
+cu_1[1] 332.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[2] 342.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[3] 352.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[4] 362.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[5] 372.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[6] 382.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[7] 392.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[8] 402.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[9] 412.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[10] 422.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[11] 432.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[12] 442.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[13] 452.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[14] 462.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[15] 472.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[16] 482.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[17] 492.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[18] 502.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[19] 512.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[20] 522.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[21] 532.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[22] 542.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[23] 552.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[24] 562.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[25] 572.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[26] 582.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[27] 592.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[28] 602.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[29] 612.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[30] 622.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[31] 632.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[32] 642.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[33] 652.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[34] 662.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[35] 672.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[36] 682.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[37] 692.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[38] 702.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[39] 712.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_1[40] 722.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_10 332.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
+cu_2[1] 332.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[2] 342.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[3] 352.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[4] 362.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[5] 372.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[6] 382.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[7] 392.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[8] 402.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[9] 412.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[10] 422.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[11] 432.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[12] 442.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[13] 452.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[14] 462.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[15] 472.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[16] 482.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[17] 492.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[18] 502.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[19] 512.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[20] 522.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[21] 532.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[22] 542.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[23] 552.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[24] 562.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[25] 572.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[26] 582.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[27] 592.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[28] 602.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[29] 612.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[30] 622.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[31] 632.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[32] 642.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[33] 652.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[34] 662.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[35] 672.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[36] 682.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[37] 692.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[38] 702.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[39] 712.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_2[40] 722.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+cu_20 332.703186 654.994873 -306.042664 -166.494919 12.032064 -107.554871
+depart_pt 569.768066 447.825653 -271.736084 80.325905 176.406357 -11.487525
+fr10_f 446.029663 759.110352 -206.843811 177.462357 48.397392 86.635773
+fr11_f 476.029663 759.110352 -251.843811 177.462357 48.397392 86.635773
+fr12_f 426.029663 759.110352 -251.843811 177.462357 48.397392 86.635773
+fr13_f 426.029663 759.110352 -151.843811 177.462357 48.397392 86.635773
+fr14_f 456.924286 458.987915 -203.728699 176.031769 28.742670 88.421799
+fr15_f 412.009796 459.153290 -266.863708 177.466568 48.396519 86.636597
+fr16_f 412.008148 459.148224 -252.217194 177.465714 48.396282 86.637474
+fr1_f 350.536804 459.128906 -125.964211 176.129883 29.289026 88.319908
+fr2_f 388.035553 459.123077 -266.838776 177.464981 48.394592 86.633934
+fr3_f 426.395782 459.123047 -266.846161 177.463593 48.396118 86.635094
+fr4_f 440.840363 459.104126 -264.460693 176.120392 29.291826 88.329254
+fr5_f 484.091919 459.015961 -203.717697 176.036972 28.740532 88.418663
+fr6_f 334.694519 459.077667 -227.457474 176.114838 29.287579 88.336075
+fr7_f 388.038330 459.118408 -266.835907 177.464661 48.395306 86.633621
+fr8_f 446.029663 459.110321 -266.843811 177.462357 48.397392 86.635773
+fr9_f 446.029663 459.110321 -206.843811 177.462357 48.397392 86.635773
+ha 50.000000 -230.000000 50.000000 90.000000 120.000008 -90.000000
+ha_flip 50.000000 -230.000000 50.000000 90.000000 120.000008 -90.000000
+ha_pickup 50.000000 -320.000000 50.000000 -90.000008 30.000002 90.000008
+home_left 86.654587 440.663025 -159.885483 -172.253799 30.898853 83.113922
+icon120_con 378.656708 567.067139 -287.858093 153.266129 26.368296 84.773743
+icon120_down -27.265648 701.860474 -282.060974 151.792542 26.299345 86.090988
+icon120_ready -29.788216 666.142578 -220.677780 120.729988 27.420092 97.131729
+icon150_con 351.049194 621.205322 -279.299194 82.415733 20.346819 99.477272
+icon150_down 351.055115 723.471252 -279.279266 82.419106 20.348347 99.483719
+icon150_ready 133.651672 742.806641 -237.548767 102.614662 14.905646 102.667450
+icon30_con 429.676453 594.262756 -290.009766 -97.272118 19.083658 91.033852
+icon30_down 425.837616 398.471375 -296.333710 -96.945442 19.082394 90.729118
+icon30_ready 355.935089 436.436462 -201.933868 -81.832924 20.530680 68.814087
+icon60_con 434.110962 534.115967 -287.094604 -151.117386 28.915903 85.875496
+icon60_down 131.310318 389.216888 -291.966553 -151.545639 28.901781 86.246925
+icon60_ready 212.616058 426.079041 -182.162567 -154.152908 28.844049 88.530075
+icon90_con 421.191956 529.951233 -287.727966 -177.687134 27.716766 85.126762
+icon90_down -28.805984 530.004639 -288.293732 -177.774323 27.717144 85.204796
+icon90_ready 93.491493 580.642456 -204.727036 -179.862305 27.639454 86.966240
+left_spatula 50.000000 -230.000000 50.000000 90.000000 120.000008 -90.000000
+level2_ho 579.649658 398.645325 -298.564514 152.785217 0.525240 -65.367218
+level2_per 577.044922 398.634583 -248.564194 152.682877 0.525143 -65.265236
+level2_tg 405.885773 398.620850 -248.581146 152.391830 0.525168 -64.974075
+level2_up 579.649658 398.645325 -248.564514 152.785217 0.525240 -65.367218
+level_ho 449.649689 548.645325 -298.564514 152.785217 0.525240 -65.367218
+level_up 449.649689 548.645325 -248.564514 152.785217 0.525240 -65.367218
+lpull120_con 484.853912 499.942871 -283.705078 128.961578 30.163612 88.139038
+lpull120_down 641.585632 371.389862 -286.402802 128.962463 30.160870 88.138763
+lpull120_ready 641.577454 371.375000 -213.858917 128.960937 30.159994 88.135025
+lpull150_con 447.343964 593.731201 -288.139832 81.997887 14.395054 93.491539
+lpull150_down 490.847504 295.598999 -291.982513 81.987518 14.394682 93.502380
+lpull150_ready 490.840759 340.018646 -230.544983 81.986031 14.396929 93.508392
+lpull30_con 421.955933 659.114929 -286.878906 -102.044472 20.592047 90.052071
+lpull30_down 421.994324 879.303223 -278.940674 -101.432991 20.595331 89.482300
+lpull30_ready 421.992981 879.347534 -253.606293 -96.727325 20.463779 84.700920
+lturn135_down 283.606293 503.684509 -289.845093 147.821365 12.899602 77.922684
+lturn135_ready 283.620483 503.682892 -244.835266 147.829773 12.899265 77.910873
+lturn135_turn 406.259216 402.570312 -291.656281 147.815460 12.900154 77.930130
+lturn135_turn10 406.274139 402.566467 -279.691071 147.811768 12.902134 77.931015
+lturn135_turn20 406.277710 376.778320 -291.189453 -102.423119 6.655750 -45.292259
+lturn45_down 306.649658 319.806000 -274.473724 -145.335510 41.107548 81.878387
+lturn45_ready 306.627533 319.841858 -212.875732 -145.331940 41.106228 81.876152
+lturn45_turn 435.548889 435.058960 -272.561188 -145.335419 41.106525 81.879112
+lturn90_back 66.158813 522.396729 -266.766663 179.351318 27.598614 88.135719
+lturn90_co 569.900879 522.400940 -266.731201 179.355560 27.603683 88.124435
+lturn90_do 66.158859 522.401733 -266.749878 179.353256 27.599215 88.130356
+lturn90_down 246.068268 416.908966 -275.844788 -178.036240 27.665121 85.812607
+lturn90_ready 246.078629 416.926636 -183.699249 179.352417 27.602287 88.125427
+lturn90_turn 441.971741 416.937592 -275.847107 -178.030884 27.665314 85.809525
+lturn90_turn10 435.163025 560.125793 -261.149261 165.917450 27.709497 94.943672
+mix_zone 569.768066 447.825653 -321.736084 80.325905 176.406357 -11.487525
+mix_zone_per 536.225464 447.455261 -277.125305 80.389412 176.399185 -11.421483
+origin 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+pick_up -45.489105 326.130920 -219.462433 80.389015 176.393921 -11.421052
+pickup_carrot 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+pickup_corn 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+pickup_cucumber 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+pickup_origin 468.011841 445.929321 -328.033569 80.340797 176.397278 -11.470846
+rcon120_con 258.480621 654.374817 -275.907104 120.732117 27.418596 97.124443
+rcon120_down 185.588531 748.598633 -273.741425 120.734962 27.419004 97.124886
+rcon120_ready 185.577545 698.255920 -220.644989 120.730835 27.416605 97.126320
+rcon150_con 351.049194 621.205322 -279.299194 82.415733 20.346819 99.477272
+rcon150_down 351.055115 723.471252 -279.279266 82.419106 20.348347 99.483719
+rcon150_ready 351.085419 723.472168 -246.036728 82.426544 20.346777 99.475113
+rcon30_con 362.243286 599.643433 -284.178040 -111.985626 19.260714 97.248436
+rcon30_down 362.248383 437.388336 -284.198090 -111.993111 19.255468 97.254532
+rcon30_ready 362.226898 437.387695 -252.091476 -111.984421 19.252739 97.247986
+rcon60_con 251.627808 542.310425 -277.818512 -138.858627 25.206850 95.743591
+rcon60_down 167.497177 469.047791 -279.201233 -138.858124 25.206509 95.743988
+rcon60_ready 167.512787 469.037140 -245.568466 -138.864502 25.207527 95.750793
+rcon90_con 379.325195 560.164001 -274.856445 165.927200 27.702126 94.933846
+rcon90_down 30.964851 560.181702 -274.859711 165.932617 27.699326 94.933830
+rcon90_ready 30.977982 560.186462 -233.871078 165.935287 27.701344 94.925987
+salad_bowl 731.934875 725.072571 -261.470184 80.347610 176.401810 -11.467535
+target_conv 469.768066 447.825653 -321.736084 80.325905 176.406357 -11.487525
+target_pt 731.934875 725.072571 -261.470184 80.347610 176.401810 -11.467535
+target_pt_appro 469.768066 447.825653 -271.736084 80.325905 176.406357 -11.487525
+target_pt_conve 559.355530 446.881195 -327.655640 80.363098 176.396378 -11.448808
+wait_zone 304.634827 622.648987 -323.592896 82.860001 175.387863 -8.955914
+wait_zone_per 0.000000 0.000000 50.000000 0.000000 0.000000 0.000000
+waste_corner 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+work_chop_zone 505.749725 585.010498 -318.372131 92.020264 176.398041 -87.989914
+work_flip_zone 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
+work_zone 564.140381 447.043060 -327.527893 80.373322 176.397705 -11.441450
+work_zone_per 536.224854 447.460541 -277.126343 80.391266 176.399216 -11.420059
 .END
-.PROGRAM DO_STATUS(.$arm) #0
-	IF .$arm <> $this_arm THEN
-		CALL SEND_LINE ("ERROR,E4003")
-		RETURN
-	END
-	IF robot_busy == 1 THEN
-		CALL SEND_LINE ("BUSY")
-	ELSE
-		CALL SEND_LINE ("OK")
-	END
+.JOINTS
+#ca_10 85.927155 -83.542603 93.416672 -17.348732 -85.812836 90.573296
+#cu_ready 88.392044 -59.610722 97.457138 -141.218277 -30.499422 240.822281
+#lclt_10 94.822571 -31.092773 102.954941 -67.027153 -113.584908 54.012360
+#lclt_20 79.002251 -51.386719 99.022903 -78.335159 -81.515129 31.355053
+#lclt_30 91.149178 -61.546146 95.638374 -88.778328 -87.500610 26.704578
+#lclt_31 78.994339 -63.217163 94.010582 -77.421097 -82.941971 24.587500
+#lclt_32 79.001816 -51.386719 99.023346 -78.335159 -81.514435 31.353966
+#lclt_33 89.952103 -64.215820 94.849907 -73.045906 -120.174637 29.053661
+#lclt_40 89.950348 -39.421143 102.942444 -64.985451 -114.156189 46.565388
+#star 113.979645 -25.807617 113.430260 -82.870316 -123.613365 62.643703
+#water 72.049667 -82.865112 87.963043 -78.633110 -13.719178 -20.175020
+#water1 74.050934 -85.500000 89.111153 -76.260941 -60.876621 20.677122
+#water2 77.614014 -89.763435 67.565269 -89.667778 -59.602894 40.501057
+#water3 73.049423 -78.409065 98.744461 -73.905472 -61.459579 17.869442
+#water4 77.249268 -75.283813 82.470154 -89.079796 -59.471058 40.004917
+#water5 74.353714 -60.482670 105.987404 -81.152054 -59.330296 29.883829
+#water6 78.493362 -69.273193 77.536804 -96.477547 -60.577244 52.558842
+#work_chop_zone 90.620079 -32.187016 114.915260 44.078030 45.057678 54.673740
 .END
-.PROGRAM DO_READY(.$arm) #0
-	IF .$arm <> $this_arm THEN
-		CALL SEND_LINE ("ERROR,E4003")
-		RETURN
-	END
-	IF robot_busy == 1 THEN
-		CALL SEND_LINE ("BUSY")
-	ELSE
-		CALL SEND_LINE ("OK")
-	END
-.END
-.PROGRAM DO_PICKUP_test() #0
-  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  ;拿菜區域
-  LMOVE pickup_origin
-  ;POINT pickup_origin = SHIFT(pickup_origin BY -10,-20,0)
-  POINT target_pt = TRANS (-0, 0, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
-  POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
-  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
-  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
-  LMOVE target_pt_appro
-  LMOVE target_conv
-  LMOVE target_pt
-  LMOVE depart_pt
-  ;等待區域
-  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  LMOVE wait_zone
-  POINT target_pt = wait_zone  ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
-  POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
-  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
-  LMOVE target_pt_appro
-  LMOVE target_conv
-  LMOVE target_pt
-  LMOVE depart_pt
-  ;混拌區域
-  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  LMOVE mix_zone_pi
-  POINT target_pt = mix_zone_pi  ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
-  POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
-  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
-  LMOVE target_pt_appro
-  LMOVE target_conv
-  LMOVE target_pt
-  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  LMOVE depart_pt
-  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
-  LMOVE target_pt_appro
-  ; 階段 2: 下降 — 一起下降到取料高度
-  LMOVE target_pt
-  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
-  LMOVE target_conv
-  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開))
-  ;LMOVE depart_pt
-  ; 階段 5: 移動至切割區 — 僅食材點位需要搬運，wait_zone/mix_zone 是暫存/混拌區，
-  POINT chop_rep = SHIFT (target_conv BY 150, 0, 50)
-  LMOVE chop_rep
-  C1MOVE chop_rep1
-  POINT chop_appro_pt = SHIFT (work_chop_zone BY 0, 0, appro_mm)
-  C2MOVE chop_appro_pt
-  ; 階段 5b: 下降 — 下降到放置高度
-  LMOVE work_chop_zone
-  ; 階段 5c: 散開 — 兩臂往外移動放開食材 (集中動作的相反，沿 TOOL 座標系移動)
-  ;POINT chop_spread_pt = work_chop_zone + TRANS (chop_spread_dx, chop_spread_dy, 0, 0, 0, 0)
-  LMOVE chop_spread_pt
-  ; 階段 5d: 抬起 — 兩臂抬起離開切割區
-  POINT chop_depart_pt = SHIFT (chop_spread_pt BY 0, 0, appro_mm)
-  LMOVE chop_depart_pt
-.END
-.PROGRAM arm_client() #0
-	$arm_id = "F"        ; change to "R" on the cutting arm
-	port = 10001         ; must match the PORT on the Pi server
-	ip[1] = 192          ; Pi IP on eth0: 192.168.5.1
-	ip[2] = 168
-	ip[3] = 5
-	ip[4] = 1
-	max_length = 255
-	tout_open = 10
-	tout_rec = 10
-	tout = 10
-	count = 0
-	;
-	CALL open_socket
-	IF sock_id < 0 THEN
-		PRINT "cannot connect to Pi, exit."
-		GOTO exit_end
-	END
-	;
-	; send 5 messages, wait for Pi reply each time
-	WHILE count < 5 DO
-		count = count + 1
-		$msg = "HELLO from " + $arm_id
-		CALL send (eret, $msg)
-		IF eret < 0 THEN
-			GOTO exit
-		END
-		CALL recv
-		IF rret < 0 THEN
-			GOTO exit
-		END
-		PRINT "Pi reply: ", $recv_buf[1]
-		TWAIT 1
-	END
-	;
-exit:
-	CALL close_socket
-exit_end:
-.END
-.PROGRAM arm_dispatch() #10
-	RESET
-	$arm_id = "F"
-	$ver = "v5"
-	port = 10001
-	ip[1] = 192
-	ip[2] = 168
-	ip[3] = 5
-	ip[4] = 1
-	max_length = 255
-	tout_open = 10
-	tout_rec = 60
-	tout = 10
-	timeout_code = -34024
-	;
-	CALL init
-	CALL open_socket
-	IF sock_id < 0 THEN
-		PRINT "cannot connect to Pi, exit."
-		GOTO exit_end
-	END
-	$msg = "ID," + $arm_id + "," + $ver
-	CALL send (eret, $msg)
-	;
-loop:
-	CALL recv
-	IF rret == timeout_code THEN
-		GOTO loop
-	END
-	IF rret < 0 THEN
-		GOTO exit
-	END
-	$line = $recv_buf[1]
-	;
-	; ---- heartbeat ----
-	IF $line == "PING" THEN
-		PRINT "got PING"
-		CALL send (eret, "PONG")
-		GOTO loop
-	END
-	;
-	; ---- parse "RUN,<id>,<dish>" ----
-	$kw = $DECODE ($line, ",", 0)
-	$t = $DECODE ($line, ",", 1)
-	$id = $DECODE ($line, ",", 0)
-	$t = $DECODE ($line, ",", 1)
-	$dish = $line
-	;
-	IF $kw == "RUN" THEN
-		; -------- DISPATCH: one line per dish --------
-		IF $dish == "SPAM" THEN
-			CALL fry_lunchmeat
-		END
-		IF $dish == "BURGER" THEN
-			CALL fry_burger
-		END
-		$reply = "DONE," + $id
-		CALL send (eret, $reply)
-	END
-	;
-	GOTO loop
-	;
-exit:
-	CALL close_socket
-exit_end:
-.END
-.PROGRAM arm_responder() #154
-	$arm_id = "F"        ; <-- change to "R" on the cutting arm
-	$ver = "v2"          ; version tag (do not change)
-	port = 10001
-	ip[1] = 192          ; Pi IP on eth0: 192.168.5.1
-	ip[2] = 168
-	ip[3] = 5
-	ip[4] = 1
-	max_length = 255
-	tout_open = 10
-	tout_rec = 60
-	tout = 10
-	timeout_code = -34024 ; E4024 = TCP receive timeout (normal while idle)
-	;
-	PRINT "arm_responder ", $ver, " arm_id=", $arm_id
-	CALL open_socket
-	IF sock_id < 0 THEN
-		PRINT "cannot connect to Pi, exit."
-		GOTO exit_end
-	END
-	;
-	; register: "ID,<role>,<version>"
-	$msg = "ID," + $arm_id + "," + $ver
-	CALL send (eret, $msg)
-	;
-	; responder loop: wait for a command, reply
-loop:
-	CALL recv
-	IF rret == timeout_code THEN
-		GOTO loop          ; timeout = no command yet -> keep waiting
-	END
-	IF rret < 0 THEN
-		GOTO exit          ; real connection error -> end
-	END
-	$cmd = $recv_buf[1]
-	;
-	IF $cmd == "HOLD" THEN
-		PRINT "got HOLD"
-		TWAIT 1
-		CALL send (eret, "HOLD_OK")
-	END
-	IF $cmd == "RELEASE" THEN
-		PRINT "got RELEASE"
-		TWAIT 1
-		CALL send (eret, "RELEASE_OK")
-	END
-	IF $cmd == "START" THEN
-		PRINT "got START"
-		TWAIT 2
-		CALL send (eret, "DONE")
-	END
-	;
-	GOTO loop
-	;
-exit:
-	CALL close_socket
-exit_end:
-.END
-.PROGRAM atest_1() #0
-	PRINT "get"
-	CALL init1222
-	IF SIG (-2001) THEN
-		GOTO 1000
-	END
-	stp = 0
-	CALL heartput
-	break
-	stp = 1
-	SWAIT 1001
-	PULSE 1, t_ans
-	LMOVE #star
-	break
-	10
-	stp = 2
-	SWAIT 1001
-	LMOVE #water
-	SIGNAL 2
-	TWAIT 6
-	SIGNAL -2
-	PRINT "get_over"
-	20
-	try = try + 1
-	CALL init1222
-	ABS.SPEED ON
-	FOR .t = 1 TO 1
-		CALL lturn90
-		SWAIT 1001
-		PULSE 1, t_ans
-		CALL lturn135
-		SWAIT 1001
-		PULSE 1, t_ans
-		CALL lturn45
-		SWAIT 1001
-		PULSE 1, t_ans
-		CALL lcon60
-		SWAIT 1001
-		PULSE 1, t_ans
-	END
-	CALL lturn90
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL lturn135
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL lturn45
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL lcon30
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL lcon60
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL lcon90
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL lcon120
-	SWAIT 1001
-	PULSE 1, t_ans
-	ABS.SPEED OFF
-	CALL remove
-	SWAIT 1001
-	PULSE 1, t_ans
-	LMOVE #star
-	break
-	SWAIT 1001
-	PULSE 1, t_ans
-	CALL loveheart
-	break
-	stp = 0
-	SWAIT 1001
-	PULSE 1, t_ans
-	1000
-	HALT
-.END
-.PROGRAM autohome() #1
-	10
-	SIGNAL -2
-	SWAIT 1001
-	IF SIG (2001) THEN
-		GOTO 30
-	END
-	CALL init1222
-	CASE stp OF
-		VALUE 0:
-			CALL loveheart
-		VALUE 1:;
-			CALL loveheart
-			break
-		VALUE 2, 16, 21, 23:
-			SPEED sp1 MM/s
-			LMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 3:
-			SPEED sp1 MM/s
-			LMOVE lturn90_ready;准备点
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 4:
-			SPEED sp1 MM/s
-			LMOVE lturn135_ready;准备点
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 5:
-			SPEED sp1 MM/s
-			LMOVE lturn45_ready;准备点
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 6:
-			SPEED sp1 MM/s
-			LMOVE icon60_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 7, 13:
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 8:
-			SPEED sp1 MM/s
-			LMOVE icon30_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 9:
-			SPEED sp1 MM/s
-			LMOVE lpull30_ready;准备点
-			break
-			stp = 8
-			SPEED sp1 MM/s
-			LMOVE icon30_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 10:
-			SPEED sp1 MM/s
-			LMOVE icon90_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 11:
-			SPEED sp1 MM/s
-			LMOVE icon120_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 14:
-			SPEED sp1 MM/s
-			LMOVE cl_10
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			LMOVE #star
-			break
-			stp = 1
-			SPEED sp1 MM/s
-			CALL loveheart
-			break
-		VALUE 12, 18:
-			SPEED sp1 MM/s
-			LMOVE #bk1
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			LMOVE #star
-			break
-			stp = 1
-			SPEED sp1 MM/s
-			CALL loveheart
-			break
-		VALUE 15, 19:
-			SPEED sp1 MM/s
-			LMOVE #bk2
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			LMOVE #star
-			break
-			stp = 1
-			SPEED sp1 MM/s
-			CALL loveheart
-			break
-		VALUE 17, 22:
-			SPEED sp1 MM/s
-			LMOVE #bk3
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			LMOVE #star
-			break
-			stp = 1
-			SPEED sp1 MM/s
-			CALL loveheart
-			break
-		VALUE 20:
-			SPEED sp1 MM/s
-			LMOVE #bk4
-			break
-			stp = 2
-			SPEED sp1 MM/s
-			LMOVE #star
-			break
-			stp = 1
-			SPEED sp1 MM/s
-			CALL loveheart
-			break
-		VALUE 23:
-			CALL loveheart
-			break
-		VALUE 24:
-			SPEED sp1 MM/s
-			LMOVE #lclt_20;定位
-			break
-			CALL loveheart
-			break
-		VALUE 25:
-			SPEED sp1 MM/s
-			LMOVE lpull120_ready;准备点
-			break
-			stp = 11
-			SPEED sp1 MM/s
-			LMOVE icon120_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-		VALUE 26:
-			SPEED sp1 MM/s
-			LMOVE lpull150_ready;准备点
-			break
-			stp = 4
-			SPEED sp1 MM/s
-			LMOVE icon150_ready;准备点
-			break
-			stp = 7
-			SPEED sp1 MM/s
-			JMOVE #star
-			break
-			stp = 1
-			CALL loveheart
-			break
-	END
-	20
-	IF SIG (-2001) THEN
-		PRINT "gohome err"
-	END
-	break
-	stp = 0
-	30
-	PULSE 1, t_ans
-	PRINT "autohome over"
-	break
-	RETURN
-	1000
-	HALT
-.END
-.PROGRAM break() #16
-	;********************************************************************
-	;此程式用途为断开ETHERNET连线
-	;********************************************************************
-	;sock_id = 36
-	IF er == 0 THEN
-		GOTO 10
-	END
-	er = 0
-	TCP_CLOSE rc, rsock_id
-	PRINT "Closed."
-	10
-	RETURN
-.END
-.PROGRAM cake() #10
-	PRINT "cut cake"
-	CALL heartput
-	ABS.SPEED ON
-	SPEED sp5 MM/s
-	JMOVE #cu_ready
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	CALL init1222
-	FOR .k = 1 TO 7
-		SPEED sp5 MM/s
-		LMOVE cu_1[.k]
-		break
-		SPEED sp5 MM/s
-		LMOVE cu_2[.k]
-		break
-		SPEED sp5 MM/s
-		LMOVE cu_1[.k]
-		break
-	END
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	LMOVE #cu_ready
-	CALL loveheart
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	RETURN
-.END
-.PROGRAM cake_check() #0
-	CALL heartput
-	JMOVE #ca_10
-	CALL init1222
-	LMOVE ca_20
-	LMOVE ca_30
-.END
-.PROGRAM cake_point() #0
-	JMOVE #cu_ready
-	CALL init1222
-	LMOVE cu_10
-	LMOVE cu_20
-	FOR .i = 1 TO 40
-		POINT cu_1[.i] = SHIFT (cu_10 BY (.i - 1) * 10, 0, 0)
-		POINT cu_2[.i] = SHIFT (cu_20 BY (.i - 1) * 10, 0, 0)
-	END
-	LMOVE cu_1[1]
-	LMOVE cu_2[1]
-	LMOVE cu_1[7]
-	LMOVE cu_2[7]
-.END
-.PROGRAM clean() #0
-	; *******************************************************************
-	; 清洁
-	; *******************************************************************
-	PRINT "清台"
-	CALL heartput
-	stp = 1
-	LMOVE #star
-	break
-	stp = 2
-	CALL init1222
-	;注水
-	SPEED sp3 MM/s
-	ABS.SPEED ON
-	SWAIT 1001
-	LMOVE #water;注水点
-	break
-	SIGNAL 2
-	break
-	TWAIT 15
-	SPEED sp3 MM/s
-	LMOVE #water1;移动1
-	break
-	SPEED sp3 MM/s
-	LMOVE #water2;移动2
-	break
-	SPEED sp3 MM/s
-	LMOVE #water3;移动3
-	break
-	SPEED sp3 MM/s
-	LMOVE #water4;移动4
-	break
-	SPEED sp3 MM/s
-	LMOVE #water5;移动5
-	break
-	SPEED sp3 MM/s
-	LMOVE #water6;移动6
-	break
-	SIGNAL -2
-	;注水结束
-	stp = 14
-	SPEED sp3 MM/s
-	CALL init1222
-	LMOVE cl_10;等待点
-	break
-	PULSE 1, t_ans
-	TWAIT 1
-	SWAIT 1001
-	;第一条
-	ABS.SPEED ON
-	SPEED sp3 MM/s
-	JMOVE cl_11
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_12
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_13
-	break
-	;第二条
-	SPEED sp3 MM/s
-	JMOVE cl_21
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_22
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_23
-	break
-	;第三条
-	SPEED sp3 MM/s
-	JMOVE cl_31
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_32
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_33
-	break
-	;第四条
-	SPEED sp3 MM/s
-	JMOVE cl_41
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_42
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_43
-	break
-	;第五条
-	SPEED sp3 MM/s
-	JMOVE cl_51
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_52
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_53
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_54
-	break
-	;第七条
-	SPEED sp3 MM/s
-	JMOVE cl_61
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_62
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_63
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_64
-	break
-	;第七条
-	SPEED sp3 MM/s
-	JMOVE cl_71
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_72
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_73
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_74
-	break
-	;第七条
-	SPEED sp3 MM/s
-	JMOVE cl_81
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_82
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_83
-	break
-	SPEED sp3 MM/s
-	LMOVE cl_84
-	break
-	PRINT "清台完成"
-	stp = 13
-	SPEED sp3 MM/s
-	JMOVE #star
-	break
-	PULSE 1, t_ans
-	SWAIT 1001
-	PULSE 1, t_ans
-	stp = 1
-	CALL loveheart
-	ABS.SPEED OFF
-	RETURN
-.END
-.PROGRAM cleanup_old_soc() #0
-  IF sock_open_flag == 1 THEN
-    PRINT "偵測到上次殘留的連線 sock_id=", sock_id, "，先關閉再繼續"
-    CALL DISCONNECT
-  END
-.END
-.PROGRAM close_socket() #23
-	TCP_CLOSE ret, sock_id
-	IF ret < 0 THEN
-		PRINT "TCP_CLOSE error=", ret
-	ELSE
-		PRINT "TCP_CLOSE OK"
-	END
-.END
-.PROGRAM do_chop_test(.$food,.cuts,.thick) #0;
-  TOOL left_spatula
-  JMOVE #work_chop_zone
-  ;POINT chop_1[1] = SHIFT(chop_1[1] BY 0,5,-5)
-  ;把沒切完的部分拿掉
-  LMOVE chop_1[1]
-  FOR .t=1 TO 30 
-    POINT chop_1[.t] = SHIFT( chop_1[1] BY (.t-1)*5,0,0)
-    POINT chop_per[.t] = SHIFT (chop_1[.t] BY 0,0,50)
-  END
-  LMOVE chop_per[1]
-  LMOVE chop_1[1]
-  LMOVE chop_per[18]
-  LMOVE chop_1[18]
-  ;集中
-  LMOVE level_ho
-  ;抬升
-  POINT level_up = SHIFT (level_ho BY 0, 0, 50)
-  LMOVE level_up
-  ;上方點
-  POINT level2_per = SHIFT (level_ho BY 0, -150, 50)
-  LMOVE level2_per
-  ;下降=
-  LMOVE level2_tg
-.END
-.PROGRAM do_place_test() #0
-  TOOL ha_pickup
-  ;等待區
-  LMOVE wait_zone_1
-  LMOVE wait_zone_up
-  LMOVE wait_zone_pu1
-  LMOVE wait_zone_pu2
-  LMOVE wait_zone_pu3
-  LMOVE wait_zone_pu4
-  POINT target_pu1 =wait_zone_pu1
-  POINT target_pu2 =wait_zone_pu2
-  POINT target_pu3 =wait_zone_pu3
-  POINT target_pu4 =wait_zone_pu4
-  POINT target_pt = wait_zone_1
-  POINT target_up = wait_zone_up
-  ;POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm );上方點
-  ;POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
-  LMOVE target_pt
-  LMOVE target_up
-  LMOVE target_pu1
-  LMOVE target_pu2
-  LMOVE target_pu3
-  LMOVE target_pu4
-  TOOL left_spatula
-  LMOVE home_left
-  ;混拌區
-  TOOL ha_pickup; PLACE 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  LMOVE mix_zone
-  LMOVE mix_zone_up
-  LMOVE mix_zone_pu1
-  LMOVE mix_zone_pu2
-  LMOVE mix_zone_pu3
-  LMOVE mix_zone_pu4
-  POINT target_pu1 =mix_zone_pu1
-  POINT target_pu2 =mix_zone_pu2
-  POINT target_pu3 =mix_zone_pu3
-  POINT target_pu4 =mix_zone_pu4
-  POINT target_pt = mix_zone
-  POINT target_up = mix_zone_up
-  POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm);上方點
-  POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
-  LMOVE target_pt
-  LMOVE target_up
-  LMOVE target_pu1
-  LMOVE target_pu2
-  LMOVE target_pu3
-  LMOVE target_pu4
-  TOOL left_spatula
-  LMOVE home_left
-  ;上菜區
-  TOOL ha_pickup
-  LMOVE salad_bowl
-  LMOVE salad_bowl_up
-  LMOVE salad_bowl_pu1
-  LMOVE salad_bowl_pu2
-  LMOVE salad_bowl_pu3
-  LMOVE salad_bowl_pu4
-  POINT target_pu1 =salad_bowl_pu1
-  POINT target_pu2 =salad_bowl_pu2
-  POINT target_pu3 =salad_bowl_pu3
-  POINT target_pu4 =salad_bowl_pu4
-  POINT target_pt = salad_bowl
-  POINT target_up = salad_bowl_up
-  ;POINT target_per = SHIFT (target_pt BY 0, 0, appro_mm);上方點
-  ;POINT target_out = SHIFT (target_up BY 0, 0, appro_mm);退避點
-  LMOVE target_pt
-  LMOVE target_up
-  LMOVE target_pu1
-  LMOVE target_pu2
-  LMOVE target_pu3
-  LMOVE target_pu4
-  TOOL left_spatula
-  LMOVE home_left
-  ;切割區上方
-  TOOL ha_pickup
-  LMOVE chop_rep
-  C1MOVE chop_rep1
-  C2MOVE chop_appro_pt
-  LMOVE work_chop_zone
-  LMOVE chop_spread_pt
-  LMOVE chop_depart_pt
-  TOOL left_spatula
-  LMOVE home_left
-.END
-.PROGRAM ethernet_test() #0
-	; *******************************************************************
-	; 利用EtherNET通讯协定取得字串来呼叫程式
-	; *******************************************************************
-	;
-	er = 0
-	IF er == 1 THEN
-		CALL break
-	END
-	break
-	try = 0
-	port = 9000
-	max_len = 64
-	tout_open = 60
-	tout_rec = 5
-	sock_id = -1
-	r1 = 0
-	max_length = 255
-	; RPi ip
-	ip[1] = 192
-	ip[2] = 168
-	ip[3] = 5
-	ip[4] = 1
-	10
-	PRINT "Connecting.."
-	TCP_CONNECT sock_id, port, ip[1], tout_open
-	IF sock_id < 0 THEN
-		PRINT "TCP_CONNECT failed, code=", sock_id
-		GOTO 1000
-	END
-	PRINT "Connected. sock_id=", sock_id
-	rsock_id = sock_id
-	er = 1
-	break
-	; ---- 接收一段字串 ----
-	.n = 1
-	$kp[1] = "ok\n"
-	break
-	TCP_SEND r1, rsock_id, $kp[1], .n, tout_rec
-	break
-	20
-	.n = max_len
-	break
-	TCP_RECV r1, sock_id, $buf[1], .n, tout_rec, max_length
-	r1_1 = r1
-	rsock_id = sock_id
-	$st1 = $buf[1]
-	IF $buf[1] == "" THEN
-		GOTO 20
-	END
-	PRINT $st1
-	break
-	$st1_1[1] = $DECODE ($buf[1], ",", 0)
-	$st1_1[2] = $DECODE ($buf[1], ",", 1)
-	$st1_1[3] = $DECODE ($buf[1], ",", 0)
-	PRINT $st1_1[3]
-	$buf[1] = ""
-	SCALL $st1_1[3]
-	.n = 1
-	$kp[1] = "ok\n"
-	break
-	TCP_SEND r1_1, rsock_id, $kp[1], .n, tout_rec
-	GOTO 20
-	1000
-	TCP_CLOSE rc, rsock_id
-	PRINT "Closed."
-.END
-.PROGRAM fry_burger() #35
-	PRINT "frying burger..."
-	ABS.SPEED ON
-	SPEED 200 MM/s
-	LMOVE fr1_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	FOR fr = 1 TO 2
-		SPEED 200 MM/s
-		LMOVE fr2_f
-		SIGNAL 1
-		SWAIT 1001
-		SIGNAL -1
-		SPEED 200 MM/s
-		LMOVE fr15_f
-		break
-		SWAIT 1001
-		;翻面
-		SPEED 200 MM/s
-		LMOVE fr16_f
-		break
-		SPEED 200 MM/s
-		LMOVE fr14_f
-		break
-		;退开
-		PULSE 1, t_ans
-		SPEED 200 MM/s
-		LMOVE fr6_f
-		break
-		SIGNAL 1
-		SWAIT 1001
-		SIGNAL -1
-	END
-	SPEED 200 MM/s
-	LMOVE fr7_f
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr8_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr9_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr10_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr11_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 50 MM/s
-	LMOVE fr12_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	LMOVE fr13_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	LMOVE fr1_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	PRINT "done burger"
-.END
-.PROGRAM fry_lunchmeat() #43
-	PRINT "frying lunch meat..."
-	ABS.SPEED ON
-	SPEED 200 MM/s
-	LMOVE fr1_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	FOR fr = 1 TO 3
-		SPEED 200 MM/s
-		LMOVE fr2_f
-		SIGNAL 1
-		SWAIT 1001
-		SIGNAL -1
-		SPEED 200 MM/s
-		LMOVE fr3_f
-		break
-		SWAIT 1001
-		;翻面
-		SPEED 200 MM/s
-		LMOVE fr4_f
-		break
-		SPEED 200 MM/s
-		LMOVE fr5_f
-		break
-		;退开
-		PULSE 1, t_ans
-		SPEED 200 MM/s
-		LMOVE fr6_f
-		break
-		SIGNAL 1
-		SWAIT 1001
-		SIGNAL -1
-	END
-	SPEED 200 MM/s
-	LMOVE fr7_f
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr8_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr9_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr10_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 200 MM/s
-	LMOVE fr11_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	SPEED 50 MM/s
-	LMOVE fr12_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	LMOVE fr13_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	LMOVE fr1_f
-	break
-	SIGNAL 1
-	SWAIT 1001
-	SIGNAL -1
-	PRINT "done frying"
-.END
-.PROGRAM get() #17
-	;测试
-	;CALL test20260206
-	;break
-	;RETURN
-	;结束
-	;PRINT "get"
-	;CALL init1222
-	;IF SIG (-2001) THEN
-	;  GOTO 1000
-	;END
-	;stp = 0
-	;CALL heartput
-	;break
-	;stp = 1
-	;SWAIT 1001
-	;PULSE 1, t_ans
-	;LMOVE #star
-	;break
-	;10
-	;stp = 2
-	;SWAIT 1001
-	;LMOVE #water
-	;SIGNAL 2
-	;TWAIT 10
-	;SIGNAL -2
-	;;弄散
-	;CALL init1222
-	;stp = 3
-	;ABS.SPEED ON
-	;SPEED sp3 MM/s
-	;JMOVE lturn90_ready;准备点
-	;break
-	;PULSE 1, t_ans
-	;SPEED sp3 MM/s
-	;LMOVE lturn90_do;准备点
-	;SWAIT 1001
-	;SPEED sp3 MM/s
-	;LMOVE lturn90_co;准备点
-	;break
-	;SPEED sp3 MM/s
-	;LMOVE lturn90_back;准备点
-	;break
-	;PULSE 1, t_ans
-	PRINT "get"
-	CALL init1222
-	IF SIG (-2001) THEN
-		GOTO 1000
-	END
-	stp = 0
-	CALL heartput
-	break
-	stp = 1
-	SWAIT 1001
-	PULSE 1, t_ans
-	LMOVE #star
-	SWAIT 1001
-	PULSE 1, t_ans
-	PRINT "get_over"
-	RETURN
-	1000
-	.n = 1
-	$kp[1] = "err\n"
-	break
-	TCP_SEND r1_1, rsock_id, $kp[1], .n, tout_rec
-	RETURN
-.END
-.PROGRAM get_ok_netosw() #0
-	ABS.SPEED ON
-	;JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[86.714,-39.505,71.544,-63.644,-95.118,73.251] ;start
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[85.391,-59.815,33.231,-70.719,-80.899,98.169] ;line1 stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[85.14,-99.701,30.173,-66.386,-79.167,106.11] ;line1 relay p
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.717,-97.464,51.698,-38.109,-89.898,88.984] ;line1 over
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.678,-100.16,57.439,-23.112,-98.433,86.406]  ;stant straight
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[90.815,-100.13,57.529,-25.859,-98.978,87.466]  ;up0
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[86.711,-39.505,71.544,-63.644,-95.116,73.251] ;stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[84.766,-43.73,61.771,-69.098,-84.603,86.199]  ;line2 stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[84.685,-78.842,61.457,-64.57,-83.214,96.37]  ;line2 relay p
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.41,-79.721,79.954,-38.294,-98.054,82.392]  ;line2 over
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.732,-83.972,85.685,-23.952,-109.39,81.349]  ;stant straight
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[93.398,-83.984,85.613,-29.203,-109.78,82.328]   ;up1
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.811,-21.354,97.593,-64.332,-98.258,66.003] ;stat1
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[84.676,-21.585,97.266,-62.942,-95.766,64.863]  ;line3 stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[84.382,-65.699,93.19,-72.327,-111.57,26.874]  ;line3 over
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.711,-68.843,91.586,-75.934,-113.09,25.619]  ;line3 up
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[87.507,-14.209,127.15,-76.946,-112.57,23.029]  ;stat2
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[82.157,-14.547,126.68,-73.042,-109.32,22.242]  ;line4 stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[82.32,-68.325,109.8,-100.31,-109.45,-46.504]  ;line4 over
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[86.486,-73.834,104.33,-104.5,-109.56,-46.573]  ;line4 up
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[92.861,-71.391,89.367,-77.324,-112.74,34.02]  ;stat4
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[89.097,-98.083,69.368,-70.409,-93.323,76.505]  ;relay5
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[83.977,-100.94,74.184,-53.827,-100.48,70.895]  ;line6 stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[85.825,-93.643,60.836,-54.263,-88.712,87.839]  ;line6 over
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[88.485,-91.597,60.19,-56.72,-88.17,90.728]  ;line6 up
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[92.275,-93.996,55.66,-64.147,-74.923,117.26]  ;stat5
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[92.561,-85.772,94.316,-60.629,-89.304,90.243]  ;relay6
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[82.321,-85.526,94.148,-55.699,-89.256,90.674]  ;line7 stat
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[84.862,-86.026,69.394,-58.903,-83.914,96.706] ;line7 over
-	;LINEAR SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[88.781,-84.573,66.561,-62.336,-87.639,92.646] ;line7 up
-	stp = 12
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[85.713, -97.057, 20.797, -70.973, -75.273, 116.11] ;转向
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.784, -97.427, 20.024, -70.564, -74.368, 116.22] ;下降1
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.287, -88.329, 44.001, -66.997, -79.389, 101.86] ;前推
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[89.466, -88.358, 57.537, -50.314, -87.518, 89.637] ;转向
-	stp = 15
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[85.526, -76.072, 47.989, -69.437, -77.221, 110.06] ;转向
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.597, -76.235, 47.642, -68.893, -76.442, 109.96] ;下降
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.775, -70.137, 68.465, -65.651, -81.569, 95.922] ;前推
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[89.682, -74.777, 83.129, -42.195, -96.573, 81.349] ;stat6
-	stp = 16
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[97.977, -31.936, 129.95, -98.037, -112.49, -7.3299] ;stat6
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[78.213, -32.164, 129.33, -79.159, -106.35, -7.0917] ;line8 stat
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[81.716, -84.649, 82.293, -88.122, -107.25, -24.406] ;line8 over
-	stp = 17
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[86.073, -91.692, 70.53, -94.563, -117.12, -20.564] ;line8 up
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.508, -91.278, 71.944, -93.556, -116.59, -21.644] ;finish1
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[87.361, -99.175, 58.14, -93.251, -117.89, -15.1] ;finish1
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[82.216, -86.736, 78.154, -87.973, -107.3, -22.265] ;finish2
-	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.928, 67.464, -87.852, -107.46, -18.609] ;finish3
+.REALS
+accepted = 1
+appro_mm = 50
+buf_n = 1
+chop_down_mm = 40
+chop_spread_dx = 0
+chop_spread_dy = 30
+client_ip[1] = 192
+client_ip[2] = 168
+client_ip[3] = 5
+client_ip[4] = 100
+conn_lost = 0
+converge_dx = 0
+converge_dy = 35
+count = 1
+cret = 0
+er = 1
+er_count = 0
+eret = 0
+flip_up_mm = 90
+found = 1
+fr = 3
+hs_ok = 1
+i = 9
+ip[1] = 192
+ip[2] = 168
+ip[3] = 5
+ip[4] = 1
+lret = 0
+max = 50
+max_len = 64
+max_length = 255
+min = 10
+msg_max = 100
+nfld = 1
+nl_pos = 10
+ok = 1
+ok1 = 1
+ok2 = 1
+p = 0
+port = 9000
+pour_tilt_deg = 90
+qb = 1
+qe = 1
+qf = 1
+qv = 1
+r1 = -34025
+r1_1 = -34025
+rc = 0
+recv_n = 1
+ret = 0
+robot_busy = 0
+rok = 1
+rret = 0
+rsock_id = 36
+s = 1
+scoop_dx = 0
+scoop_dy = 20
+scoop_tilt_deg = 60
+sig_in_step = 1001
+sig_out_step = 1
+sock_id = 37
+sock_open_flag = 1
+sp1 = 300
+sp2 = 300
+sp3 = 600
+sp4 = 1000
+sp5 = 500
+sret = 0
+st = 2
+stp = 10
+t_ans = 0.1
+t_blow = 0.5
+t_pul = 0.1
+t_pul2 = 1
+t_voff = 0.5
+t_von = 1.5
+t_wai[1] = 5
+t_wai[2] = 30
+t_wai[3] = 3600
+timeout_code = -34024
+timeout_flip = 30
+timeout_flip_se = 30
+timeout_io_sec = 30
+tout = 10
+tout_accept = 5
+tout_open = 60
+tout_rec = 5
+tout_recv = 10
+tout_send = 5
+try = 0CCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.928, 67.464, -87.852, -107.46, -18.609] ;finish3
 	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.944, -96.898, 62.283, -88.762, -107.97, -16.281] ;finish4
 	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[83.228, -93.929, 67.464, -87.852, -107.46, -18.609] ;finish3
 	LINEAR 800. ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF, 0, 0, O) 2 (OFF, 0, 0, O) OX= WX= #[84.353, -83.413, 84.001, -90.848, -107.83, -24.894] ;finish0
