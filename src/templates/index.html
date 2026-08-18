@@ -49,6 +49,23 @@
   .dish .meta{font-size:clamp(13px,1.9vh,22px); color:var(--dim);}
   .dish.off{opacity:.35; pointer-events:none;}
 
+  /* 維護動作：跟菜色明顯區隔，不搶四道菜的視覺重心 */
+  .tasks{
+    margin-top:clamp(16px,2.4vh,32px); display:flex; gap:clamp(12px,2vw,24px);
+    justify-content:center; flex-wrap:wrap;
+  }
+  .task{
+    display:flex; align-items:center; gap:.7em; cursor:pointer;
+    background:transparent; border:2px dashed var(--line); border-radius:999px;
+    padding:clamp(10px,1.6vh,20px) clamp(20px,3vw,40px);
+    transition:transform .12s, border-color .12s, background .12s;
+  }
+  .task:active{transform:scale(.96); border-color:var(--accent); background:var(--card);}
+  .task .ticon{font-size:clamp(24px,3.4vh,40px);}
+  .task .tname{font-size:clamp(17px,2.5vh,30px); font-weight:700;}
+  .task .tdesc{font-size:clamp(12px,1.7vh,19px); color:var(--dim);}
+  .task.off{opacity:.35; pointer-events:none;}
+
   .banner{
     margin-top:3vh; text-align:center; padding:1.6vh; border-radius:14px;
     background:rgba(239,68,68,.12); border:1px solid var(--danger);
@@ -132,6 +149,21 @@
       </div>
       {% endfor %}
     </div>
+
+    {% if tasks %}
+    <div class="tasks">
+      {% for t in tasks %}
+      <div class="task" data-task="{{ t.key }}" data-name="{{ t.name }}"
+           data-icon="{{ t.icon }}" data-min="{{ t.minutes }}"
+           data-notice="{{ t.notice }}">
+        <span class="ticon">{{ t.icon }}</span>
+        <span class="tname">{{ t.name }}</span>
+        <span class="tdesc">{{ t.desc }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
     <div id="menu-banner" class="banner" style="display:none"></div>
   </section>
 
@@ -141,7 +173,7 @@
       <div class="icon" id="c-icon"></div>
       <h2 id="c-title"></h2>
       <div class="est" id="c-est"></div>
-      <div class="notice">請確認食材已放入取料區，<br>並確認機台周圍淨空。</div>
+      <div class="notice" id="c-notice">請確認食材已放入取料區，<br>並確認機台周圍淨空。</div>
       <div class="btn-row">
         <button class="ghost" onclick="show('menu')">取消</button>
         <button class="primary" id="c-go">確定開始</button>
@@ -177,8 +209,9 @@
 </main>
 
 <script>
-let pending = null;      // 待確認的菜色
+let pending = null;      // 待確認的項目 {choice:"1"} 或 {task:"clean"}
 let lastState = "idle";
+const DEFAULT_NOTICE = "請確認食材已放入取料區，<br>並確認機台周圍淨空。";
 
 const $ = id => document.getElementById(id);
 
@@ -192,15 +225,22 @@ function mmss(sec){
   return m + ":" + String(s).padStart(2, "0");
 }
 
-// 選菜 → 確認畫面
+// 走到確認畫面
+function askConfirm(el, payload, verb){
+  pending = payload;
+  $("c-icon").textContent = el.dataset.icon;
+  $("c-title").textContent = "確定要" + verb + "「" + el.dataset.name + "」？";
+  $("c-est").textContent = "預計 " + el.dataset.min + " 分鐘";
+  $("c-notice").innerHTML = el.dataset.notice || DEFAULT_NOTICE;
+  show("confirm");
+}
+
 document.querySelectorAll(".dish").forEach(el => {
-  el.addEventListener("click", () => {
-    pending = el.dataset.key;
-    $("c-icon").textContent = el.dataset.icon;
-    $("c-title").textContent = "確定要做「" + el.dataset.name + "」？";
-    $("c-est").textContent = "預計 " + el.dataset.min + " 分鐘";
-    show("confirm");
-  });
+  el.addEventListener("click", () => askConfirm(el, {choice: el.dataset.key}, "做"));
+});
+
+document.querySelectorAll(".task").forEach(el => {
+  el.addEventListener("click", () => askConfirm(el, {task: el.dataset.task}, "執行"));
 });
 
 $("c-go").addEventListener("click", async () => {
@@ -210,7 +250,7 @@ $("c-go").addEventListener("click", async () => {
   try{
     const r = await (await fetch("/api/start", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({choice: pending})
+      body: JSON.stringify(pending)
     })).json();
     if(!r.ok){ alert(r.msg || "無法開始"); show("menu"); }
   } catch(e){ alert("連線失敗: " + e); show("menu"); }
@@ -238,12 +278,13 @@ async function poll(){
 
   // 系統沒就緒 → 菜色停用並顯示原因
   const banner = $("menu-banner");
+  const items = document.querySelectorAll(".dish, .task");
   if(!st.ready){
-    document.querySelectorAll(".dish").forEach(d => d.classList.add("off"));
+    items.forEach(d => d.classList.add("off"));
     banner.style.display = "block";
     banner.textContent = "⚠️ " + (st.init_error || "系統尚未就緒") + "（修好後重新啟動本程式）";
   } else {
-    document.querySelectorAll(".dish").forEach(d => d.classList.remove("off"));
+    items.forEach(d => d.classList.remove("off"));
     banner.style.display = "none";
   }
 

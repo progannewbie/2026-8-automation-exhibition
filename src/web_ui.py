@@ -69,6 +69,19 @@ DISHES = [
     {"key": "4", "name": "生菜沙拉", "icon": "🥗", "desc": "三種食材，翻炒後裝盤"},
 ]
 
+# 維護用動作：不是菜色，直接送一句 CSV 指令給兩臂，不走 PhaseController。
+# cmd 要跟兩臂 AS 的 DISPATCH 裡的 SVALUE 字串完全一致。
+TASKS = {
+    "clean": {
+        "name": "清理檯面",
+        "icon": "🧹",
+        "cmd": "DO_CLEAN",
+        "desc": "把檯面上的殘料清乾淨",
+        "notice": "請確認檯面上沒有餐具或雜物，<br>並確認機台周圍淨空。",
+        "minutes": 1,
+    },
+}
+
 
 def describe_phase(phase_instr) -> str:
     """把 PhaseInstruction 轉成觀眾看得懂的一句話"""
@@ -127,6 +140,8 @@ class RobotRunner:
         self.choice: Optional[str] = None
         self.recipe_name = ""
         self.phases = []
+        # 每一步要顯示給觀眾看的文字。菜色從 phases 展開，維護動作只有一步。
+        self.steps_text: list = []
         self.started_at = 0.0
         self.finished_at = 0.0
         self.error = ""
@@ -171,27 +186,62 @@ class RobotRunner:
 
     # ---------------------------------------------------------------- 執行
 
+    def _begin(self, title: str, steps_text: list, phases: list) -> None:
+        """共用的開跑前置。呼叫端必須已持有 self.lock。"""
+        self.recipe_name = title
+        self.phases = phases
+        self.steps_text = steps_text
+        self.state = "running"
+        self.started_at = time.time()
+        self.finished_at = 0.0
+        self.error = ""
+        self.stopping = False
+        self._sim_index = 0
+
+    def _guard(self, ) -> Optional[Dict]:
+        """共用的前置檢查，通過回 None"""
+        if self.state == "running":
+            return {"ok": False, "msg": "目前正在執行中"}
+        if not self.ready:
+            return {"ok": False, "msg": self.init_error or "系統尚未就緒"}
+        return None
+
     def start(self, choice: str) -> Dict:
         """開始執行一道菜。已經在跑就拒絕。"""
         with self.lock:
-            if self.state == "running":
-                return {"ok": False, "msg": "目前正在執行中"}
-            if not self.ready:
-                return {"ok": False, "msg": self.init_error or "系統尚未就緒"}
+            bad = self._guard()
+            if bad:
+                return bad
             if choice not in MENU:
                 return {"ok": False, "msg": f"沒有這道菜: {choice}"}
 
             recipe = get_recipe(choice)
+            phases = get_phases(choice)
             self.choice = choice
-            self.recipe_name = recipe["name"]
-            self.phases = get_phases(choice)
-            self.state = "running"
-            self.started_at = time.time()
-            self.finished_at = 0.0
-            self.error = ""
-            self.stopping = False
+            self._begin(recipe["name"], [describe_phase(p) for p in phases], phases)
 
             self.thread = threading.Thread(target=self._run, args=(choice,), daemon=True)
+            self.thread.start()
+            return {"ok": True}
+
+    def start_task(self, key: str) -> Dict:
+        """
+        開始執行維護動作（例如清理檯面）
+
+        不走 PhaseController，直接把一句 CSV 指令同時送給兩臂並等兩邊都回 OK。
+        """
+        with self.lock:
+            bad = self._guard()
+            if bad:
+                return bad
+            task = TASKS.get(key)
+            if not task:
+                return {"ok": False, "msg": f"沒有這個動作: {key}"}
+
+            self.choice = None
+            self._begin(task["name"], [f"{task['name']}中…"], [None])
+
+            self.thread = threading.Thread(target=self._run_task, args=(task,), daemon=True)
             self.thread.start()
             return {"ok": True}
 
@@ -210,6 +260,30 @@ class RobotRunner:
             self.error = str(exc)
             success = False
 
+        self._finish(success)
+
+    def _run_task(self, task: Dict):
+        cmd = task["cmd"]
+        logger.info(f"=== 開始執行 {task['name']}（{cmd}）===")
+        try:
+            if self.simulate:
+                time.sleep(4.0)
+                success = not self.stopping
+            else:
+                resp = self.comms.send_command_dual(cmd)
+                logger.info(f"  F60_F={resp.get('F60_F')}  F60_R={resp.get('F60_R')}")
+                success = resp.get("F60_F") == "OK" and resp.get("F60_R") == "OK"
+                if not success:
+                    self.error = (f"F60_F={resp.get('F60_F')}, F60_R={resp.get('F60_R')}"
+                                  f"（{cmd} 需要兩臂 AS 都有對應的 DISPATCH 分支並回 OK）")
+        except Exception as exc:
+            logger.error(f"✗ {task['name']} 異常: {exc}", exc_info=True)
+            self.error = str(exc)
+            success = False
+
+        self._finish(success)
+
+    def _finish(self, success: bool):
         with self.lock:
             self.finished_at = time.time()
             if self.stopping:
@@ -253,13 +327,16 @@ class RobotRunner:
 
     def status(self) -> Dict:
         with self.lock:
-            state, total = self.state, len(self.phases)
+            state, total = self.state, len(self.steps_text)
 
             if state == "running":
-                idx = (getattr(self, "_sim_index", 0) if self.simulate
-                       else self.controller.current_phase_index)
+                # 維護動作只有一步、不經過 PhaseController，索引固定 0
+                if self.choice is None or self.simulate:
+                    idx = getattr(self, "_sim_index", 0)
+                else:
+                    idx = self.controller.current_phase_index
                 idx = max(0, min(idx, total - 1)) if total else 0
-                step_text = describe_phase(self.phases[idx]) if total else ""
+                step_text = self.steps_text[idx] if total else ""
                 elapsed = time.time() - self.started_at
             else:
                 idx = total
@@ -299,7 +376,9 @@ def create_app(runner: RobotRunner) -> Flask:
             dishes.append({**d,
                            "steps": len(get_phases(d["key"]) or []),
                            "minutes": max(1, round(secs / 60))})
-        return render_template("index.html", dishes=dishes, simulate=runner.simulate)
+        tasks = [{**v, "key": k} for k, v in TASKS.items()]
+        return render_template("index.html", dishes=dishes, tasks=tasks,
+                               simulate=runner.simulate)
 
     @app.route("/api/status")
     def api_status():
@@ -307,7 +386,10 @@ def create_app(runner: RobotRunner) -> Flask:
 
     @app.route("/api/start", methods=["POST"])
     def api_start():
-        return jsonify(runner.start((request.json or {}).get("choice", "")))
+        body = request.json or {}
+        if body.get("task"):
+            return jsonify(runner.start_task(body["task"]))
+        return jsonify(runner.start(body.get("choice", "")))
 
     @app.route("/api/stop", methods=["POST"])
     def api_stop():
