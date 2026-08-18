@@ -39,7 +39,7 @@ IMAGE_EXTENSIONS = [
 images = []
 
 for ext in IMAGE_EXTENSIONS:
-    images.extend(IMAGE_DIR.glob(f"*{ext}"))
+    images.extend(IMAGE_DIR.glob(f"new2_*{ext}"))
 
 
 print(f"找到圖片數量: {len(images)}")

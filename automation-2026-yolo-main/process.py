@@ -4,7 +4,9 @@ import json
 classes = {
     "CUCUMBER": 0,
     "CORN": 1,
-    "CARROT": 2
+    "CARROT": 2,
+    "LETTUCE": 3,
+    "CUCUMBER_SLICE": 4
 }
 json_folder = "label"
 output_folder = "label_txt"
@@ -55,7 +57,7 @@ def convert_json(json_path, output_path):
         )
 # batch convert
 for filename in os.listdir(json_folder):
-    if filename.endswith(".json"):
+    if filename.endswith(".json") and filename.startswith("new3_"):
         json_path = os.path.join(
             json_folder,
             filename

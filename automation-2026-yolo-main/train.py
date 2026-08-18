@@ -1,7 +1,7 @@
 from ultralytics import YOLO
 
 def main():
-    model = YOLO("yolov8_smartcook_v1.pt")
+    model = YOLO("yolo26_smartcook_v3.pt")
 
     model.train(
         data="train_data/dataset.yaml",

@@ -19,16 +19,18 @@ class YOLOConfig:
     """YOLOv8 模型配置"""
 
     # 模型參數
-    MODEL_PATH = str(_SRC_DIR / "models" / "yolo26_smartcook_v3.pt")
-    CONFIDENCE_THRESHOLD = 0.5  # 信心閾值（v3 模型用 0.3）
+    MODEL_PATH = str(_SRC_DIR / "models" / "yolo26_smartcook_v4.pt")
+    CONFIDENCE_THRESHOLD = 0.5  # 信心閾值
     IOU_THRESHOLD = 0.5  # IoU 非極大值抑制閾值
 
-    # 類別定義
+    # 類別定義 — 必須與模型內嵌的 names 一致，順序即索引。
+    # 從 .pt 讀出來的 v4 類別表就是下面這五個。
     CLASSES = {
       0: "CUCUMBER",
       1: "CORN",
       2: "CARROT",
       3: "LETTUCE",
+      4: "CUCUMBER_SLICE",   # v4 新增：切好的小黃瓜片
     }
     
     CLASS_NAMES = {v: k for k, v in CLASSES.items()}  # 反向映射

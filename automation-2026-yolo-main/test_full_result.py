@@ -3,6 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import cv2
 import math
+import time
+
+model = YOLO('yolo26_smartcook_v3.pt')
+
+TIP_DETECTION_CLASSES = [
+    'CUCUMBER',
+    'CORN'
+]
 
 FIELDS = {
     'class_id': int,
@@ -163,46 +171,23 @@ def create_obb_mask(image_shape, center_x, center_y, width, height, angle_deg):
     cv2.fillConvexPoly(obb_mask, box, 255)
     return obb_mask
 
-
 def build_output(img_path):
-    model = YOLO('yolo26_smartcook_v2.pt')
     img = cv2.imread(img_path)
     if img is None:
         raise FileNotFoundError(f'Cannot load image: {img_path}')
-
     results = model.predict(source=img_path, conf=0.3)
     if len(results) == 0:
         raise ValueError('No results returned from YOLO')
-
     res = results[0]
     obb = res.obb
     if obb is None:
         raise ValueError('No OBB output from model')
-
     top_data = select_highest_confidence_obb(obb)
     center_x, center_y, width, height, angle_rad, confidence, class_id = top_data
     class_id = int(class_id)
     class_name = model.names[class_id]
-    obj_type = CLASS_TO_HSV_KEY.get(class_name.upper())
-    if obj_type is None:
-        raise ValueError(f'Unsupported class name: {class_name}')
-
-    mask = get_mask(img, obj_type)
+    class_name_upper = class_name.upper()
     obb_angle_deg = math.degrees(angle_rad)
-    obb_mask = create_obb_mask(img.shape[:2], center_x, center_y, width, height, obb_angle_deg)
-    mask = cv2.bitwise_and(mask, obb_mask)
-
-    contour = choose_contour_for_box(mask, center_x, center_y, width, height)
-    if contour is None:
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        if len(contours) == 0:
-            raise ValueError(f'No {obj_type} contour found inside OBB mask')
-        contour = max(contours, key=cv2.contourArea)
-
-    head, tail, rect = find_head_tail(mask, contour)
-    angle_deg = calculate_angle(head, tail)
-    obb_angle_deg = math.degrees(angle_rad)
-
     fields = {
         'class_id': class_id,
         'class_name': class_name,
@@ -211,21 +196,75 @@ def build_output(img_path):
         'center_y_pixel': float(center_y),
         'width_pixel': float(width),
         'height_pixel': float(height),
-        'angle_deg': float(angle_deg),
+        'angle_deg': float(obb_angle_deg),
     }
+    if class_name_upper in TIP_DETECTION_CLASSES:
 
-    return fields, img, mask, contour, head, tail, rect, obb_angle_deg
-
+        obj_type = CLASS_TO_HSV_KEY[class_name_upper]
+        # HSV segmentation
+        mask = get_mask(img, obj_type)
+        # restrict mask inside YOLO OBB
+        obb_mask = create_obb_mask(
+            img.shape[:2],
+            center_x,
+            center_y,
+            width,
+            height,
+            obb_angle_deg
+        )
+        mask = cv2.bitwise_and(mask, obb_mask)
+        contour = choose_contour_for_box(
+            mask,
+            center_x,
+            center_y,
+            width,
+            height
+        )
+        if contour is None:
+            contours, _ = cv2.findContours(
+                mask,
+                cv2.RETR_EXTERNAL,
+                cv2.CHAIN_APPROX_SIMPLE
+            )
+            if len(contours) == 0:
+                raise ValueError(
+                    f'No {class_name} contour found'
+                )
+            contour = max(
+                contours,
+                key=cv2.contourArea
+            )
+        head, tail, rect = find_head_tail(mask,contour)
+        angle_deg = calculate_angle(head,tail)
+        fields['angle_deg'] = float(angle_deg)
+        return (fields, img,mask, contour, head, tail, rect, obb_angle_deg)
+    else:
+        mask = np.zeros(img.shape[:2], dtype=np.uint8)
+        head = None
+        tail = None
+        contour = None
+        rect = None
+        if class_name_upper == 'CARROT':
+            wx, wy = math.cos(angle_rad), math.sin(angle_rad)
+            hx, hy = -math.sin(angle_rad), math.cos(angle_rad)
+            if width >= height:
+                dx, dy = wx, wy
+            else:
+                dx, dy = hx, hy
+            if dy > 0:    
+                dx, dy = -dx, -dy
+            tilt_from_vertical_deg = math.degrees(math.atan2(dx, -dy))
+            fields['angle_deg'] = float(tilt_from_vertical_deg)
+        return (fields, img, mask, contour, head, tail, rect, obb_angle_deg)
 
 if __name__ == '__main__':
-    image_path = r'images\\new_capture_216.jpg'
+    image_path = r'train_data\images\val\new2_capture_278.jpg'
     fields, img, mask, contour, head, tail, rect, obb_angle_deg = build_output(image_path)
-    print('FIELDS =', fields)
-
     result = img.copy()
     rect_points = np.int32(cv2.boxPoints(((fields['center_x_pixel'], fields['center_y_pixel']), (fields['width_pixel'], fields['height_pixel']), obb_angle_deg)))
     cv2.drawContours(result, [rect_points], 0, (0, 0, 255), 2)
-    cv2.arrowedLine(result, tuple(tail), tuple(head), (0, 255, 255), 4)
+    if head is not None and tail is not None:
+        cv2.arrowedLine(result,tuple(tail),tuple(head),(0,255,255),4)
     cv2.putText(result, f"{fields['class_name']} {fields['angle_deg']:.1f} deg", (30, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 3)
 
     result_rgb = cv2.cvtColor(result, cv2.COLOR_BGR2RGB)
