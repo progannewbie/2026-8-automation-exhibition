@@ -109,10 +109,10 @@ class FlipParams:
 
 FLIP_PARAMS = {
     "standard": FlipParams(
-        num_cycles=6,
+        num_cycles=1,
         speed_percent=50,
-        duration_sec=18.0,  # 約 3 秒/循環
-        description="標準翻炒：6 循環，50% 速度",
+        duration_sec=6.0,  # 約 3 秒/循環
+        description="標準翻炒：1 循環，50% 速度",
     ),
     "gentle": FlipParams(
         num_cycles=8,
