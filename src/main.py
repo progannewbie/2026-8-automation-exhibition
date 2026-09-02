@@ -122,7 +122,10 @@ class SmartCookApp:
                 self.state = ProgramState.ERROR
                 return False
 
-            self.vision = VisionSystem()
+            # ⚠️ 視覺處理暫時停用，不載入 YOLO/ArUco/手眼標定，PICKUP 一律用教點座標。
+            # 要恢復時把下面這行取消註解、拿掉 self.vision = None。
+            # self.vision = VisionSystem()
+            self.vision = None
             self.controller = PhaseController(self.vision, self.comms)
 
             self.session_start = time.time()

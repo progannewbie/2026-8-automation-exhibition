@@ -164,7 +164,6 @@ class RobotRunner:
 
         try:
             from comms_connection_skeleton import CommsManager
-            from vision_skeleton import VisionSystem
             from phase_controller_skeleton import PhaseController
 
             self.comms = CommsManager()
@@ -173,7 +172,11 @@ class RobotRunner:
                 logger.error(f"✗ {self.init_error}")
                 return False
 
-            self.vision = VisionSystem()
+            # ⚠️ 視覺處理暫時停用，不載入 YOLO/ArUco/手眼標定，PICKUP 一律用教點座標。
+            # 要恢復時把 import 跟下面這行取消註解、拿掉 self.vision = None。
+            # from vision_skeleton import VisionSystem
+            # self.vision = VisionSystem()
+            self.vision = None
             self.controller = PhaseController(self.vision, self.comms)
             self.ready = True
             logger.info("✓ 系統就緒")

@@ -283,19 +283,21 @@ class PhaseController:
             try:
                 x_mm, y_mm, angle_deg = 0.0, 0.0, 0.0
 
-                if expected_food:
-                    image = self.vision.capture_frame()
-                    detection = (
-                        self.vision.get_location_and_angle_mm(expected_food, image)
-                        if image is not None else None
-                    )
-                    if detection is None:
-                        logger.warning(f"  ⚠️ 視覺未偵測到 {expected_food}，中止本次取料，不送指令給機器人")
-                        if attempt < max_retries - 1:
-                            time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-                        continue
-                    x_mm, y_mm, angle_deg = detection
-                    logger.info(f"  視覺定位 {expected_food}: x={x_mm:.1f}mm, y={y_mm:.1f}mm, angle={angle_deg:.1f}°")
+                # ⚠️ 視覺定位暫時停用，座標統一送 0,0,0（AS 端用教點）。
+                # 要恢復時把下面這段取消註解即可。
+                # if expected_food:
+                #     image = self.vision.capture_frame()
+                #     detection = (
+                #         self.vision.get_location_and_angle_mm(expected_food, image)
+                #         if image is not None else None
+                #     )
+                #     if detection is None:
+                #         logger.warning(f"  ⚠️ 視覺未偵測到 {expected_food}，中止本次取料，不送指令給機器人")
+                #         if attempt < max_retries - 1:
+                #             time.sleep(RetryPolicy.RETRY_DELAY_SEC)
+                #         continue
+                #     x_mm, y_mm, angle_deg = detection
+                #     logger.info(f"  視覺定位 {expected_food}: x={x_mm:.1f}mm, y={y_mm:.1f}mm, angle={angle_deg:.1f}°")
 
                 cmd = PickupCommand.create(location, arm, x_mm, y_mm, angle_deg)
                 if not self._validate_command(cmd, CommandParser.validate_pickup):
