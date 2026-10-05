@@ -48,13 +48,20 @@ def _setup_logging() -> str:
 
     formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
 
+    # handler 也設 INFO：comms 模組自己開到 DEBUG（每拍心跳都記），那些只寫 connection.log
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
+    console_handler.setLevel(logging.INFO)
 
     root_logger = logging.getLogger()
+    # vision / phase_controller 為了單獨跑測試腳本時有輸出，import 時會 basicConfig
+    # 掛一個 root handler；這裡由入口程式接手，先拿掉，不然終端機每行印兩次
+    for h in list(root_logger.handlers):
+        root_logger.removeHandler(h)
     root_logger.setLevel(logging.INFO)
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
@@ -288,6 +295,10 @@ class SmartCookApp:
         duration = time.time() - start
 
         self.controller.print_execution_report()
+        if not success and self.controller.failure_message:
+            print(f"\n✗ {self.controller.failure_message}")
+            if self.controller.arms_off_home:
+                print("  請確認現場，用教導器把手臂移回原點後重新啟動程式。")
         self.handle_execution_complete(success, choice, duration)
 
         self.state = ProgramState.READY if self.state != ProgramState.ERROR else self.state
@@ -413,6 +424,11 @@ class SmartCookApp:
 # ============================================================================
 
 def main() -> int:
+    # 輸出被導向時 stdout 會變成 cp950，印到 ✓ / ⚠️ 就 UnicodeEncodeError 掛掉
+    try:
+        sys.stdout.reconfigure(errors="backslashreplace")
+    except (AttributeError, ValueError):
+        pass
     _setup_logging()
     app = SmartCookApp()
     return app.run()

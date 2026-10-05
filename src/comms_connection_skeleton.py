@@ -21,12 +21,18 @@ from config_connection import (
 
 os.makedirs(os.path.dirname(LOGGING_CONFIG['connection_log']), exist_ok=True)
 
-logging.basicConfig(
-    filename=LOGGING_CONFIG['connection_log'],
-    level=logging.DEBUG if LOGGING_CONFIG['verbose'] else logging.INFO,
-    format=LOGGING_CONFIG['log_format']
-)
+# 用本模組自己的 handler 寫 connection.log，不碰 root logger。
+# 舊版用 logging.basicConfig(filename=...)：誰先設定 root 誰贏——
+# web_ui.py 先設好日誌才 import 本模組，basicConfig 變成 no-op、connection.log
+# 根本不會產生；main.py 則是先 import 本模組，結果所有模組的日誌都灌進 connection.log。
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG if LOGGING_CONFIG['verbose'] else logging.INFO)
+if not any(getattr(h, '_smartcook_connection_log', False) for h in logger.handlers):
+    _conn_handler = logging.FileHandler(LOGGING_CONFIG['connection_log'], encoding='utf-8')
+    _conn_handler.setFormatter(logging.Formatter(LOGGING_CONFIG['log_format']))
+    _conn_handler._smartcook_connection_log = True
+    logger.addHandler(_conn_handler)
+# 仍會往上傳到 root，所以 web_ui_*.log / smartcook_*.log 也看得到連線紀錄
 
 # ============================================================================
 # 連線管理類別
@@ -283,6 +289,10 @@ class F60Connection:
                 if self._cmd_in_flight.is_set():
                     continue
 
+                # 連線已因指令逾時停用：手臂可能還在動，不要再往線上送東西
+                if self.state != CONNECTION_STATES['READY']:
+                    continue
+
                 # 閘門 2：線路剛剛才有收發，還不需要保活
                 if time.monotonic() - self._last_io < self.heartbeat_interval:
                     continue
@@ -314,7 +324,12 @@ class F60Connection:
                     logger.warning(f"[{self.arm_id}] 心跳無回應或格式異常")
 
             except Exception as e:
-                logger.error(f"[{self.arm_id}] 心跳異常: {e}")
+                if self.stop_heartbeat:
+                    break   # disconnect() 先關 socket 才停心跳，這裡的例外是預期中的
+                # 心跳會出例外幾乎都是 socket 已經壞了（sendall 失敗）。不能只是
+                # 默默結束迴圈——狀態還掛著 READY，介面和流程都會以為連線正常。
+                self.state = CONNECTION_STATES['ERROR']
+                logger.error(f"[{self.arm_id}] 心跳異常，連線已停用: {e}")
                 break
 
     def _stop_heartbeat(self):
@@ -436,20 +451,30 @@ class F60Connection:
             )
         return len(dropped)
 
-    def send_command(self, cmd: str) -> Optional[str]:
+    def send_command(self, cmd: str, timeout: Optional[float] = None) -> Optional[str]:
         """
         發送 CSV 指令，接收回應
-        
+
+        ⚠️ 等不到回應時，這條連線會被標成 ERROR，之後的指令一律拒送。
+           逾時不代表手臂沒動——它可能還在跑，跑完照樣會回 OK。那個遲到的
+           OK 如果留在線路上，會被下一個指令當成自己的回應，整條流程從此
+           晚一拍（跟 2026-09-18 心跳那次同一類問題）。drain 只能清掉
+           「已經到的」，清不掉「還在路上的」，所以唯一安全的做法是停用
+           這條連線，等操作人員確認手臂狀態後重新連線。
+
         Args:
             cmd: CSV 格式的指令 (例如 "CHOP,CUCUMBER,5")
-        
+            timeout: 等回應的秒數，None 則使用 self.read_timeout
+
         Returns:
             回應字串，或 None 如果失敗
         """
         if self.state != CONNECTION_STATES['READY']:
             logger.error(f"[{self.arm_id}] 狀態不是 READY，無法發送指令 (目前: {self.state})")
             return None
-        
+
+        wait_sec = timeout if timeout else self.read_timeout
+
         # 指令在途期間停發心跳（修正 3）。必須在搶鎖「之前」就舉旗，
         # 這樣已經拿到鎖的心跳線程能在二次確認時看到並讓路。
         self._cmd_in_flight.enter()
@@ -464,7 +489,7 @@ class F60Connection:
                 # 不是這個指令的回應。舊版直接收下，導致 PICKUP 拿到 HEARTBEAT_ACK
                 # 被判定失敗，但手臂其實已經把食材夾走了。
                 hb_ack = HEARTBEAT.get('ack', 'HEARTBEAT_ACK')
-                deadline = time.monotonic() + self.read_timeout
+                deadline = time.monotonic() + wait_sec
                 response = None
                 while True:
                     remain = deadline - time.monotonic()
@@ -482,14 +507,24 @@ class F60Connection:
                     response = candidate
                     break
 
+                if not response:
+                    # 回應流已經不可信（見 docstring），在放掉鎖之前就停用
+                    self._drain_socket(reason=f"{cmd.split(',')[0]} 逾時")
+                    self.state = CONNECTION_STATES['ERROR']
+
             if response:
                 logger.info(f"[{self.arm_id}] 回應: {response}")
             else:
-                logger.error(f"[{self.arm_id}] 等不到 {cmd.split(',')[0]} 的回應")
+                logger.error(
+                    f"[{self.arm_id}] {wait_sec:.0f} 秒內等不到 {cmd.split(',')[0]} 的回應，"
+                    f"連線已停用：請確認手臂狀態後重新啟動程式"
+                )
             return response
 
         except Exception as e:
-            logger.error(f"[{self.arm_id}] 發送異常: {e}")
+            # 不知道指令有沒有送到手臂，同樣視為回應流不可信
+            self.state = CONNECTION_STATES['ERROR']
+            logger.error(f"[{self.arm_id}] 發送異常，連線已停用: {e}")
             return None
         finally:
             # 指令結束：放下旗標，並把心跳的計時重新起算
@@ -566,6 +601,13 @@ class CommsManager:
             logger.error(f"連線失敗 (F60_F: {result_f}, F60_R: {result_r})")
             return False
     
+    def broken_arms(self) -> list:
+        """回傳目前不是 READY 的手臂 ID（例如心跳失敗或指令逾時被停用的）"""
+        return [
+            arm_id for arm_id, conn in (('F60_F', self.f60_f), ('F60_R', self.f60_r))
+            if conn is None or not conn.is_connected()
+        ]
+
     def disconnect_all(self):
         """斷開兩台 F60 的連線"""
         if self.f60_f:
@@ -574,26 +616,27 @@ class CommsManager:
             self.f60_r.disconnect()
         logger.info("所有連線已關閉")
     
-    def send_command(self, arm_id: str, cmd: str) -> Optional[str]:
+    def send_command(self, arm_id: str, cmd: str, timeout: Optional[float] = None) -> Optional[str]:
         """
         發送指令到指定臂
-        
+
         Args:
             arm_id: 'F60_F' 或 'F60_R'
             cmd: CSV 格式指令
-        
+            timeout: 等回應的秒數，None 則用 TCP_RETRY['read_timeout']
+
         Returns:
             回應字串，或 None
         """
         if arm_id == 'F60_F' and self.f60_f:
-            return self.f60_f.send_command(cmd)
+            return self.f60_f.send_command(cmd, timeout)
         elif arm_id == 'F60_R' and self.f60_r:
-            return self.f60_r.send_command(cmd)
+            return self.f60_r.send_command(cmd, timeout)
         else:
             logger.error(f"未知的 arm_id: {arm_id}")
             return None
 
-    def send_command_dual(self, cmd) -> Dict[str, Optional[str]]:
+    def send_command_dual(self, cmd, timeout: Optional[float] = None) -> Dict[str, Optional[str]]:
         """
         同時送指令給 F60_F 與 F60_R（各自在自己的執行緒平行送出）
 
@@ -608,6 +651,7 @@ class CommsManager:
                  dict  → {"F60_F": 指令, "F60_R": 指令} 各臂送各自的指令。
                          PICKUP / HOME 需要這個形式，因為 AS 端會檢查指令裡的
                          arm 欄位是不是自己，送錯會回 ERROR,E4003。
+            timeout: 每臂等回應的秒數，None 則用 TCP_RETRY['read_timeout']
 
         Returns:
             {"F60_F": 回應或 None, "F60_R": 回應或 None}
@@ -620,7 +664,7 @@ class CommsManager:
         responses: Dict[str, Optional[str]] = {}
 
         def _call(arm_id: str):
-            responses[arm_id] = self.send_command(arm_id, cmds[arm_id])
+            responses[arm_id] = self.send_command(arm_id, cmds[arm_id], timeout)
 
         threads = [threading.Thread(target=_call, args=(arm_id,)) for arm_id in ('F60_F', 'F60_R')]
         for t in threads:

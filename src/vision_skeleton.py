@@ -177,7 +177,7 @@ class YOLODetector:
                     detections.append(detection)
 
             # 用色彩分割在 YOLO 框內做頭尾判斷，取得完整 0–360° 角度，取代 'obb'/
-            # 'estimated' 只有 0–180° 週期的角度；偵測不到（例如 ROMAINE 還沒有
+            # 'estimated' 只有 0–180° 週期的角度；偵測不到（例如 LETTUCE 刻意沒有
             # HSV 色域，見 img_processing.py）就保留原本角度，不影響既有流程。
             for detection in detections:
                 try:
@@ -470,12 +470,16 @@ class VisionSystem:
                     self.calibrator.hand_eye_transform
                 )
                 detection['coord_source'] = 'hand_eye'
+                detection['in_calibrated_area'] = True
             else:
                 real_x, real_y = TableHomography.pixel_to_mm(pixel_x, pixel_y)
                 detection['coord_source'] = 'table_homography'
 
-                # 標定範圍外是外推，透視項會讓誤差快速放大
-                if not TableHomography.is_within_calibrated_area(pixel_x, pixel_y):
+                # 標定範圍外是外推，透視項會讓誤差快速放大。
+                # get_location_mm / get_location_and_angle_mm 會把這種偵測當成沒找到。
+                in_area = TableHomography.is_within_calibrated_area(pixel_x, pixel_y)
+                detection['in_calibrated_area'] = in_area
+                if not in_area:
                     logger.warning(
                         f"⚠️ {detection['class_name']} 在 ({pixel_x:.0f},{pixel_y:.0f})，"
                         f"超出標定範圍 u{TableHomography.U_RANGE} v{TableHomography.V_RANGE}，"
@@ -531,7 +535,7 @@ class VisionSystem:
         避免視覺子系統本身的問題連帶擋住整條取料流程。
 
         Args:
-            food_type: 期望偵測到的食材類別（例如 "CUCUMBER"、"CARROT"、"ROMAINE"）
+            food_type: 期望偵測到的食材類別（例如 "CUCUMBER"、"CARROT"、"LETTUCE"）
 
         Returns:
             True：偵測到該食材，或確認能力目前不可用；False：確實沒偵測到
@@ -582,25 +586,48 @@ class VisionSystem:
         self.calibrator.hand_eye_transform = transform
         logger.warning("⚠️ 已切換為 Hand-eye 轉換，不再使用檯面單應性")
     
+    def _find_usable(self, food_name: str, image: np.ndarray) -> Optional[Dict]:
+        """
+        找第一個類別相符、而且座標可信的偵測結果
+
+        ⚠️ 落在標定範圍外的偵測一律不用：單應性在範圍外是外推，誤差會遠大於
+           MAX_ERROR_MM，把那種座標送給手臂可能夾空或撞到東西。寧可回 None
+           讓呼叫端重拍／中止，也不要送一個不可信的點。
+           取料區如果真的在範圍外，該做的是重新標定把它涵蓋進去，
+           不是放寬這裡（見 config_vision.TableHomography）。
+        """
+        detections = self.detect_foods(image)
+        matches = [d for d in detections if d['class_name'] == food_name]
+
+        for detection in matches:
+            if detection.get('in_calibrated_area', True):
+                return detection
+
+        if matches:
+            d = matches[0]
+            logger.warning(
+                f"⚠️ {food_name} 在 ({d['center_x_pixel']:.0f},{d['center_y_pixel']:.0f})，"
+                f"超出標定範圍，不使用這個座標"
+            )
+        else:
+            logger.warning(f"⚠️ 未檢測到食材: {food_name}")
+        return None
+
     def get_location_mm(self, food_name: str, image: np.ndarray) -> Optional[Tuple[float, float]]:
         """
         取得食材在現實世界中的座標
         
         Args:
-            food_name: 食材名稱 ("CUCUMBER", "CARROT", "ROMAINE")
+            food_name: YOLO 類別名稱 ("CUCUMBER", "CARROT", "LETTUCE")
             image: 輸入圖像
 
         Returns:
-            (x_mm, y_mm) 或 None 如果未檢測到食材
+            (x_mm, y_mm) 或 None 如果未檢測到食材、或食材在標定範圍外
         """
-        detections = self.detect_foods(image)
-
-        for detection in detections:
-            if detection['class_name'] == food_name:
-                return (detection['center_x_mm'], detection['center_y_mm'])
-
-        logger.warning(f"⚠️ 未檢測到食材: {food_name}")
-        return None
+        detection = self._find_usable(food_name, image)
+        if detection is None:
+            return None
+        return (detection['center_x_mm'], detection['center_y_mm'])
 
     def get_location_and_angle_mm(
         self, food_name: str, image: np.ndarray
@@ -610,26 +637,22 @@ class VisionSystem:
 
         角度直接沿用 YOLODetector 輸出的 angle_deg。CUCUMBER/CARROT 已用
         img_processing 的色彩頭尾判斷精算成完整 0-360°（angle_source ==
-        'color_head_tail'）；ROMAINE 還沒有 HSV 色域，會 fallback 回 OBB 的
+        'color_head_tail'）；LETTUCE 不需分頭尾、刻意沒有 HSV 色域，會用 OBB 的
         0-180° 週期角度（或非 OBB 模型的長寬估計值），見 YOLODetector.detect()。
 
         Args:
-            food_name: 食材名稱 ("CUCUMBER", "CARROT", "ROMAINE")
+            food_name: YOLO 類別名稱 ("CUCUMBER", "CARROT", "LETTUCE")
             image: 輸入圖像
 
         Returns:
-            (x_mm, y_mm, angle_deg) 或 None 如果未檢測到食材
+            (x_mm, y_mm, angle_deg) 或 None 如果未檢測到食材、或食材在標定範圍外
         """
-        detections = self.detect_foods(image)
-
-        for detection in detections:
-            if detection['class_name'] == food_name:
-                return (
-                    detection['center_x_mm'],
-                    detection['center_y_mm'],
-                    detection['angle_deg'],
-                )
-
-        logger.warning(f"⚠️ 未檢測到食材: {food_name}")
-        return None
+        detection = self._find_usable(food_name, image)
+        if detection is None:
+            return None
+        return (
+            detection['center_x_mm'],
+            detection['center_y_mm'],
+            detection['angle_deg'],
+        )
 

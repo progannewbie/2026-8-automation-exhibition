@@ -41,7 +41,7 @@ TCP_RETRY = {
     'max_retries': 5,           # 最多重試 5 次
     'retry_delay': 1.0,         # 每次重試間隔 1 秒
     'connection_timeout': 5,    # 連線超時 5 秒
-    'read_timeout': 300,         # 讀取超時 300 秒（測試階段暫時延長，CHOP 15 刀耗時較久）
+    'read_timeout': 120,         # 讀取超時預設值；動作指令改用各階段的 PhaseInstruction.timeout_sec
 }
 
 # 心跳(Heartbeat)設定

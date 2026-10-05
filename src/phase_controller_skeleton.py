@@ -72,9 +72,21 @@ class PhaseController:
         # 停止要求。execute() 每跑完一個階段會檢查一次。
         # ⚠️ 只能在「階段與階段之間」生效——單一階段送出去之後，PC 端是卡在
         #    recv() 等手臂回應，而 send_command 的 socket_lock 也被佔著，
-        #    沒辦法插隊送 STOP。切割那種要 4 分鐘的階段，按下去要等它跑完。
+        #    沒辦法插隊送 STOP。切割那種約 30 秒的階段，按下去要等它跑完。
         #    真正的緊急停止是實體急停按鈕，這個旗標不能當安全裝置用。
         self.cancel_requested = False
+
+        # 手臂可能不在原點：送出任何動作指令就舉起，HOME 兩臂都回 OK 才放下。
+        # 流程中途失敗時「不」自動復歸——手臂可能停在切割途中、刀還在食材上，
+        # 連線也可能已經因為逾時被停用，從未知位置直接走 HOME 有撞機風險。
+        # 這個旗標舉著的時候 execute() 拒絕開跑，要操作人員確認現場、用教導器
+        # 把手臂移回原點後重新啟動程式（重新建立 PhaseController）。
+        self.arms_off_home = False
+
+        # 最近一次 execute() 失敗的原因，給介面顯示用（成功時是空字串）
+        self.failure_message = ""
+        # 單一階段可以補充的失敗細節（例如視覺沒找到），_set_phase_failure 會接在後面
+        self._phase_detail = ""
 
         logger.info("✓ PhaseController 已初始化")
 
@@ -130,10 +142,19 @@ class PhaseController:
         Returns:
             True 成功，False 失敗
         """
+        self.failure_message = ""
+        self._phase_detail = ""
+
         if not self.current_recipe:
             logger.error("✗ 未選擇菜色")
+            self.failure_message = "未選擇菜色"
             return False
-        
+
+        if self.arms_off_home:
+            self.failure_message = "上次流程中斷後手臂沒有復歸，請確認現場、把手臂移回原點後重新啟動程式"
+            logger.error(f"✗ {self.failure_message}")
+            return False
+
         self.start_time = time.time()
         self.cancel_requested = False
         logger.info(f"\n{'='*60}")
@@ -144,13 +165,17 @@ class PhaseController:
             # 初始化手臂
             if not self._initialize_arms():
                 logger.error("✗ 手臂初始化失敗")
+                self.failure_message = "手臂狀態檢查失敗（STATUS 沒有兩臂都回 OK）"
                 return False
 
             # 執行各階段
             for i, phase_instr in enumerate(self.phases):
                 if self.cancel_requested:
                     logger.warning(f"⚠️ 使用者要求停止，在第 {i+1} 階段前中止")
-                    self._handle_home("HOME_LEFT", {}, 1)
+                    if self._handle_home("HOME_LEFT", {}):
+                        self.failure_message = "已由操作人員停止，手臂已復歸"
+                    else:
+                        self.failure_message = "已由操作人員停止，但手臂復歸失敗"
                     return False
 
                 self.current_phase_index = i
@@ -159,13 +184,8 @@ class PhaseController:
 
                 if not self._execute_phase(phase_instr):
                     logger.error(f"✗ 階段執行失敗: {phase_instr.phase.value}")
-                    
-                    if self.is_continuous:
-                        logger.error("✗ 連續執行模式，無法恢復")
-                        return False
-                    else:
-                        logger.warning("⚠️ 可嘗試重試或重新開始")
-                        return False
+                    self._set_phase_failure(i, phase_instr)
+                    return False
             
             # 完成
             self.end_time = time.time()
@@ -181,8 +201,23 @@ class PhaseController:
             
         except Exception as e:
             logger.error(f"✗ 執行異常: {e}")
+            self.failure_message = f"執行異常: {e}"
+            if self.arms_off_home:
+                self.failure_message += "；手臂停在原處、沒有自動復歸"
             return False
-    
+
+    def _set_phase_failure(self, index: int, phase_instr: PhaseInstruction):
+        """記下是哪一步失敗、手臂是不是停在半路，給介面和操作人員看"""
+        self.failure_message = (
+            f"第 {index+1}/{len(self.phases)} 步 "
+            f"{phase_instr.action} {phase_instr.location} 失敗"
+        )
+        if self._phase_detail:
+            self.failure_message += f"：{self._phase_detail}"
+        if self.arms_off_home:
+            self.failure_message += "；手臂停在原處、沒有自動復歸"
+            logger.error("✗ 手臂沒有自動復歸：請確認現場，用教導器把手臂移回原點後重新啟動程式")
+
     # ========================================================================
     # 單階段執行
     # ========================================================================
@@ -215,17 +250,18 @@ class PhaseController:
         
         # 執行邏輯
         success = False
-        
+        timeout = phase_instr.timeout_sec
+
         if action == "PICKUP":
-            success = self._handle_pickup(location, params, phase_instr.retries)
+            success = self._handle_pickup(location, params, phase_instr.retries, timeout)
         elif action == "CHOP":
-            success = self._handle_chop(location, params, phase_instr.retries)
+            success = self._handle_chop(location, params, phase_instr.retries, timeout)
         elif action == "PLACE":
-            success = self._handle_place(location, params, phase_instr.retries)
+            success = self._handle_place(location, params, phase_instr.retries, timeout)
         elif action == "FLIP":
-            success = self._handle_flip(location, params, phase_instr.retries)
+            success = self._handle_flip(location, params, phase_instr.retries, timeout)
         elif action == "HOME":
-            success = self._handle_home(location, params, phase_instr.retries)
+            success = self._handle_home(location, params, timeout)
         else:
             logger.error(f"✗ 未知的動作: {action}")
             log.status = PhaseStatus.FAILED
@@ -265,7 +301,50 @@ class PhaseController:
     # 具體動作實現
     # ========================================================================
 
-    def _handle_pickup(self, location: str, params: Dict, max_retries: int) -> bool:
+    def _send_motion(self, label: str, cmd, max_retries: int,
+                     timeout: Optional[float]) -> bool:
+        """
+        把動作指令同時送給兩臂，兩邊都回 OK 才算成功
+
+        ⚠️ 只有「兩臂都回 BUSY」才重送。AS 的 DISPATCH 在 robot_busy 時
+           直接回 BUSY、不呼叫 DO_*，所以這種情況兩臂都確定沒動，重送才安全。
+           其他情況一律不重送：
+           - 逾時 / None：手臂可能還在跑，重送會讓它再做一次（例如再切一輪）
+           - 一邊 OK 一邊 ERROR：OK 那臂已經做完，重送它會重做
+           這時候交給操作人員確認現場狀況，不要讓程式自己猜。
+
+        Args:
+            label: 日誌用的動作名稱（例如「切割」）
+            cmd: 字串（兩臂同一句）或 {"F60_F": ..., "F60_R": ...}
+            max_retries: 兩臂都 BUSY 時最多嘗試幾次
+            timeout: 每臂等回應的秒數，None 則用連線層預設值
+        """
+        for attempt in range(max_retries):
+            # 指令一送出就當作手臂可能離開原點（見 __init__ 的 arms_off_home 說明）
+            self.arms_off_home = True
+            responses = self.comms.send_command_dual(cmd, timeout=timeout)
+            f, r = responses.get("F60_F"), responses.get("F60_R")
+
+            if f == "OK" and r == "OK":
+                logger.info(f"  ✓ {label}完成")
+                return True
+
+            if f == "BUSY" and r == "BUSY":
+                logger.warning(f"  ⚠️ {label}: 兩臂都回 BUSY（未執行），"
+                               f"嘗試 {attempt+1}/{max_retries}")
+                if attempt < max_retries - 1:
+                    time.sleep(RetryPolicy.RETRY_DELAY_SEC)
+                continue
+
+            logger.error(f"  ✗ {label}回應異常: F60_F={f}, F60_R={r}")
+            logger.error(f"    手臂可能已經動過，不自動重送，請人工確認現場狀況")
+            return False
+
+        logger.error(f"  ✗ {label}失敗：兩臂持續 BUSY ({max_retries} 次)")
+        return False
+
+    def _handle_pickup(self, location: str, params: Dict, max_retries: int,
+                       timeout: Optional[float] = None) -> bool:
         """處理取料"""
         arm = params.get("arm", "F60_F")
 
@@ -279,55 +358,50 @@ class PhaseController:
         if expected_food == "ROMAINE":
             expected_food = "LETTUCE"
 
-        for attempt in range(max_retries):
-            try:
-                x_mm, y_mm, angle_deg = 0.0, 0.0, 0.0
+        x_mm, y_mm, angle_deg = 0.0, 0.0, 0.0
 
-                if expected_food:
-                    image = self.vision.capture_frame()
-                    detection = (
-                        self.vision.get_location_and_angle_mm(expected_food, image)
-                        if image is not None else None
-                    )
-                    if detection is None:
-                        logger.warning(f"  ⚠️ 視覺未偵測到 {expected_food}，中止本次取料，不送指令給機器人")
-                        if attempt < max_retries - 1:
-                            time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-                        continue
-                    x_mm, y_mm, angle_deg = detection
-                    logger.info(f"  視覺定位 {expected_food}: x={x_mm:.1f}mm, y={y_mm:.1f}mm, angle={angle_deg:.1f}°")
+        # 視覺定位可以放心重試——還沒送任何指令，手臂沒動
+        if expected_food:
+            detection = None
+            for attempt in range(max_retries):
+                image = self.vision.capture_frame()
+                detection = (
+                    self.vision.get_location_and_angle_mm(expected_food, image)
+                    if image is not None else None
+                )
+                if detection is not None:
+                    break
+                logger.warning(f"  ⚠️ 視覺未偵測到 {expected_food} "
+                               f"({attempt+1}/{max_retries})，不送指令給機器人")
+                if attempt < max_retries - 1:
+                    time.sleep(RetryPolicy.RETRY_DELAY_SEC)
 
-                cmd = PickupCommand.create(location, arm, x_mm, y_mm, angle_deg)
-                if not self._validate_command(cmd, CommandParser.validate_pickup):
-                    return False
+            if detection is None:
+                self._phase_detail = (f"視覺找不到 {expected_food}，或位置超出標定範圍"
+                                      f"（請把食材放回取料區中央）")
+                logger.error(f"  ✗ 取料失敗：{self._phase_detail}")
+                return False
+            x_mm, y_mm, angle_deg = detection
+            logger.info(f"  視覺定位 {expected_food}: x={x_mm:.1f}mm, y={y_mm:.1f}mm, angle={angle_deg:.1f}°")
 
-                logger.info(f"  取料: {location} (雙臂協同)")
+        cmd = PickupCommand.create(location, arm, x_mm, y_mm, angle_deg)
+        if not self._validate_command(cmd, CommandParser.validate_pickup):
+            return False
 
-                # 各臂的 AS DO_PICKUP 都會檢查 arm 欄位是不是自己
-                # （左臂要 "F60_F"、右臂要 "F60_R"），不符就回 ERROR,E4003。
-                # 送同一個字串給兩邊必定有一邊被拒，所以各自帶自己的名稱。
-                cmds = {
-                    a: PickupCommand.create(location, a, x_mm, y_mm, angle_deg)
-                    for a in ("F60_F", "F60_R")
-                }
-                # PICKUP 兩臂會逐階段用 SYNC_STEP 會合，指令必須同時送給兩邊
-                responses = self.comms.send_command_dual(cmds)
-                if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
-                    logger.info(f"  ✓ 取料成功")
-                    return True
-                else:
-                    logger.warning(f"  ⚠️ 取料回應異常: F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}")
+        logger.info(f"  取料: {location} (雙臂協同)")
 
-            except Exception as e:
-                logger.warning(f"  ⚠️ 取料嘗試 {attempt+1}/{max_retries} 失敗: {e}")
+        # 各臂的 AS DO_PICKUP 都會檢查 arm 欄位是不是自己
+        # （左臂要 "F60_F"、右臂要 "F60_R"），不符就回 ERROR,E4003。
+        # 送同一個字串給兩邊必定有一邊被拒，所以各自帶自己的名稱。
+        cmds = {
+            a: PickupCommand.create(location, a, x_mm, y_mm, angle_deg)
+            for a in ("F60_F", "F60_R")
+        }
+        # PICKUP 兩臂會逐階段用 SYNC_STEP 會合，指令必須同時送給兩邊
+        return self._send_motion("取料", cmds, max_retries, timeout)
 
-            if attempt < max_retries - 1:
-                time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-
-        logger.error(f"  ✗ 取料失敗 (重試 {max_retries} 次)")
-        return False
-    
-    def _handle_chop(self, location: str, params: Dict, max_retries: int) -> bool:
+    def _handle_chop(self, location: str, params: Dict, max_retries: int,
+                     timeout: Optional[float] = None) -> bool:
         """處理切割"""
         food_type = params.get("food_type", "CUCUMBER")
         num_cuts = params.get("num_cuts", 5)
@@ -337,28 +411,12 @@ class PhaseController:
         if not self._validate_command(cmd, CommandParser.validate_chop):
             return False
 
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"  切割: {food_type} ({num_cuts} 次，{thickness} mm，雙臂協同)")
+        logger.info(f"  切割: {food_type} ({num_cuts} 次，{thickness} mm，雙臂協同)")
+        # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
+        return self._send_motion("切割", cmd, max_retries, timeout)
 
-                # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
-                responses = self.comms.send_command_dual(cmd)
-                if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
-                    logger.info(f"  ✓ 切割完成")
-                    return True
-                else:
-                    logger.warning(f"  ⚠️ 切割回應異常: F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}")
-                    
-            except Exception as e:
-                logger.warning(f"  ⚠️ 切割嘗試 {attempt+1}/{max_retries} 失敗: {e}")
-            
-            if attempt < max_retries - 1:
-                time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-        
-        logger.error(f"  ✗ 切割失敗 (重試 {max_retries} 次)")
-        return False
-    
-    def _handle_place(self, location: str, params: Dict, max_retries: int) -> bool:
+    def _handle_place(self, location: str, params: Dict, max_retries: int,
+                      timeout: Optional[float] = None) -> bool:
         """處理放置"""
         source = params.get("source", "WORK_CHOP_ZONE")
         method = params.get("method", "SCOOP")
@@ -370,30 +428,11 @@ class PhaseController:
         # 一律雙臂。食材是夾在兩支鏟子中間搬運的，只送左臂的話右臂不動，
         # 東西會掉。兩臂的 AS DO_PLACE 都有完整的目的地分支（WAIT_ZONE_1 /
         # MIX_ZONE / SALAD_BOWL / WORK_CHOP_ZONE），SCOOP/PUSH/POUR 都收。
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"  放置: {source} → {location} (方式: {method}，雙臂協同)")
+        logger.info(f"  放置: {source} → {location} (方式: {method}，雙臂協同)")
+        return self._send_motion("放置", cmd, max_retries, timeout)
 
-                responses = self.comms.send_command_dual(cmd)
-                ok = responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK"
-                response_desc = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
-
-                if ok:
-                    logger.info(f"  ✓ 放置完成")
-                    return True
-                else:
-                    logger.warning(f"  ⚠️ 放置回應異常: {response_desc}")
-                    
-            except Exception as e:
-                logger.warning(f"  ⚠️ 放置嘗試 {attempt+1}/{max_retries} 失敗: {e}")
-            
-            if attempt < max_retries - 1:
-                time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-        
-        logger.error(f"  ✗ 放置失敗 (重試 {max_retries} 次)")
-        return False
-    
-    def _handle_flip(self, location: str, params: Dict, max_retries: int) -> bool:
+    def _handle_flip(self, location: str, params: Dict, max_retries: int,
+                     timeout: Optional[float] = None) -> bool:
         """處理翻炒"""
         num_cycles = params.get("num_cycles", 6)
         speed_percent = params.get("speed_percent", 50)
@@ -402,28 +441,12 @@ class PhaseController:
         if not self._validate_command(cmd, CommandParser.validate_flip):
             return False
 
-        for attempt in range(max_retries):
-            try:
-                logger.info(f"  翻炒: {num_cycles} 循環，{speed_percent}% 速度，雙臂協同")
+        logger.info(f"  翻炒: {num_cycles} 循環，{speed_percent}% 速度，雙臂協同")
+        # FLIP 兩臂逐循環用 SYNC_STEP 會合，指令必須同時送給兩邊
+        return self._send_motion("翻炒", cmd, max_retries, timeout)
 
-                # FLIP 兩臂逐循環用 SYNC_STEP 會合，指令必須同時送給兩邊
-                responses = self.comms.send_command_dual(cmd)
-                if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
-                    logger.info(f"  ✓ 翻炒完成")
-                    return True
-                else:
-                    logger.warning(f"  ⚠️ 翻炒回應異常: F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}")
-                    
-            except Exception as e:
-                logger.warning(f"  ⚠️ 翻炒嘗試 {attempt+1}/{max_retries} 失敗: {e}")
-            
-            if attempt < max_retries - 1:
-                time.sleep(RetryPolicy.RETRY_DELAY_SEC)
-        
-        logger.error(f"  ✗ 翻炒失敗 (重試 {max_retries} 次)")
-        return False
-    
-    def _handle_home(self, location: str, params: Dict, max_retries: int) -> bool:
+    def _handle_home(self, location: str, params: Dict,
+                     timeout: Optional[float] = None) -> bool:
         """處理復歸（兩臂都要回原點）"""
         # AS 的 DO_HOME 會檢查 arm == $this_arm，各臂只認自己的名稱，
         # 所以兩邊各送各的。食譜裡的 params["arm"] 只是主導臂標示，
@@ -438,10 +461,12 @@ class PhaseController:
         try:
             logger.info(f"  復歸: F60_F + F60_R → {location}")
 
-            responses = self.comms.send_command_dual(cmds)
+            self.arms_off_home = True
+            responses = self.comms.send_command_dual(cmds, timeout=timeout)
             response = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
 
             if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
+                self.arms_off_home = False
                 logger.info(f"  ✓ 復歸完成")
                 return True
             else:
