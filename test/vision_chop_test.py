@@ -134,28 +134,26 @@ def print_offset(food: str, r: Dict):
 # ----------------------------------------------------------------------------
 # 切割區還沒標定時的偏移估算（經驗公式）
 #
-# 2026-10-05 現場手動對點：小黃瓜放在切割區、頭尾方向角度約 180°，
-# 用教導器找出第一刀該落的左臂 X，對照同一張照片「取料區座標 X 較大那端」。
-# 三次都符合「第一刀 X = 右端 + K」，K 差不到 1mm：
-#     (取料區右端 X, 手動第一刀 X)
-OFFSET_REFERENCE = [
-    (228.7, 308.855),
-    (220.3, 301.0),
-    (273.8, 354.2),
+# 用教導器手動對點，記下「這個擺法要填的偏移」，對照同一張照片的視覺數值：
+#   X：取料區座標「X 較大那端」每移 1mm，偏移就差 1mm（舊點位時三次驗證，誤差 ±0.3mm）
+#   Y：取料區座標「小黃瓜中心 Y」，方向與比例由 2 筆以上資料擬合
+#
+# 2026-10-05 點位重教後重新量：這個擺法定義為 (0, 0)。舊點位的資料已作廢。
+#     (取料區右端 X, 確認的 CHOP_ORIGIN_OFFSET_MM)
+OFFSET_REFERENCE: List[Tuple[float, float]] = [
+    (314.6, 0.0),
 ]
-REF_ANGLE_DEG = 180.0        # 對點時小黃瓜的頭尾角度；放反了公式不成立
+#     (取料區中心 Y, 確認的 CHOP_ORIGIN_OFFSET_Y_MM)；至少 2 筆才會估
+OFFSET_Y_REFERENCE: List[Tuple[float, float]] = [
+    (41.4, 0.0),
+]
+REF_ANGLE_DEG = 6.0          # 對點時小黃瓜的頭尾角度；放反了公式不成立
 ANGLE_TOLERANCE_DEG = 30.0
-# ⚠️ 相機或切割區移動過就失效，要重新手動對點、更新 OFFSET_REFERENCE。
+# ⚠️ 相機、切割區或手臂點位動過就失效，要重新手動對點、更新上面兩組資料。
 # ----------------------------------------------------------------------------
 
-REF_K = mean(arm - tab for tab, arm in OFFSET_REFERENCE)
-REF_SPREAD = max(abs(arm - tab - REF_K) for tab, arm in OFFSET_REFERENCE)
-
-# Y 偏移：(取料區座標的小黃瓜中心 Y, 手動對點確認的 CHOP_ORIGIN_OFFSET_Y_MM)
-# 至少 2 筆才會估（要從資料決定方向與比例）。對點一次就加一筆。
-OFFSET_Y_REFERENCE: List[Tuple[float, float]] = [
-    (6.1, 0.0),     # 2026-10-05 第 4 次擺放（第一刀 X 354.2），Y 不用偏
-]
+REF_K = mean(off - tab for tab, off in OFFSET_REFERENCE)
+REF_SPREAD = max(abs(off - tab - REF_K) for tab, off in OFFSET_REFERENCE)
 
 
 def fit_y() -> Optional[Tuple[float, float, float]]:
@@ -174,7 +172,7 @@ def fit_y() -> Optional[Tuple[float, float, float]]:
 
 def estimate_offset(d: Dict, m: Dict) -> Tuple[Optional[float], str]:
     """
-    用經驗公式估第 1 格偏移
+    用經驗公式估 X 偏移
 
     Returns:
         (偏移 mm, 說明)；偏移是 None 表示這次不能估，說明寫原因
@@ -186,8 +184,7 @@ def estimate_offset(d: Dict, m: Dict) -> Tuple[Optional[float], str]:
         return None, (f"頭尾角度 {d['angle_deg']:.0f}°，跟對點時的 {REF_ANGLE_DEG:.0f}° "
                       f"差 {diff:.0f}°（可能放反了），公式不適用，請轉回同方向")
     right_x = max(m["m1"][0], m["m2"][0])
-    first_x = right_x + REF_K
-    return first_x - ChopPlanConfig.CHOP_1_FIRST_X_MM, f"第一刀 X = {first_x:.1f}"
+    return right_x + REF_K, f"右端 X = {right_x:.1f}"
 
 
 def print_offset_estimate(d: Dict, m: Dict) -> Optional[float]:
@@ -196,7 +193,8 @@ def print_offset_estimate(d: Dict, m: Dict) -> Optional[float]:
         print(f"\n  [偏移] ✗ {note}")
         return None
     warn = "  ⚠️ 超過 ±300mm，手臂會拒絕" if abs(off) > 300 else ""
-    print(f"\n  ==> 偏移 .offset = {off:+.1f} mm（{note}，對點資料誤差 ±{REF_SPREAD:.1f}mm）{warn}")
+    spread = f"對點資料誤差 ±{REF_SPREAD:.1f}mm" if len(OFFSET_REFERENCE) > 1 else "對點資料 1 筆"
+    print(f"\n  ==> 偏移 .offset = {off:+.1f} mm（{note}，{spread}）{warn}")
     print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM = "
           f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM:+.1f}")
 
