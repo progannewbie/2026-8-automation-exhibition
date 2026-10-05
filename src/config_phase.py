@@ -92,7 +92,7 @@ class ChopPlanConfig:
     # 整根切完要從更前面開始時調這裡（負值 = 往 X 小的方向）。隨 CHOP 指令送給兩臂，
     # 左臂下刀點、右臂壓點一起移；兩臂 AS 只接受 ±300mm。
     # 待現場確認：用 test/chop_points.py --offset N 預覽、教導器對點後填入。
-    CHOP_ORIGIN_OFFSET_MM = -7.9    # 2026-10-05 現場手動對點：第一刀 X ≈ 301（chop_1[1] 前 7.9mm）
+    CHOP_ORIGIN_OFFSET_MM = 45.3    # 2026-10-05 現場手動對點：第一刀 X ≈ 354.2（chop_1[1] 後 45.3mm）
     MAX_CUTS = 60
     MAX_INDEX = 60               # 最後一刀的格數上限（AS 端同一個值）
 
