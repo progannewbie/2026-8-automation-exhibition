@@ -136,7 +136,8 @@ def print_offset(food: str, r: Dict):
 #
 # 用教導器手動對點，記下「這個擺法要填的偏移」，對照同一張照片的視覺數值：
 #   X：取料區座標「X 較大那端」每移 1mm，偏移就差 1mm（舊點位時三次驗證，誤差 ±0.3mm）
-#   Y：取料區座標「小黃瓜中心 Y」，方向與比例由 2 筆以上資料擬合
+#   Y：取料區座標「X 較大那端（第一刀那端）的 Y」，方向與比例由 2 筆以上資料擬合
+#      （小黃瓜擺放會斜，用中心 Y 會差到 30mm 以上，2026-10-05 第三筆對點時發現）
 #
 # 2026-10-05 點位重教後重新量：這個擺法定義為 (0, 0)。舊點位的資料已作廢。
 #     (取料區右端 X, 確認的 CHOP_ORIGIN_OFFSET_MM)
@@ -145,10 +146,11 @@ OFFSET_REFERENCE: List[Tuple[float, float]] = [
     (314.4, 0.0),    # 同一個 (0, 0) 擺法再拍一次
     (237.1, -77.4),  # 第一刀 X 328.9、Y 625.88
 ]
-#     (取料區中心 Y, 確認的 CHOP_ORIGIN_OFFSET_Y_MM)；至少 2 筆才會估
+#     (取料區右端 Y, 確認的 CHOP_ORIGIN_OFFSET_Y_MM)；至少 2 筆才會估
 OFFSET_Y_REFERENCE: List[Tuple[float, float]] = [
-    (39.2, 0.0),     # (0, 0) 擺法兩次的平均（41.4、36.9），算同一個基準點
-    (76.4, 53.0),    # 第一刀 Y 625.88（基準 572.925）
+    (21.9, 0.0),     # (0, 0) 擺法兩次右端 Y 的平均（26.2、17.5），算同一個基準點
+    (67.9, 53.0),    # 第一刀 Y 625.88（基準 572.925）
+    (-11.8, -36.9),  # 第一刀 Y 535.977
 ]
 # 只檢查小黃瓜是否沿畫面橫向擺（長軸 0°/180° 都算），不分頭尾：
 # 色彩判斷的頭尾不可靠，同一個擺向會出現 6° 和 183°（2026-10-05 現場確認沒有放反）。
@@ -163,14 +165,14 @@ REF_SPREAD = max(abs(off - tab - REF_K) for tab, off in OFFSET_REFERENCE)
 
 
 def fit_y() -> Optional[Tuple[float, float, float]]:
-    """Y 偏移 = a × 中心 Y + b 的最小平方解，回傳 (a, b, 最大誤差)；資料不足回 None"""
+    """Y 偏移 = a × 右端 Y + b 的最小平方解，回傳 (a, b, 最大誤差)；資料不足回 None"""
     pts = OFFSET_Y_REFERENCE
     if len(pts) < 2:
         return None
     mx, my = mean(p[0] for p in pts), mean(p[1] for p in pts)
     sxx = sum((p[0] - mx) ** 2 for p in pts)
     if sxx < 1e-6:
-        return None   # 中心 Y 都一樣，分不出斜率
+        return None   # 右端 Y 都一樣，分不出斜率
     a = sum((p[0] - mx) * (p[1] - my) for p in pts) / sxx
     b = my - a * mx
     return a, b, max(abs(a * p[0] + b - p[1]) for p in pts)
@@ -203,17 +205,17 @@ def print_offset_estimate(d: Dict, m: Dict) -> Optional[float]:
     print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM = "
           f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM:+.1f}")
 
-    center_y = (m["m1"][1] + m["m2"][1]) / 2
+    right_y = max((m["m1"], m["m2"]), key=lambda p: p[0])[1]   # X 較大那端（第一刀那端）的 Y
     fit = fit_y()
     if fit is None:
         print(f"  ==> Y 偏移：還沒有足夠對點資料（目前 {len(OFFSET_Y_REFERENCE)} 筆，至少 2 筆）。"
-              f"這次小黃瓜中心 Y = {center_y:.1f}，")
-        print("      對點後把「中心 Y、確認的 Y 偏移」一起告訴我，加進 OFFSET_Y_REFERENCE")
+              f"這次右端 Y = {right_y:.1f}，")
+        print("      對點後把「右端 Y、確認的 Y 偏移」一起告訴我，加進 OFFSET_Y_REFERENCE")
     else:
         a, b, err = fit
-        off_y = a * center_y + b
+        off_y = a * right_y + b
         warn = "  ⚠️ 超過 ±100mm，手臂會拒絕" if abs(off_y) > 100 else ""
-        print(f"  ==> Y 偏移 .offset_y = {off_y:+.1f} mm（中心 Y = {center_y:.1f}，"
+        print(f"  ==> Y 偏移 .offset_y = {off_y:+.1f} mm（右端 Y = {right_y:.1f}，"
               f"對點資料誤差 ±{err:.1f}mm）{warn}")
     print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM = "
           f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM:+.1f}")
