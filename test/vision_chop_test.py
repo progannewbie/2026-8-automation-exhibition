@@ -148,7 +148,10 @@ OFFSET_REFERENCE: List[Tuple[float, float]] = [
 OFFSET_Y_REFERENCE: List[Tuple[float, float]] = [
     (39.2, 0.0),     # (0, 0) 擺法兩次的平均（41.4、36.9），算同一個基準點
 ]
-REF_ANGLE_DEG = 6.0          # 對點時小黃瓜的頭尾角度；放反了公式不成立
+# 只檢查小黃瓜是否沿畫面橫向擺（長軸 0°/180° 都算），不分頭尾：
+# 色彩判斷的頭尾不可靠，同一個擺向會出現 6° 和 183°（2026-10-05 現場確認沒有放反）。
+# 公式只用「取料區 X 較大那端」，跟頭尾無關。
+REF_AXIS_DEG = 0.0
 ANGLE_TOLERANCE_DEG = 30.0
 # ⚠️ 相機、切割區或手臂點位動過就失效，要重新手動對點、更新上面兩組資料。
 # ----------------------------------------------------------------------------
@@ -178,12 +181,11 @@ def estimate_offset(d: Dict, m: Dict) -> Tuple[Optional[float], str]:
     Returns:
         (偏移 mm, 說明)；偏移是 None 表示這次不能估，說明寫原因
     """
-    if d["angle_source"] != "color_head_tail":
-        return None, "沒有頭尾方向（色彩判斷失敗），不知道小黃瓜朝哪邊，不估"
-    diff = abs((d["angle_deg"] - REF_ANGLE_DEG + 180.0) % 360.0 - 180.0)
+    axis = (d["angle_deg"] - REF_AXIS_DEG) % 180.0      # 長軸方向，不分頭尾
+    diff = min(axis, 180.0 - axis)
     if diff > ANGLE_TOLERANCE_DEG:
-        return None, (f"頭尾角度 {d['angle_deg']:.0f}°，跟對點時的 {REF_ANGLE_DEG:.0f}° "
-                      f"差 {diff:.0f}°（可能放反了），公式不適用，請轉回同方向")
+        return None, (f"小黃瓜長軸斜了 {diff:.0f}°（上限 {ANGLE_TOLERANCE_DEG:.0f}°），"
+                      f"公式只適用橫向擺放，請擺正")
     right_x = max(m["m1"][0], m["m2"][0])
     return right_x + REF_K, f"右端 X = {right_x:.1f}"
 
