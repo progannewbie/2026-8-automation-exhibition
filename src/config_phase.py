@@ -140,8 +140,8 @@ class PhaseInstruction:
     action: str                 # 動作 (PICKUP, CHOP, PLACE, FLIP 等)
     location: str               # 位置 (PICKUP_CUCUMBER, SALAD_BOWL 等)
     params: Optional[Dict] = None  # 額外參數
-    retries: int = 3            # 重試次數
-    timeout_sec: float = 500.0   # 超時時間 (秒)
+    retries: int = 3            # 重試次數（只在兩臂都回 BUSY 或視覺沒偵測到時才會用到，見 PhaseController._send_motion）
+    timeout_sec: float = 500.0   # 等手臂回應的秒數。逾時會停用連線、整道菜中止，不會重送
 
 
 class MenuRecipes:
@@ -190,7 +190,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
-                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
+                timeout_sec=420.0,  # 15 刀約 4 分鐘，留餘裕；逾時會中止整道菜（不會重送）
             ),
             # 切完食材是躺在檯面上的，要先夾起來才能搬
             PhaseInstruction(
@@ -241,7 +241,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CARROT"].__dict__,
-                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
+                timeout_sec=420.0,  # 15 刀約 4 分鐘，留餘裕；逾時會中止整道菜（不會重送）
             ),
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -330,7 +330,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
-                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
+                timeout_sec=420.0,  # 15 刀約 4 分鐘，留餘裕；逾時會中止整道菜（不會重送）
             ),
             PhaseInstruction(
                 phase=Phase.PICKUP,
@@ -367,7 +367,7 @@ class MenuRecipes:
                 action="CHOP",
                 location="WORK_CHOP_ZONE",
                 params=FOOD_CUT_PARAMS["CARROT"].__dict__,
-                timeout_sec=300.0,  # 測試階段先設 5 分鐘，避免提前逾時重送指令
+                timeout_sec=420.0,  # 15 刀約 4 分鐘，留餘裕；逾時會中止整道菜（不會重送）
             ),
 
             # ================================================================
@@ -504,12 +504,9 @@ class RetryPolicy:
     MAX_RETRIES = 3
     RETRY_DELAY_SEC = 2.0
     
-    # 哪些指令可重試
-    RETRYABLE_ACTIONS = {
-        "PICKUP",      # 重新取料
-        "CHOP",        # 重新切割
-        "PLACE",       # 重新放置
-    }
+    # 動作指令（PICKUP / CHOP / PLACE / FLIP）只有在「兩臂都回 BUSY」時才重送，
+    # 那代表兩臂都沒動。逾時、ERROR、一邊 OK 一邊失敗都不重送，因為手臂可能
+    # 已經動過，重送會讓它重做一次。見 PhaseController._send_motion。
     
     # 哪些指令不可重試（立即失敗）
     CRITICAL_ACTIONS = {
