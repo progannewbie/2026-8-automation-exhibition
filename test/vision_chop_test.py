@@ -293,9 +293,15 @@ def main() -> int:
                 history.setdefault(f"{food}(切割區) 建議偏移",
                                    []).append(suggested_offset(min(p[0] for p in r["ends_mm"])))
         else:
-            for d, m in items:
-                if d["class_name"] != "CUCUMBER":
-                    continue
+            # 只用信心度最高的那根小黃瓜算偏移（畫面邊緣常有別根或誤判）
+            cucumbers = [(d, m) for d, m in items if d["class_name"] == "CUCUMBER"]
+            if cucumbers:
+                best = max(range(len(cucumbers)), key=lambda k: cucumbers[k][0]["confidence"])
+                d, m = cucumbers[best]
+                if len(cucumbers) > 1:
+                    print(f"\n  （有 {len(cucumbers)} 根小黃瓜，偏移只用信心度最高的 "
+                          f"{d['confidence']:.2f}，像素中心 ({d['center_x_pixel']:.0f}, "
+                          f"{d['center_y_pixel']:.0f})）")
                 off = print_offset_estimate(d, m)
                 if off is not None:
                     history.setdefault("CUCUMBER 偏移", []).append(off)
