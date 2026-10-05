@@ -424,6 +424,11 @@ class SmartCookApp:
 # ============================================================================
 
 def main() -> int:
+    # 輸出被導向時 stdout 會變成 cp950，印到 ✓ / ⚠️ 就 UnicodeEncodeError 掛掉
+    try:
+        sys.stdout.reconfigure(errors="backslashreplace")
+    except (AttributeError, ValueError):
+        pass
     _setup_logging()
     app = SmartCookApp()
     return app.run()

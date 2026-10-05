@@ -493,6 +493,13 @@ def create_app(runner: RobotRunner, token: Optional[str] = None) -> Flask:
 
 
 def main() -> int:
+    # 輸出被導向（捷徑、排程、別的程式啟動）時 stdout 會變成 cp950，
+    # 印到 ⚠️ 這類字元就 UnicodeEncodeError 整個掛掉。改成印不出來的字元用跳脫碼代替。
+    try:
+        sys.stdout.reconfigure(errors="backslashreplace")
+    except (AttributeError, ValueError):
+        pass
+
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--simulate", action="store_true", help="不連手臂，純測介面")
