@@ -13,6 +13,11 @@ SmartCook 視覺量測測試（不連手臂、不設任何限制）
     python vision_chop_test.py --image captures/yolo_070.jpg
     python vision_chop_test.py --food CUCUMBER --save   # 只看小黃瓜，存標註圖
 
+偏移（第 1 格相對 chop_1[1]）：
+    切割區還沒標定時，用現場手動對點的經驗公式估（見 OFFSET_REFERENCE），
+    印成「==> 偏移 .offset = +45.3 mm」這一行，只在小黃瓜頭尾方向跟對點時一致時給。
+    切割區標定後改用正式量測（左臂座標）。
+
 ⚠️ mm 是用取料區的 TableHomography 換算的：
    - 座標是相對 pickup_origin 的偏移，不是左臂座標，不能直接跟 chop_1[] 比位置
    - 切割區如果不在取料區標定範圍內，是外推值，誤差可能很大（會標 ⚠️外推）
@@ -126,13 +131,55 @@ def print_offset(food: str, r: Dict):
           f"，教導器移到第 1 格看刀子是不是落在前端往內 {ChopPlanConfig.TIP_OFFSET_MM:g}mm")
 
 
-def print_offset_manual():
-    x1 = ChopPlanConfig.CHOP_1_FIRST_X_MM
-    print("\n  [偏移] 切割區還沒標定，視覺換算不出左臂座標，算不出偏移。")
-    print("      手動量法：用教導器把左臂刀尖移到小黃瓜前端（X 小那端），讀教導器上的 X，")
-    print(f"      偏移 = X + {ChopPlanConfig.TIP_OFFSET_MM:g} − {x1:.1f}（chop_1[1] 的 X），"
-          f"例如 X=250.0 → 偏移 {250.0 + ChopPlanConfig.TIP_OFFSET_MM - x1:+.1f}")
-    print("      要讓視覺自動算：先跑 test/calibrate_chop_zone.py 標定切割區")
+# ----------------------------------------------------------------------------
+# 切割區還沒標定時的偏移估算（經驗公式）
+#
+# 2026-10-05 現場手動對點：小黃瓜放在切割區、頭尾方向角度約 180°，
+# 用教導器找出第一刀該落的左臂 X，對照同一張照片「取料區座標 X 較大那端」。
+# 三次都符合「第一刀 X = 右端 + K」，K 差不到 1mm：
+#     (取料區右端 X, 手動第一刀 X)
+OFFSET_REFERENCE = [
+    (228.7, 308.855),
+    (220.3, 301.0),
+    (273.8, 354.2),
+]
+REF_ANGLE_DEG = 180.0        # 對點時小黃瓜的頭尾角度；放反了公式不成立
+ANGLE_TOLERANCE_DEG = 30.0
+# ⚠️ 相機或切割區移動過就失效，要重新手動對點、更新 OFFSET_REFERENCE。
+# ----------------------------------------------------------------------------
+
+REF_K = mean(arm - tab for tab, arm in OFFSET_REFERENCE)
+REF_SPREAD = max(abs(arm - tab - REF_K) for tab, arm in OFFSET_REFERENCE)
+
+
+def estimate_offset(d: Dict, m: Dict) -> Tuple[Optional[float], str]:
+    """
+    用經驗公式估第 1 格偏移
+
+    Returns:
+        (偏移 mm, 說明)；偏移是 None 表示這次不能估，說明寫原因
+    """
+    if d["angle_source"] != "color_head_tail":
+        return None, "沒有頭尾方向（色彩判斷失敗），不知道小黃瓜朝哪邊，不估"
+    diff = abs((d["angle_deg"] - REF_ANGLE_DEG + 180.0) % 360.0 - 180.0)
+    if diff > ANGLE_TOLERANCE_DEG:
+        return None, (f"頭尾角度 {d['angle_deg']:.0f}°，跟對點時的 {REF_ANGLE_DEG:.0f}° "
+                      f"差 {diff:.0f}°（可能放反了），公式不適用，請轉回同方向")
+    right_x = max(m["m1"][0], m["m2"][0])
+    first_x = right_x + REF_K
+    return first_x - ChopPlanConfig.CHOP_1_FIRST_X_MM, f"第一刀 X = {first_x:.1f}"
+
+
+def print_offset_estimate(d: Dict, m: Dict) -> Optional[float]:
+    off, note = estimate_offset(d, m)
+    if off is None:
+        print(f"\n  [偏移] ✗ {note}")
+        return None
+    warn = "  ⚠️ 超過 ±300mm，手臂會拒絕" if abs(off) > 300 else ""
+    print(f"\n  ==> 偏移 .offset = {off:+.1f} mm（{note}，對點資料誤差 ±{REF_SPREAD:.1f}mm）{warn}")
+    print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM = "
+          f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM:+.1f}")
+    return off
 
 
 def annotate(image, items: List[Tuple[Dict, Dict]]):
@@ -210,8 +257,13 @@ def main() -> int:
                 history.setdefault(f"{food}(切割區) 長度", []).append(r["length_mm"])
                 history.setdefault(f"{food}(切割區) 建議偏移",
                                    []).append(suggested_offset(min(p[0] for p in r["ends_mm"])))
-        elif shot == 1:
-            print_offset_manual()
+        else:
+            for d, m in items:
+                if d["class_name"] != "CUCUMBER":
+                    continue
+                off = print_offset_estimate(d, m)
+                if off is not None:
+                    history.setdefault("CUCUMBER 偏移", []).append(off)
 
         if args.save:
             CAPTURE_DIR.mkdir(parents=True, exist_ok=True)
