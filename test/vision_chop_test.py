@@ -153,7 +153,9 @@ REF_SPREAD = max(abs(arm - tab - REF_K) for tab, arm in OFFSET_REFERENCE)
 
 # Y 偏移：(取料區座標的小黃瓜中心 Y, 手動對點確認的 CHOP_ORIGIN_OFFSET_Y_MM)
 # 至少 2 筆才會估（要從資料決定方向與比例）。對點一次就加一筆。
-OFFSET_Y_REFERENCE: List[Tuple[float, float]] = []
+OFFSET_Y_REFERENCE: List[Tuple[float, float]] = [
+    (6.1, 0.0),     # 2026-10-05 第 4 次擺放（第一刀 X 354.2），Y 不用偏
+]
 
 
 def fit_y() -> Optional[Tuple[float, float, float]]:
