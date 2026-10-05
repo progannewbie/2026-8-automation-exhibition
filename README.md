@@ -153,8 +153,10 @@ python main.py
 
 - `SmartCook_TCP協定規格.docx`、`SmartCook_信號分配表.docx`、`SmartCook_術語字典.docx`
 - `SmartCook_展出場景腳本_V3.docx`、`SmartCook_食材視覺策略.docx`
-- `SmartCook_專案時間表_v5.1_進度指標版.docx`、`SmartCook_時序化甘特圖.docx`、`SmartCook_時間表_責任分配.docx`
+- `SmartCook_專案時間表_v5.1_進度指標版.docx`
 - [docs/PLANNING_ROADMAP.txt](docs/PLANNING_ROADMAP.txt)、[docs/PLANNING_COMPLETE_CHECKLIST.md](docs/PLANNING_COMPLETE_CHECKLIST.md)
+
+被取代的舊版文件放在 [docs/archive/](docs/archive/README.md)。
 
 ## 各模組負責人
 
