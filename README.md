@@ -146,6 +146,7 @@ python main.py
 | `test_vision_coord.py` | 視覺座標轉換 |
 | `test_pickup.py`、`test_pickup_fixed.py` | 夾取 |
 | `test_pickup_chop.py` | 夾取 + 切割（舊流程：缺少放到切割區的步驟，刀數也是舊的） |
+| `vision_chop_test.py` | **不連手臂、不設限制**：拍照（或讀圖）印出每個偵測的像素框、長軸端點、粗估長度 mm 與「整根要幾刀」，`--repeat` 看穩定度、`--save` 存標註圖 |
 | `chop_points.py` | **不連手臂**：從 GBK 教點算出每一刀的下刀座標與右臂壓點，`--actual` 輸入手動量到的座標，算差距與建議的 `rom_mid_mm` / `press_mm` |
 | `test_flip.py` | 翻轉 |
 | `test_full_salad_workflow.py` | 沙拉完整流程（流程邏輯） |
