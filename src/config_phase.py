@@ -94,12 +94,12 @@ class ChopPlanConfig:
     # 整根切完要從更前面開始時調這裡（負值 = 往 X 小的方向）。隨 CHOP 指令送給兩臂，
     # 左臂下刀點、右臂壓點一起移；兩臂 AS 只接受 ±300mm。
     # 待現場確認：用 test/chop_points.py --offset N 預覽、教導器對點後填入。
-    CHOP_ORIGIN_OFFSET_MM = -4.4    # 2026-10-05 現場對點：第一刀 X 401.9（(0, 0) 基準見 CHOP_1_FIRST_X_MM）
+    CHOP_ORIGIN_OFFSET_MM = -66.3   # 2026-10-05 視覺估算、現場確認：第一刀 X 340.0（(0, 0) 基準見 CHOP_1_FIRST_X_MM）
 
     # 食材放置的 Y 偏移 (mm)：每一刀的下刀點、右臂壓點都沿 Y 移這麼多
     # （右臂方向由 INIT_CONST 的 press_dir_y 決定）。兩臂 AS 只接受 ±100mm。
     # 待現場確認：用 test/chop_points.py --offset-y N 預覽、教導器對點後填入。
-    CHOP_ORIGIN_OFFSET_Y_MM = -36.9 # 2026-10-05 現場對點：第一刀 Y 535.977（基準 572.925）
+    CHOP_ORIGIN_OFFSET_Y_MM = -12.4 # 2026-10-05 視覺估算、現場確認：第一刀 Y 560.5（基準 572.925）
     MAX_CUTS = 60
     MAX_INDEX = 60               # 最後一刀的格數上限（AS 端同一個值）
 
