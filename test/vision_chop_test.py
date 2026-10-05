@@ -13,7 +13,7 @@ SmartCook 視覺量測測試（不連手臂、不設任何限制）
     python vision_chop_test.py --image captures/yolo_070.jpg
     python vision_chop_test.py --food CUCUMBER --save   # 只看小黃瓜，存標註圖
 
-偏移（第 1 格相對 chop_1[1]）：
+偏移（第 1 格相對左臂教點 cu）：
     切割區還沒標定時，用現場手動對點的經驗公式估（見 OFFSET_REFERENCE），
     印成「==> 偏移 .offset = +45.3 mm」這一行，只在小黃瓜頭尾方向跟對點時一致時給。
     切割區標定後改用正式量測（左臂座標）。
@@ -95,13 +95,13 @@ def print_detection(i: int, d: Dict, m: Dict):
 
 
 def suggested_offset(front_x: float) -> float:
-    """讓第 1 格剛好落在「前端 + TIP_OFFSET_MM」的偏移量（相對 chop_1[1]）"""
-    return front_x + ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.CHOP_1_FIRST_X_MM
+    """讓第 1 格剛好落在「前端 + TIP_OFFSET_MM」的偏移量（相對 cu）"""
+    return front_x + ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.CU_X_MM
 
 
 def raw_range(front_x: float, back_x: float, offset: float) -> Tuple[int, int]:
     """不設上下限，照 ChopPlanConfig.plan 的算法回傳 (起始格, 最後一格)"""
-    first_x = ChopPlanConfig.CHOP_1_FIRST_X_MM + offset
+    first_x = ChopPlanConfig.CU_X_MM + offset
     start = int(round((front_x + ChopPlanConfig.TIP_OFFSET_MM - first_x) / CHOP_STEP_MM)) + 1
     last = int((back_x - ChopPlanConfig.TAIL_MARGIN_MM - first_x) // CHOP_STEP_MM) + 1
     return start, last
@@ -117,12 +117,12 @@ def print_offset(food: str, r: Dict):
     if r["axis_angle_deg"] > ChopPlanConfig.MAX_AXIS_ANGLE_DEG:
         print(f"      ⚠️ 偏角超過 {ChopPlanConfig.MAX_AXIS_ANGLE_DEG:g}°：食材沒有順著刀子行進方向（左臂 X）擺，"
               f"正式流程會拒切；下面的 X 範圍比實際長度短")
-    print(f"      左臂 X：前端 {front:.1f}  後端 {back:.1f}    chop_1[1] = {ChopPlanConfig.CHOP_1_FIRST_X_MM:.1f}")
-    print(f"      前端距 chop_1[1]：{front - ChopPlanConfig.CHOP_1_FIRST_X_MM:+.1f} mm")
+    print(f"      左臂 X：前端 {front:.1f}  後端 {back:.1f}    cu = {ChopPlanConfig.CU_X_MM:.1f}")
+    print(f"      前端距 cu：{front - ChopPlanConfig.CU_X_MM:+.1f} mm")
     for label, off in (("建議偏移", sug), ("目前設定", cur)):
         start, last = raw_range(front, back, off)
         cuts = last - start + 1
-        first_x = ChopPlanConfig.CHOP_1_FIRST_X_MM + off + (start - 1) * CHOP_STEP_MM
+        first_x = ChopPlanConfig.CU_X_MM + off + (start - 1) * CHOP_STEP_MM
         ok = (1 <= cuts <= ChopPlanConfig.MAX_CUTS and start >= 1 and
               last <= ChopPlanConfig.MAX_INDEX and abs(off) <= 300)
         print(f"      {label} {off:+7.1f} mm → 第 {start}～{last} 格、{cuts} 刀，第一刀 X={first_x:.1f}"

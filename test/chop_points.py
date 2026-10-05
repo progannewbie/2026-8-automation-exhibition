@@ -6,10 +6,10 @@ SmartCook 切割點位預覽（不連手臂、不動手臂）
 算出每一刀左臂的下刀座標、右臂的壓點座標，印成表格。用教導器手動把手臂移到
 這些點，看跟實際食材差多少，再回來微調參數。
 
-    左臂第 i 格下刀點 = chop_1[1] 沿 X 移 偏移 + (i-1)×5mm（上方點再 +50mm）
+    左臂第 i 格下刀點 = cu 沿 X 移 偏移 + (i-1)×5mm、沿 Y 移 Y 偏移（上方點再 +50mm）
     右臂第 i 格壓點   = press_chop_zone 沿右臂 X 移 (偏移 + (i-1)×5mm)×press_dir，再往下壓 press_mm
-                        （press_chop_zone 應教在離 chop_1[1] 下刀處 10mm、還沒切的那一側）
-    偏移 = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM（第 1 格相對 chop_1[1]），可用 --offset 預覽
+                        （press_chop_zone 應教在離 cu 下刀處 10mm、還沒切的那一側）
+    偏移 = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM（第 1 格相對 cu），可用 --offset 預覽
     Y 偏移 = ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM（食材放置的 Y 偏移），可用 --offset-y 預覽；
              左臂下刀點沿 Y 移、右臂壓點沿 Y 移 Y 偏移×press_dir_y
 
@@ -17,7 +17,7 @@ SmartCook 切割點位預覽（不連手臂、不動手臂）
     python chop_points.py CUCUMBER                      # 小黃瓜，第 1 格起，刀數取 config_phase
     python chop_points.py CUCUMBER --cuts 41 --start 3  # 第 3～43 格
     python chop_points.py ROMAINE --start 17            # 生菜，預覽第 17 格那一刀
-    python chop_points.py CUCUMBER --offset -60         # 預覽第 1 格移到 chop_1[1] 前 60mm
+    python chop_points.py CUCUMBER --offset -60         # 預覽第 1 格移到 cu 前 60mm
     python chop_points.py CUCUMBER --offset-y 5         # 預覽每一刀往 Y 移 5mm
     python chop_points.py CUCUMBER --cuts 3 --actual chop_1 310.0 548.6 -297.0
                                                          # 手動量到的實際座標，算差距與建議值
@@ -107,7 +107,7 @@ def main() -> int:
     ap.add_argument("--start", type=int, help="從第幾格開始切（預設 1；ROMAINE 預設取 "
                                                "ChopPlanConfig.ROMAINE_START_INDEX）")
     ap.add_argument("--offset", type=float, default=ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM,
-                    help="第 1 格相對 chop_1[1] 的 X 偏移 mm（預設取 ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM）")
+                    help="第 1 格相對 cu 的 X 偏移 mm（預設取 ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM）")
     ap.add_argument("--offset-y", type=float, default=ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM,
                     help="食材放置的 Y 偏移 mm（預設取 ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM）")
     ap.add_argument("--actual", nargs=4, action="append", metavar=("點名", "X", "Y", "Z"),
@@ -116,7 +116,7 @@ def main() -> int:
 
     left_text, right_text = read_as(LEFT_AS), read_as(RIGHT_AS)
     left_trans, right_trans = read_trans(left_text), read_trans(right_text)
-    for name, table in (("chop_1[1]", left_trans), ("press_chop_zone", right_trans)):
+    for name, table in (("cu", left_trans), ("press_chop_zone", right_trans)):
         if name not in table:
             sys.exit(f"✗ 教點 {name} 不存在（.TRANS 裡沒有）")
 
@@ -154,14 +154,14 @@ def main() -> int:
     ready = read_const(right_text, "press_follow_ready")
 
     print(f"{FOODS[food]} ({food})：第 {start}～{last} 格，共 {cuts} 刀；"
-          f"第 1 格 = chop_1[1] X {offset:+g}mm、Y {offset_y:+g}mm")
+          f"第 1 格 = cu X {offset:+g}mm、Y {offset_y:+g}mm")
     print(f"右臂 press_mm = {press_mm:g}，press_dir = {press_dir:g}，press_follow_ready = {ready:g}")
     if ready != 1:
-        print("⚠️ 右臂 press_follow_ready 還是 0：press_chop_zone 重教在離 chop_1[1] 下刀處 10mm、"
+        print("⚠️ 右臂 press_follow_ready 還是 0：press_chop_zone 重教在離 cu 下刀處 10mm、"
               "確認方向後改成 1，否則手臂拒絕切割。下面右臂座標是用目前的 press_chop_zone 算的。")
     print(f"教點來源: {LEFT_AS.name} / {RIGHT_AS.name}（.TRANS 區段，單位 mm / deg）")
 
-    c1 = left_trans["chop_1[1]"]
+    c1 = left_trans["cu"]
     p0 = right_trans["press_chop_zone"]
     print(f"\n左臂姿態每刀相同: O={c1[3]:.3f}  A={c1[4]:.3f}  T={c1[5]:.3f}")
     print(f"右臂姿態每刀相同: O={p0[3]:.3f}  A={p0[4]:.3f}  T={p0[5]:.3f}")
@@ -170,16 +170,12 @@ def main() -> int:
           f" {'右臂壓點 X':>11}{'Y':>10}{'上方 Z':>10}{'壓下 Z':>10}  備註")
     lookup: Dict[str, Pose] = {}
     for i in range(start, last + 1):
-        dist = offset + (i - 1) * CHOP_STEP_MM          # 距 chop_1[1] 的 X
+        dist = offset + (i - 1) * CHOP_STEP_MM          # 距 cu 的 X
         cut = shift_xy(c1, dist, offset_y)
         press_up = shift_xy(p0, dist * press_dir, offset_y * press_dir_y)
         press_down = shift_x(press_up, 0.0, -press_mm)
         lookup[f"chop_{i}"], lookup[f"press_{i}"] = cut, press_down
         note = ""
-        if dist < 0:
-            note = "在 chop_1[1] 之前，AS 即時計算"
-        elif dist > 29 * CHOP_STEP_MM:
-            note = "超出教點陣列 chop_1[1..30]，AS 即時計算"
         print(f"  {i:>3} {cut[0]:11.3f}{cut[1]:10.3f}{cut[2]:10.3f}{cut[2] + LIFT_MM:10.3f}   │"
               f" {press_up[0]:11.3f}{press_up[1]:10.3f}{press_up[2]:10.3f}{press_down[2]:10.3f}  {note}")
 
@@ -204,14 +200,14 @@ def main() -> int:
                     print(f"    → Y 偏：ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM 改成 {offset_y + dy:.1f}"
                           "（左臂下刀點、右臂壓點一起移）")
                 if abs(dz) > 1:
-                    print("    → Z 偏差要重教 chop_1[1]")
+                    print("    → Z 偏差要重教 cu")
                 if food == "ROMAINE" and abs(dx) >= CHOP_STEP_MM / 2:
                     print(f"    → 只是生菜下刀位置偏的話，ROMAINE_START_INDEX 改成 "
                           f"{start + round(dx / CHOP_STEP_MM)}")
             else:
                 print(f"    → 壓的深度：press_mm 建議改成 {press_mm - dz:.1f}（右臂 do_chop 的 {food} 分支）")
                 if abs(dx) > 1 or abs(dy) > 1:
-                    print("    → X/Y 偏差：重教 press_chop_zone（離 chop_1[1] 下刀處 10mm）；"
+                    print("    → X/Y 偏差：重教 press_chop_zone（離 cu 下刀處 10mm）；"
                           "越切越偏的話檢查 press_dir")
     return 0
 

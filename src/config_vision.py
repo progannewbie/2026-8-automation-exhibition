@@ -330,7 +330,7 @@ class ChopZoneHomography(PlanarHomography):
     這裡的 (x, y) 是左臂基座座標，直接跟 chop_1[i] 的 X 比較，不是相對取料原點。
 
     ⚠️ 尚未標定：CALIBRATION_POINTS 是空的、H 是 None。這段期間量測步驟會
-       跳過，CHOP 照舊從 chop_1[1] 開始切（跟加這個功能之前一樣）。
+       跳過，CHOP 照舊從 cu + 目前設定的偏移開始切（跟加這個功能之前一樣）。
 
     標定流程（test/calibrate_chop_zone.py）：
        1. 在切割區放一個小標記，用教導器讓左臂刀尖對準標記，記下 X、Y

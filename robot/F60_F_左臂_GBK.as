@@ -4030,8 +4030,9 @@ listen:
 		CALL SEND_LINE ("ERROR,E4004")
 		RETURN
 	END
-	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切，.offset = 第 1 格相對 chop_1[1] 的 X 偏移 (mm)
-	; 第 i 格下刀點 = chop_1[1] 沿 X 移 .offset + (i-1)*5mm（.offset = 0 時跟教點陣列 chop_1[1..30] 相同）
+	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切，.offset = 第 1 格相對 cu 的 X 偏移 (mm)
+	; cu = 偏移 (0, 0) 時第一刀的位置（教點）。第 i 格下刀點 = cu 沿 X 移 .offset + (i-1)*5mm、沿 Y 移 .offset_y
+	; 只從 cu 算、不改寫任何教點；chop_1[] / chop_per[] 陣列已不使用
 	; .offset 由 PC 送（config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM），右臂壓點跟著移一樣多
 	; .offset_y = 食材放置的 Y 偏移 (mm)，每一刀的下刀點都沿 Y 移這麼多（CHOP_ORIGIN_OFFSET_Y_MM）
 	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
@@ -4056,7 +4057,7 @@ listen:
 	; 右臂 do_chop 每刀 SYNC 一次、等一次 PULSE，兩邊次數必須一致
 	i = .start
 	DO
-		POINT chop_now = SHIFT (chop_1[1] BY .offset + (i - 1) * 5, .offset_y, 0)
+		POINT chop_now = SHIFT (cu BY .offset + (i - 1) * 5, .offset_y, 0)
 		POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
 		LMOVE chop_now_per
 		break
@@ -5258,29 +5259,19 @@ exit_end:
 	END
 .END
 .PROGRAM do_chop_test(.$food,.cuts,.thick) #0;
+	; 手動測試下刀位置：跟 DO_CHOP 同一套算法（cu + 偏移），不改寫任何教點
+	; .ox / .oy 改成 PC 的 CHOP_ORIGIN_OFFSET_MM / CHOP_ORIGIN_OFFSET_Y_MM 再執行
 	TOOL left_spatula
 	JMOVE #work_chop_zone
-	;POINT chop_1[1] = SHIFT(chop_1[1] BY 0,5,-5)
-	;把沒切完的部分拿掉
-	LMOVE chop_1[1]
-	FOR .t = 1 TO 30
-		POINT chop_1[.t] = SHIFT (chop_1[1] BY (.t - 1) * 5, 0, 0)
-		POINT chop_per[.t] = SHIFT (chop_1[.t] BY 0, 0, 50)
+	.ox = -66.3
+	.oy = -12.4
+	FOR .t = 1 TO 18 STEP 17      ; 只試第 1 刀和第 18 刀
+		POINT chop_now = SHIFT (cu BY .ox + (.t - 1) * 5, .oy, 0)
+		POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
+		LMOVE chop_now_per
+		LMOVE chop_now
+		LMOVE chop_now_per
 	END
-	LMOVE chop_per[1]
-	LMOVE chop_1[1]
-	LMOVE chop_per[18]
-	LMOVE chop_1[18]
-	;集中
-	LMOVE level_ho
-	;抬升
-	POINT level_up = SHIFT (level_ho BY 0, 0, 50)
-	LMOVE level_up
-	;上方點
-	POINT level2_per = SHIFT (level_ho BY 0, -150, 50)
-	LMOVE level2_per
-	;下降=
-	LMOVE level2_tg
 .END
 .PROGRAM do_place_test() #0
 	TOOL ha_pickup
@@ -7217,7 +7208,7 @@ ca_10 481.034973 551.823059 -244.598251 95.567825 9.148594 -97.579819
 ca_20 378.783264 489.339233 -300.314148 -96.437469 8.648026 -84.770317
 ca_30 378.823151 534.270630 -300.307343 -96.455627 8.649182 -84.749664
 chop_1[0] 329.105743 548.659119 -306.316650 153.032837 0.526956 -65.612526
-chop_1[1] 406.318909 572.924683 -293.171570 -100.501511 3.362465 -172.076477
+chop_1[1] 308.854706 548.660400 -296.810974 -111.152252 1.464066 -161.432785
 chop_1[2] 313.854706 548.660400 -296.810974 -111.152252 1.464066 -161.432785
 chop_1[3] 318.854706 548.660400 -296.810974 -111.152252 1.464066 -161.432785
 chop_1[4] 323.854706 548.660400 -296.810974 -111.152252 1.464066 -161.432785
@@ -7284,6 +7275,7 @@ chop_per[30] 453.854706 548.660400 -246.810974 -111.152252 1.464066 -161.432785
 chop_rep 573.785156 440.432831 -280.391785 77.495300 175.858597 -16.572807
 chop_rep1 588.901245 524.838928 -285.925140 98.312790 174.320084 -26.488541
 chop_spread_pt 524.747009 579.870972 -302.782440 -135.854187 174.642929 49.438255
+cu 406.318909 572.924683 -293.171570 -100.501511 3.362465 -172.076477
 cu_1[1] 332.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
 cu_1[2] 342.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174
 cu_1[3] 352.701904 655.026550 -268.737274 -166.473953 12.035121 -107.572174

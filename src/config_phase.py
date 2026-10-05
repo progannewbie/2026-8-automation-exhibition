@@ -52,14 +52,14 @@ class FoodCutParams:
 
 # ⚠️ 切片厚度由左臂下刀點決定，cut_thickness_mm 改了沒有作用。
 #
-#    第 i 格的下刀點 = chop_1[1] 沿 X 移 CHOP_ORIGIN_OFFSET_MM + (i-1)×5mm（左臂 AS 即時
-#    計算；偏移 0 時跟教點陣列 chop_1[1..30] 的值相同，但可以算到第 60 格）。
+#    第 i 格的下刀點 = 教點 cu 沿 X 移 CHOP_ORIGIN_OFFSET_MM + (i-1)×5mm、沿 Y 移
+#    CHOP_ORIGIN_OFFSET_Y_MM（左臂 AS 即時計算，不改寫任何教點；chop_1[] 陣列已不使用）。
 #    .thick 只拿來檢查 > 0。
 #
 # ⚠️ 右臂跟著刀走：每一刀都是「右臂在離下刀處 10mm 的地方壓好 → 左臂切 → 右臂抬起」，
 #    下一刀兩臂一起往後移 5mm。右臂第 i 格壓點 = press_chop_zone 沿右臂 X 移
-#    (偏移 + (i-1)×5mm)×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 chop_1[1]
-#    （原本的教點，不含偏移）下刀處 10mm、還沒切的那一側。
+#    (偏移 + (i-1)×5mm)×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 cu
+#    （偏移 0 的第一刀）下刀處 10mm、還沒切的那一側。
 #
 # ⚠️ AS 端 DO_CHOP：刀數 1～60，最後一刀的格數 (起始格 + 刀數 - 1) 不超過 60。
 
@@ -85,16 +85,15 @@ class ChopPlanConfig:
        照舊「從第 1 格切 FOOD_CUT_PARAMS 的刀數」。
     """
 
-    # 左臂 chop_1[1] 的 X。重教點後要跟著改。
-    # 2026-10-05 點位重教：(0, 0) 擺法的第一刀 = 406.318909 572.924683 -293.171570
-    #                       -100.501511 3.362465 -172.076477（舊值 308.854706）
-    CHOP_1_FIRST_X_MM = 406.318909
+    # 左臂教點 cu 的 X：偏移 (0, 0) 時第一刀的位置。重教 cu 後要跟著改。
+    # 2026-10-05：cu = 406.318909 572.924683 -293.171570 -100.501511 3.362465 -172.076477
+    CU_X_MM = 406.318909
+    CU_Y_MM = 572.924683
 
-    # 第 1 格相對 chop_1[1] 的 X 偏移 (mm)。chop_1[1] 是以前「只切前段」的第一刀，
-    # 整根切完要從更前面開始時調這裡（負值 = 往 X 小的方向）。隨 CHOP 指令送給兩臂，
+    # 第 1 格相對 cu 的 X 偏移 (mm)，依食材擺放位置調（負值 = 往 X 小的方向）。隨 CHOP 指令送給兩臂，
     # 左臂下刀點、右臂壓點一起移；兩臂 AS 只接受 ±300mm。
     # 待現場確認：用 test/chop_points.py --offset N 預覽、教導器對點後填入。
-    CHOP_ORIGIN_OFFSET_MM = -66.3   # 2026-10-05 視覺估算、現場確認：第一刀 X 340.0（(0, 0) 基準見 CHOP_1_FIRST_X_MM）
+    CHOP_ORIGIN_OFFSET_MM = -66.3   # 2026-10-05 視覺估算、現場確認：第一刀 X 340.0（cu 見 CU_X_MM）
 
     # 食材放置的 Y 偏移 (mm)：每一刀的下刀點、右臂壓點都沿 Y 移這麼多
     # （右臂方向由 INIT_CONST 的 press_dir_y 決定）。兩臂 AS 只接受 ±100mm。
@@ -109,7 +108,7 @@ class ChopPlanConfig:
     MIN_LENGTH_MM = 30.0         # 比這短當成量錯
     MAX_AXIS_ANGLE_DEG = 15.0    # 食材軸線跟刀子行進方向 (左臂 X 軸) 的夾角上限
 
-    # 生菜「中間切一刀」落在第幾格（第 i 格 = chop_1[1] 往後 (i-1)×5mm）。
+    # 生菜「中間切一刀」落在第幾格（第 i 格 = cu + 偏移 往後 (i-1)×5mm）。
     # 待現場量測：用 test/chop_points.py ROMAINE --start N 預覽、教導器對點後填入。
     # None = 還沒量 → 生菜不切，CHOP 階段直接失敗。
     ROMAINE_START_INDEX: Optional[int] = None
@@ -117,7 +116,7 @@ class ChopPlanConfig:
     @classmethod
     def cut_x(cls, index: int) -> float:
         """第 index 格下刀點的左臂 X"""
-        return cls.CHOP_1_FIRST_X_MM + cls.CHOP_ORIGIN_OFFSET_MM + (index - 1) * CHOP_STEP_MM
+        return cls.CU_X_MM + cls.CHOP_ORIGIN_OFFSET_MM + (index - 1) * CHOP_STEP_MM
 
     @classmethod
     def plan(cls, low_x_mm: float, high_x_mm: float) -> Tuple[Optional[Dict], str]:

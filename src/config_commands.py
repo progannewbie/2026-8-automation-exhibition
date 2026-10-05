@@ -97,8 +97,8 @@ class ChopCommand:
     CSV: CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>,<START_INDEX>,<OFFSET_MM>,<OFFSET_Y_MM>
 
     START_INDEX：左臂從第幾格開始下刀，右臂壓點跟著刀走
-    OFFSET_MM  ：第 1 格相對 chop_1[1] 的 X 偏移（ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM）
-                 第 i 格下刀點 = chop_1[1] 往後 OFFSET_MM + (i-1)×5mm
+    OFFSET_MM  ：第 1 格相對左臂教點 cu 的 X 偏移（ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM）
+                 第 i 格下刀點 = cu 往後 OFFSET_MM + (i-1)×5mm
     OFFSET_Y_MM：食材放置的 Y 偏移（ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM），
                  每一刀下刀點、右臂壓點都沿 Y 移這麼多
     三欄一律帶上，AS 端不用處理欄位不存在的情況。
@@ -108,7 +108,7 @@ class ChopCommand:
 
     例子:
         CHOP,CUCUMBER,15,5.0,1,0.0,0.0       # 沒量測：從第 1 格切 15 刀
-        CHOP,CUCUMBER,41,5.0,3,-60.0,4.5     # 第 3～43 格，第 1 格在 chop_1[1] 前 60mm、Y 偏 4.5mm
+        CHOP,CUCUMBER,41,5.0,3,-60.0,4.5     # 第 3～43 格，第 1 格在 cu 前 60mm、Y 偏 4.5mm
         CHOP,ROMAINE,1,25.0,17,-60.0,0.0     # 生菜中間一刀落在第 17 格
     """
 
