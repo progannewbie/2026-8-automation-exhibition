@@ -78,12 +78,16 @@ git checkout 10d83385 -- "robot/F60_F_左臂_slow.as"
 ### 切菜
 
 - **刀數依長度**：MEASURE 拍照量出食材兩端在左臂座標的 X，算出起始格與刀數
-  （[`ChopPlanConfig`](src/config_phase.py)），指令是 `CHOP,<食材>,<刀數>,5.0,<起始格>,<偏移>`。
+  （[`ChopPlanConfig`](src/config_phase.py)），指令是 `CHOP,<食材>,<刀數>,5.0,<起始格>,<X 偏移>,<Y 偏移>`。
   上限 60 刀、最後一刀不超過第 60 格。
 - **下刀位置**：第 i 格 = `chop_1[1]` + 偏移 + (i-1)×5 mm，左臂即時計算。
   `chop_1[1]` 是以前「只切前段」的第一刀；整根切完要從更前面開始時調
   `ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM`（負值 = 往 X 小的方向，±300 mm 內），
   左臂下刀點和右臂壓點一起移，教點不用動。
+- **Y 偏移**：食材放置時 Y 方向的偏差用 `ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM`（±100 mm 內），
+  每一刀下刀點與右臂壓點都沿 Y 移；右臂方向由 `INIT_CONST` 的 `press_dir_y` 決定（待現場確認）。
+- `test/vision_chop_test.py` 會依現場手動對點的資料估出 X / Y 偏移（`OFFSET_REFERENCE` /
+  `OFFSET_Y_REFERENCE`），相機或切割區移動過要重新對點。
 - **右臂跟刀壓**：每一刀都是「右臂在離下刀處 10 mm、還沒切的那一側壓好 → 左臂切 →
   右臂抬起」，下一刀兩臂一起往後移 5 mm。
 - **生菜**：中間一刀落在 `ChopPlanConfig.ROMAINE_START_INDEX` 那一格（從偏移後的第 1 格算起，改偏移要一起確認）。

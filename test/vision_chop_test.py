@@ -151,6 +151,24 @@ ANGLE_TOLERANCE_DEG = 30.0
 REF_K = mean(arm - tab for tab, arm in OFFSET_REFERENCE)
 REF_SPREAD = max(abs(arm - tab - REF_K) for tab, arm in OFFSET_REFERENCE)
 
+# Y 偏移：(取料區座標的小黃瓜中心 Y, 手動對點確認的 CHOP_ORIGIN_OFFSET_Y_MM)
+# 至少 2 筆才會估（要從資料決定方向與比例）。對點一次就加一筆。
+OFFSET_Y_REFERENCE: List[Tuple[float, float]] = []
+
+
+def fit_y() -> Optional[Tuple[float, float, float]]:
+    """Y 偏移 = a × 中心 Y + b 的最小平方解，回傳 (a, b, 最大誤差)；資料不足回 None"""
+    pts = OFFSET_Y_REFERENCE
+    if len(pts) < 2:
+        return None
+    mx, my = mean(p[0] for p in pts), mean(p[1] for p in pts)
+    sxx = sum((p[0] - mx) ** 2 for p in pts)
+    if sxx < 1e-6:
+        return None   # 中心 Y 都一樣，分不出斜率
+    a = sum((p[0] - mx) * (p[1] - my) for p in pts) / sxx
+    b = my - a * mx
+    return a, b, max(abs(a * p[0] + b - p[1]) for p in pts)
+
 
 def estimate_offset(d: Dict, m: Dict) -> Tuple[Optional[float], str]:
     """
@@ -179,6 +197,21 @@ def print_offset_estimate(d: Dict, m: Dict) -> Optional[float]:
     print(f"\n  ==> 偏移 .offset = {off:+.1f} mm（{note}，對點資料誤差 ±{REF_SPREAD:.1f}mm）{warn}")
     print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM = "
           f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM:+.1f}")
+
+    center_y = (m["m1"][1] + m["m2"][1]) / 2
+    fit = fit_y()
+    if fit is None:
+        print(f"  ==> Y 偏移：還沒有足夠對點資料（目前 {len(OFFSET_Y_REFERENCE)} 筆，至少 2 筆）。"
+              f"這次小黃瓜中心 Y = {center_y:.1f}，")
+        print("      對點後把「中心 Y、確認的 Y 偏移」一起告訴我，加進 OFFSET_Y_REFERENCE")
+    else:
+        a, b, err = fit
+        off_y = a * center_y + b
+        warn = "  ⚠️ 超過 ±100mm，手臂會拒絕" if abs(off_y) > 100 else ""
+        print(f"  ==> Y 偏移 .offset_y = {off_y:+.1f} mm（中心 Y = {center_y:.1f}，"
+              f"對點資料誤差 ±{err:.1f}mm）{warn}")
+    print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM = "
+          f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM:+.1f}")
     return off
 
 

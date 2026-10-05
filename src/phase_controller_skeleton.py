@@ -496,7 +496,8 @@ class PhaseController:
         if plan and plan["food_type"] == food_type:
             num_cuts, start = plan["cuts"], plan["start"]
         offset = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM
-        cmd = ChopCommand.create(food_type, num_cuts, thickness, start, offset)
+        offset_y = ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM
+        cmd = ChopCommand.create(food_type, num_cuts, thickness, start, offset, offset_y)
 
         if not self._validate_command(cmd, CommandParser.validate_chop):
             return False
