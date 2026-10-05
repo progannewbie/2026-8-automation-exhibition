@@ -142,10 +142,11 @@ def print_offset(food: str, r: Dict):
 #     (取料區右端 X, 確認的 CHOP_ORIGIN_OFFSET_MM)
 OFFSET_REFERENCE: List[Tuple[float, float]] = [
     (314.6, 0.0),
+    (314.4, 0.0),    # 同一個 (0, 0) 擺法再拍一次
 ]
 #     (取料區中心 Y, 確認的 CHOP_ORIGIN_OFFSET_Y_MM)；至少 2 筆才會估
 OFFSET_Y_REFERENCE: List[Tuple[float, float]] = [
-    (41.4, 0.0),
+    (39.2, 0.0),     # (0, 0) 擺法兩次的平均（41.4、36.9），算同一個基準點
 ]
 REF_ANGLE_DEG = 6.0          # 對點時小黃瓜的頭尾角度；放反了公式不成立
 ANGLE_TOLERANCE_DEG = 30.0
