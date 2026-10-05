@@ -264,3 +264,58 @@ def refine_angle_with_yolo_box(
 
     head, tail, _ = find_head_tail(mask, contour)
     return calculate_angle(head, tail)
+
+
+def measure_axis_endpoints(
+    img: np.ndarray,
+    class_name: str,
+    center_x: float,
+    center_y: float,
+    width: float,
+    height: float,
+    obb_angle_deg: float,
+) -> Optional[Dict]:
+    """
+    量食材長軸的兩個端點（像素），給切割區的「從頂點起切」用
+
+    先用該類別的 HSV 色域在 YOLO 框內取輪廓，沿 minAreaRect 長軸投影出兩端——
+    這是食材實際的頭尾，比 YOLO 框的邊緣準。色域沒有或抓不到輪廓時，
+    退回 YOLO OBB 長邊的兩端（框通常比食材略大幾 px，頂點會偏外一點）。
+
+    Returns:
+        {"end1": (u, v), "end2": (u, v), "source": "color" | "obb"}，
+        兩端不分頭尾（哪一端是頂點由呼叫端依手臂座標決定）；
+        框本身不合理（寬高為 0）時回傳 None。
+    """
+    if width <= 0 or height <= 0:
+        return None
+
+    obj_type = CLASS_TO_HSV_KEY.get(class_name.upper())
+    if obj_type is not None:
+        mask = get_mask(img, obj_type)
+        obb_mask = create_obb_mask(img.shape[:2], center_x, center_y, width, height, obb_angle_deg)
+        mask = cv2.bitwise_and(mask, obb_mask)
+        contour = choose_contour_for_box(mask, center_x, center_y, width, height)
+        if contour is not None and cv2.contourArea(contour) > 0:
+            rect, axis, _ = get_rect_axis(contour)
+            center = np.array(rect[0])
+            projection = (contour.reshape(-1, 2) - center) @ axis
+            end1 = center + axis * float(np.min(projection))
+            end2 = center + axis * float(np.max(projection))
+            return {"end1": (float(end1[0]), float(end1[1])),
+                    "end2": (float(end2[0]), float(end2[1])),
+                    "source": "color"}
+
+    # 退回 OBB：沿長邊方向從中心往兩邊各走半個長邊
+    rad = math.radians(obb_angle_deg)
+    if width >= height:
+        axis = np.array([math.cos(rad), math.sin(rad)])
+        half = width / 2.0
+    else:
+        axis = np.array([-math.sin(rad), math.cos(rad)])
+        half = height / 2.0
+    center = np.array([center_x, center_y])
+    end1, end2 = center - axis * half, center + axis * half
+    return {"end1": (float(end1[0]), float(end1[1])),
+            "end2": (float(end2[0]), float(end2[1])),
+            "source": "obb"}

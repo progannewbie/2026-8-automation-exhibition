@@ -66,20 +66,35 @@ git checkout 10d83385 -- "robot/F60_F_左臂_slow.as"
 
 定義在 [src/config_phase.py](src/config_phase.py) 的 `MENU`：
 
-1. 小黃瓜：夾取 → 放置 → 切割（每 5 mm 一刀，15 刀）→ 夾取 → 擺盤 → 回原點
+1. 小黃瓜：夾取 → 放置 → **量測長度** → 整根切完（每 5 mm 一刀）→ 夾取 → 擺盤 → 回原點
 2. 紅蘿蔔：同上
 3. 羅曼生菜：夾取 → 放置 → 中間切一刀 → 夾取 → 擺盤 → 回原點
-4. 生菜沙拉完整流程：小黃瓜 → 紅蘿蔔 → 生菜，每種都「夾取 → 放置 → 切割 → 夾取 → 倒進沙拉盤」
+4. 生菜沙拉完整流程：小黃瓜 → 紅蘿蔔 → 生菜，每種都「夾取 → 放置 →（量測）→ 切割 → 夾取 → 倒進沙拉盤」
 
-所有食材切完都直接倒進沙拉盤：不使用等待區、不翻炒混拌 (FLIP)，切完也不做廢料去除
-（左右臂 `DO_CHOP` 裡該段已註解停用）。
+所有食材切完都直接倒進沙拉盤：不使用等待區、不翻炒混拌 (FLIP)、不做廢料去除。
 
-小黃瓜、紅蘿蔔只切前段 75 mm（切割時右臂壓在尾段上），**沒切到的尾段由人工去除**。
+流程階段：`INIT → PICKUP → PLACE → (MEASURE →) CHOP → PICKUP → PLACE / PLACE_FINAL → … → HOME`
 
-> ⚠️ 生菜的下刀位置由左臂 `INIT_CONST` 的 `rom_mid_mm` 決定（距 `chop_1[1]` 的 X 距離），
-> 預設 0 = 未量測，左臂會拒絕切生菜（回 `ERROR,E4005`）。現場量好後改這個值。
+### 切菜
 
-流程階段：`INIT → PICKUP → PLACE → CHOP → PICKUP → PLACE / PLACE_FINAL → … → HOME`
+- **刀數依長度**：MEASURE 拍照量出食材兩端在左臂座標的 X，算出起始格與刀數
+  （[`ChopPlanConfig`](src/config_phase.py)），指令是 `CHOP,<食材>,<刀數>,5.0,<起始格>`。
+  上限 60 刀、最後一刀不超過第 60 格。第 i 格下刀點 = `chop_1[1]` 往後 (i-1)×5 mm，
+  左臂即時計算，可超過教點陣列 `chop_1[1..30]`。
+- **右臂跟刀壓**：每一刀都是「右臂在離下刀處 10 mm、還沒切的那一側壓好 → 左臂切 →
+  右臂抬起」，下一刀兩臂一起往後移 5 mm。
+- **生菜**：中間一刀落在 `ChopPlanConfig.ROMAINE_START_INDEX` 那一格。
+
+> ⚠️ 上機前要在現場完成，否則會被擋下：
+>
+> | 項目 | 沒做的話 |
+> |---|---|
+> | 右臂 `press_chop_zone` 重教在離 `chop_1[1]` 下刀處 10 mm，確認 `press_dir` 方向後把右臂 `INIT_CONST` 的 `press_follow_ready` 改成 1 | 右臂拒絕切割，所有切菜都不能做 |
+> | 用 `test/calibrate_chop_zone.py` 標定切割區，結果貼回 `config_vision.ChopZoneHomography` | 不量測，照舊從第 1 格切 15 刀 |
+> | 量生菜中間位置，填 `ChopPlanConfig.ROMAINE_START_INDEX` | 菜色 3、4 開跑前就被擋下 |
+> | 試壓各食材的 `press_mm`（右臂 `do_chop`） | 壓太淺壓不住、太深壓爛 |
+>
+> 對點、微調用 `test/chop_points.py`（不動手臂），視覺數值用 `test/vision_chop_test.py` 確認。
 
 ## 視覺
 
@@ -147,7 +162,8 @@ python main.py
 | `test_pickup.py`、`test_pickup_fixed.py` | 夾取 |
 | `test_pickup_chop.py` | 夾取 + 切割（舊流程：缺少放到切割區的步驟，刀數也是舊的） |
 | `vision_chop_test.py` | **不連手臂、不設限制**：拍照（或讀圖）印出每個偵測的像素框、長軸端點、粗估長度 mm 與「整根要幾刀」，`--repeat` 看穩定度、`--save` 存標註圖 |
-| `chop_points.py` | **不連手臂**：從 GBK 教點算出每一刀的下刀座標與右臂壓點，`--actual` 輸入手動量到的座標，算差距與建議的 `rom_mid_mm` / `press_mm` |
+| `chop_points.py` | **不連手臂**：從 GBK 教點算出每一刀左臂下刀點與右臂壓點，`--actual` 輸入手動量到的座標，算差距與建議值 |
+| `calibrate_chop_zone.py` | 切割區標定（像素 → 左臂座標），`--check` 即時看量測長度、起始格與刀數 |
 | `test_flip.py` | 翻轉 |
 | `test_full_salad_workflow.py` | 沙拉完整流程（流程邏輯） |
 | `test_full_salad_real.py` | 沙拉完整流程（實機） |

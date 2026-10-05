@@ -4449,7 +4449,7 @@ exit_end:
 		SVALUE "PICKUP":
 			CALL do_pickup ($fld[2], $fld[3], VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
 		SVALUE "CHOP":
-			CALL do_chop ($fld[2], VAL ($fld[3]), VAL ($fld[4]))
+			CALL do_chop ($fld[2], VAL ($fld[3]), VAL ($fld[4]), VAL ($fld[5]))
 		SVALUE "PLACE":
 			CALL do_place ($fld[2], $fld[3], $fld[4])
 		SVALUE "FLIP":
@@ -4474,9 +4474,21 @@ exit_end:
 			CALL send_line ("ERROR,E4021")
 	END
 .END
-.PROGRAM do_chop(.$food,.cuts,.thick) #159
+.PROGRAM do_chop(.$food,.cuts,.thick,.start) #159
   ABS.SPEED ON
-  IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
+  ; press_chop_zone 要重教在離左臂 chop_1[1] 下刀處 10mm、還沒切的那一側，
+  ; 教好、確認 press_dir 方向後把 INIT_CONST 的 press_follow_ready 改成 1。
+  ; 沒改之前一律拒絕切割（左臂會在 SYNC 逾時回 E4023），避免壓在舊位置。
+  IF press_follow_ready <> 1 THEN
+    CALL send_line ("ERROR,E4005")
+    RETURN
+  END
+  IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 THEN
+    CALL send_line ("ERROR,E4005")
+    RETURN
+  END
+  .last = .start + .cuts - 1
+  IF .last > 60 THEN
     CALL send_line ("ERROR,E4005")
     RETURN
   END
@@ -4496,94 +4508,35 @@ exit_end:
   TOOL right_spatula
   LMOVE home_right
   break
-  SPEED 500 MM/s ALWAYS   ;  絕對速度
-  LMOVE press_chop_zone
-  CALL sync_step (ok);抵達準備點
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  i = 0
-  DRAW 0, 0, -press_mm
-  break
-  TWAIT 0.1
-  SWAIT 1001
-  DRAW 0, 0, press_mm
-  break
+  ; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
+  ; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (i-1)*5mm*press_dir，跟著刀子走
+  i = .start
+  DO
+    POINT press_now = SHIFT (press_chop_zone BY (i - 1) * 5 * press_dir, 0, 0)
+    SPEED 500 MM/s ALWAYS   ;  絕對速度
+    LMOVE press_now
+    break
+    SPEED 50 MM/s ALWAYS   ;  絕對速度
+    DRAW 0, 0, -press_mm
+    break
+    CALL sync_step (ok);壓好，左臂可以下刀
+    IF ok == 0 THEN
+      CALL send_line ("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
+    SWAIT -1001    ;等左臂 SYNC 的 0.1 秒脈衝結束，不然會被當成「這刀切完」
+    SWAIT 1001     ;等左臂這刀切完 (PULSE)
+    DRAW 0, 0, press_mm
+    break
+    i = i + 1
+  UNTIL i > .last
   CALL sync_step (ok);切割完成
   IF ok == 0 THEN
     CALL send_line ("ERROR,E4023")
     robot_busy = 0
     RETURN
   END
-  ; ---- 廢料去除 (集中→抬升→丟棄點) 暫停用，切完直接回原點 ----
-  ; 左臂 DO_CHOP 同步停用，兩邊 SYNC_STEP 次數一致；要恢復時兩臂一起取消註解
-  ;廢料去除
-  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
-  ;LMOVE level_per;準備點上方
-  ;break
-  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
-  ;LMOVE level_tg;下降準備點
-  ;break
-  ;
-  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
-  ;LMOVE level_ho;集中
-  ;break
-  ;CALL sync_step (ok); 已到集中
-  ;IF ok == 0 THEN
-    ;CALL send_line ("ERROR,E4023")
-    ;robot_busy = 0
-    ;RETURN
-  ;END
-  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
-  ;LMOVE level_up;抬升
-  ;break
-  ;CALL sync_step (ok); 已到集中
-  ;IF ok == 0 THEN
-    ;CALL send_line ("ERROR,E4023")
-    ;robot_busy = 0
-    ;RETURN
-  ;END
-  ;丟棄點上方
-  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
-  ;LMOVE level2_per
-  ;break
-  ;CALL sync_step (ok); 已到集中
-  ;IF ok == 0 THEN
-    ;CALL send_line ("ERROR,E4023")
-    ;robot_busy = 0
-    ;RETURN
-  ;END
-  ;丟棄點
-  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
-  ;LMOVE level2_tg
-  ;break
-  ;CALL sync_step (ok); 已到集中
-  ;IF ok == 0 THEN
-    ;CALL send_line ("ERROR,E4023")
-    ;robot_busy = 0
-    ;RETURN
-  ;END
-  ;TWAIT 1
-  ;丟棄
-  ;LMOVE level2_ho
-  ;break
-  ;CALL sync_step (ok); 直奂
-  ;IF ok == 0 THEN
-  ;  CALL send_line ("ERROR,E4023")
-  ;  robot_busy = 0
-  ;  RETURN
-  ;END
-  ;抬升
-  ;LMOVE level2_up
-  ;break
-  ;IF ok == 0 THEN
-  ;  CALL send_line ("ERROR,E4023")
-  ;  robot_busy = 0
-  ;  RETURN
-  ;END
-  ; ---- 廢料去除 結束 ----
   SPEED 500 MM/s ALWAYS   ;  絕對速度
   LMOVE home_right
   break
@@ -6029,6 +5982,9 @@ exit_end:
 	timeout_flip = 30
 	robot_busy = 0
 	$rxbuf = ""
+	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (i-1)*5mm*press_dir
+	press_dir = 1           ; ★ 待現場確認：壓點往反方向跑就改 -1
+	press_follow_ready = 0  ; ★ press_chop_zone 重教在離 chop_1[1] 下刀處 10mm 後改 1，否則拒絕切割
 .END
 .PROGRAM init_points() #0
 	POINT origin = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 檯面左下角基準點 (須在 BASE ba 生效後教點，見 INIT_TOOL)

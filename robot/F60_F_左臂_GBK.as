@@ -3647,7 +3647,6 @@ TOOL: NULL
 	scoop_dx = 0e+00          ; PLACE 撈取階段：鏟面滑入食材下方的位移量 (★ 佔位值，待現場設計確認)
 	scoop_dy = 20
 	scoop_tilt_deg = 60   ; PLACE 釋放階段 (SCOOP)：傾倒角度 (★ 佔位值，待現場測試)
-	rom_mid_mm = 0        ; CHOP 生菜：中間下刀點距 chop_1[1] 的 X 距離 (★ 待現場量測，0 = 不允許切生菜)
 	; --- 逾時設定 (秒) ---
 	timeout_io_sec = 30
 	timeout_flip = 30
@@ -3854,7 +3853,7 @@ listen:
 		SVALUE "PICKUP":
 			CALL DO_PICKUP ($fld[2], $fld[3], VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
 		SVALUE "CHOP":
-			CALL DO_CHOP ($fld[2], VAL ($fld[3]), VAL ($fld[4]))
+			CALL DO_CHOP ($fld[2], VAL ($fld[3]), VAL ($fld[4]), VAL ($fld[5]))
 		SVALUE "PLACE":
 			CALL DO_PLACE ($fld[2], $fld[3], $fld[4])
 		SVALUE "FLIP":
@@ -4026,136 +4025,58 @@ listen:
   robot_busy = 0
   CALL SEND_LINE ("OK")
 .END
-.PROGRAM DO_CHOP(.$food,.cuts,.thick) #153
+.PROGRAM DO_CHOP(.$food,.cuts,.thick,.start) #153
 	IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
 		CALL SEND_LINE ("ERROR,E4004")
 		RETURN
 	END
-	IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
+	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切
+	; 第 i 格下刀點 = chop_1[1] 沿 X 往後 (i-1)*5mm（跟教點陣列 chop_1[1..30] 相同，可算到第 60 格）
+	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 THEN
 		CALL SEND_LINE ("ERROR,E4005")
 		RETURN
 	END
-	; 生菜中間切一刀：下刀點 = chop_1[1] 沿 X 往後 rom_mid_mm (INIT_CONST)
-	; rom_mid_mm 未量測 (<= 0) 前拒絕執行，避免下刀位置不明
-	IF .$food == "ROMAINE" AND rom_mid_mm <= 0 THEN
+	.last = .start + .cuts - 1
+	IF .last > 60 THEN
 		CALL SEND_LINE ("ERROR,E4005")
 		RETURN
 	END
 	robot_busy = 1
 	ABS.SPEED ON
-	SPEED 50 MM/s ALWAYS   ;  ^俣龋Fy試{
+	SPEED 50 MM/s ALWAYS
 	TOOL left_spatula
 	LMOVE home_left
 	break
 	SPEED 500 MM/s ALWAYS
 	JMOVE #work_chop_zone
 	break
-	CALL SYNC_STEP (ok);直鄣同一叨
+	; 每一刀：到下刀點上方 → 等右臂在離下刀處 10mm 壓好 (SYNC) → 切 → 抬刀 → 通知右臂抬起 (PULSE)
+	; 右臂 do_chop 每刀 SYNC 一次、等一次 PULSE，兩邊次數必須一致
+	i = .start
+	DO
+		POINT chop_now = SHIFT (chop_1[1] BY (i - 1) * 5, 0, 0)
+		POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
+		LMOVE chop_now_per
+		break
+		CALL SYNC_STEP (ok);右臂壓好
+		IF ok == 0 THEN
+			CALL SEND_LINE ("ERROR,E4023")
+			robot_busy = 0
+			RETURN
+		END
+		LMOVE chop_now
+		break
+		LMOVE chop_now_per
+		break
+		PULSE sig_out_step, 0.1   ; 這刀切完，通知右臂抬起
+		i = i + 1
+	UNTIL i > .last
+	CALL SYNC_STEP (ok);切割完成
 	IF ok == 0 THEN
 		CALL SEND_LINE ("ERROR,E4023")
 		robot_busy = 0
 		RETURN
 	END
-	IF .$food == "ROMAINE" THEN
-		; 生菜：右臂壓住時從中間切一刀，切完才通知右臂放開
-		POINT rom_cut = SHIFT (chop_1[1] BY rom_mid_mm, 0, 0)
-		POINT rom_per = SHIFT (rom_cut BY 0, 0, 50)
-		SPEED 50 MM/s ALWAYS
-		LMOVE rom_per
-		break
-		LMOVE rom_cut
-		break
-		PULSE sig_out_step, 0.1   ; 通知右臂抬起壓鏟
-		LMOVE rom_per
-		break
-	ELSE
-		; 小黃瓜 / 紅蘿蔔：每 5mm 一刀 (chop_1[] 教點間距)，最後一刀在右臂放開後慢速切
-		i = 1
-		DO
-			LMOVE chop_per[i]
-			break
-			LMOVE chop_1[i]
-			break
-			LMOVE chop_per[i]
-			break
-			i = i + 1
-		UNTIL i >= .cuts
-		PULSE sig_out_step, 0.1   ; 通知右臂抬起壓鏟
-		SPEED 50 MM/s ALWAYS
-		LMOVE chop_1[i]
-		break
-		LMOVE chop_per[i]         ; 切完先垂直抬刀，再回準備點
-		break
-	END
-	CALL SYNC_STEP (ok);直鄣同一叨
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		robot_busy = 0
-		RETURN
-	END
-	; ---- 廢料去除 (集中→抬升→丟棄點) 暫停用，切完直接回原點 ----
-	; 右臂 do_chop 同步停用，兩邊 SYNC_STEP 次數一致；要恢復時兩臂一起取消註解
-	;
-	;SPEED 50 MM/s ALWAYS
-	;LMOVE level_ho
-	;break
-	;CALL SYNC_STEP (ok); 直奂
-	;IF ok == 0 THEN
-		;CALL SEND_LINE ("ERROR,E4023")
-		;robot_busy = 0
-		;RETURN
-	;END
-	;抬
-	;SPEED 50 MM/s ALWAYS
-	;LMOVE level_up
-	;break
-	;CALL SYNC_STEP (ok); 直奂
-	;IF ok == 0 THEN
-		;CALL SEND_LINE ("ERROR,E4023")
-		;robot_busy = 0
-		;RETURN
-	;END
-	;戏c
-	;SPEED 50 MM/s ALWAYS
-	;LMOVE level2_per
-	;break
-	;CALL SYNC_STEP (ok); 直奂
-	;IF ok == 0 THEN
-		;CALL SEND_LINE ("ERROR,E4023")
-		;robot_busy = 0
-		;RETURN
-	;END
-	;陆
-	;SPEED 50 MM/s ALWAYS
-	;LMOVE level2_tg
-	;break
-	;CALL SYNC_STEP (ok); 直奂
-	;IF ok == 0 THEN
-		;CALL SEND_LINE ("ERROR,E4023")
-		;robot_busy = 0
-		;RETURN
-	;END
-	;_
-	;SPEED 600 MM/s ALWAYS
-	;LMOVE level2_ho
-	;break
-	;CALL SYNC_STEP (ok); 直奂
-	;IF ok == 0 THEN
-	;  CALL SEND_LINE ("ERROR,E4023")
-	;  robot_busy = 0
-	;  RETURN
-	;END
-	;抬
-	;SPEED 600 MM/s ALWAYS
-	;LMOVE level2_up
-	;break
-	;CALL SYNC_STEP (ok); 直奂
-	;IF ok == 0 THEN
-	;  CALL SEND_LINE ("ERROR,E4023")
-	;  robot_busy = 0
-	;  RETURN
-	;END
-	; ---- 廢料去除 結束 ----
 	SPEED 500 MM/s ALWAYS
 	LMOVE #work_chop_zone
 	break

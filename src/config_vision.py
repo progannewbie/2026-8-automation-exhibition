@@ -173,7 +173,72 @@ class HandEyeCalibrationConfig:
         ], dtype=np.float32)
 
 
-class TableHomography:
+class PlanarHomography:
+    """
+    像素平面 → 手臂平面 (mm) 的 3×3 單應性，共用的計算方法
+
+    子類別提供 CALIBRATION_POINTS [(u, v, x_mm, y_mm), ...]、H (3×3) 與
+    U_RANGE / V_RANGE（標定點涵蓋的像素範圍）。
+    """
+
+    CALIBRATION_POINTS: List[Tuple[float, float, float, float]] = []
+    H: Optional[np.ndarray] = None
+    U_RANGE: Tuple[float, float] = (0, 0)
+    V_RANGE: Tuple[float, float] = (0, 0)
+
+    @classmethod
+    def is_calibrated(cls) -> bool:
+        return cls.H is not None
+
+    @classmethod
+    def is_within_calibrated_area(cls, u: float, v: float, margin_px: float = 20.0) -> bool:
+        """像素座標是否落在標定過的範圍內（含容許外擴 margin_px）"""
+        return (cls.U_RANGE[0] - margin_px <= u <= cls.U_RANGE[1] + margin_px and
+                cls.V_RANGE[0] - margin_px <= v <= cls.V_RANGE[1] + margin_px)
+
+    @classmethod
+    def pixel_to_mm(cls, u: float, v: float) -> Tuple[float, float]:
+        """
+        像素座標 → 手臂平面座標 (mm)
+
+        座標系依子類別而定：TableHomography 是相對 pickup_origin 的偏移量
+        （直接餵給 PICKUP 指令的 X_MM / Y_MM），ChopZoneHomography 是左臂基座座標。
+        """
+        p = cls.H @ np.array([u, v, 1.0])
+        return float(p[0] / p[2]), float(p[1] / p[2])
+
+    @classmethod
+    def solve(cls, points=None) -> np.ndarray:
+        """
+        重新標定：從點對解出單應性矩陣
+
+        重測之後把新的 (u, v, x_mm, y_mm) 傳進來，取得新的 H 覆蓋上面的常數。
+        至少 4 點，實務上鋪滿工作範圍的 3×3 網格以上比較穩。
+        """
+        pts = points if points is not None else cls.CALIBRATION_POINTS
+        if len(pts) < 4:
+            raise ValueError(f"單應性至少需要 4 個點對，只給了 {len(pts)} 個")
+
+        rows = []
+        for u, v, x, y in pts:
+            rows.append([u, v, 1, 0, 0, 0, -x * u, -x * v, -x])
+            rows.append([0, 0, 0, u, v, 1, -y * u, -y * v, -y])
+        _, _, vt = np.linalg.svd(np.array(rows, dtype=np.float64))
+        h = vt[-1].reshape(3, 3)
+        return h / h[2, 2]
+
+    @classmethod
+    def residuals(cls, points=None):
+        """逐點殘差 (mm)，用來確認標定品質"""
+        pts = points if points is not None else cls.CALIBRATION_POINTS
+        out = []
+        for u, v, x, y in pts:
+            px_, py_ = cls.pixel_to_mm(u, v)
+            out.append((u, v, x, y, px_, py_, float(np.hypot(px_ - x, py_ - y))))
+        return out
+
+
+class TableHomography(PlanarHomography):
     """
     檯面單應性標定（像素 → 手臂 mm）
 
@@ -256,51 +321,29 @@ class TableHomography:
     U_RANGE = (147, 320)
     V_RANGE = (200, 363)
 
-    @classmethod
-    def is_within_calibrated_area(cls, u: float, v: float, margin_px: float = 20.0) -> bool:
-        """像素座標是否落在標定過的範圍內（含容許外擴 margin_px）"""
-        return (cls.U_RANGE[0] - margin_px <= u <= cls.U_RANGE[1] + margin_px and
-                cls.V_RANGE[0] - margin_px <= v <= cls.V_RANGE[1] + margin_px)
+class ChopZoneHomography(PlanarHomography):
+    """
+    切割區標定（像素 → 左臂 F60_F 基座座標 mm）
 
-    @classmethod
-    def pixel_to_mm(cls, u: float, v: float) -> Tuple[float, float]:
-        """
-        YOLO 像素中心點 → 相對 pickup_origin 的手臂偏移量 (mm)
+    用途：小黃瓜送進切割區後，量出頂點在左臂座標的位置，決定從 chop_1[] 的
+    第幾格開始切（見 config_phase.ChopPlanConfig）。跟 TableHomography 不同，
+    這裡的 (x, y) 是左臂基座座標，直接跟 chop_1[i] 的 X 比較，不是相對取料原點。
 
-        回傳值直接餵給 PICKUP 指令的 X_MM / Y_MM 欄位。
-        """
-        p = cls.H @ np.array([u, v, 1.0])
-        return float(p[0] / p[2]), float(p[1] / p[2])
+    ⚠️ 尚未標定：CALIBRATION_POINTS 是空的、H 是 None。這段期間量測步驟會
+       跳過，CHOP 照舊從 chop_1[1] 開始切（跟加這個功能之前一樣）。
 
-    @classmethod
-    def solve(cls, points=None) -> np.ndarray:
-        """
-        重新標定：從點對解出單應性矩陣
+    標定流程（test/calibrate_chop_zone.py）：
+       1. 在切割區放一個小標記，用教導器讓左臂刀尖對準標記，記下 X、Y
+       2. 手臂退開、拍照、在畫面上點標記中心
+       3. 換位置重複，至少 4 點、不要排成一直線（沿刀子方向 X 和垂直方向 Y
+          都要拉開），建議 6～9 點涵蓋小黃瓜可能落的範圍
+       4. 工具會印出 CALIBRATION_POINTS / H / U_RANGE / V_RANGE，貼回這裡
+    """
 
-        重測之後把新的 (u, v, x_mm, y_mm) 傳進來，取得新的 H 覆蓋上面的常數。
-        至少 4 點，實務上鋪滿工作範圍的 3×3 網格以上比較穩。
-        """
-        pts = points if points is not None else cls.CALIBRATION_POINTS
-        if len(pts) < 4:
-            raise ValueError(f"單應性至少需要 4 個點對，只給了 {len(pts)} 個")
-
-        rows = []
-        for u, v, x, y in pts:
-            rows.append([u, v, 1, 0, 0, 0, -x * u, -x * v, -x])
-            rows.append([0, 0, 0, u, v, 1, -y * u, -y * v, -y])
-        _, _, vt = np.linalg.svd(np.array(rows, dtype=np.float64))
-        h = vt[-1].reshape(3, 3)
-        return h / h[2, 2]
-
-    @classmethod
-    def residuals(cls, points=None):
-        """逐點殘差 (mm)，用來確認標定品質"""
-        pts = points if points is not None else cls.CALIBRATION_POINTS
-        out = []
-        for u, v, x, y in pts:
-            px_, py_ = cls.pixel_to_mm(u, v)
-            out.append((u, v, x, y, px_, py_, float(np.hypot(px_ - x, py_ - y))))
-        return out
+    CALIBRATION_POINTS: List[Tuple[float, float, float, float]] = []
+    H: Optional[np.ndarray] = None
+    U_RANGE: Tuple[float, float] = (0, 0)
+    V_RANGE: Tuple[float, float] = (0, 0)
 
 
 class CoordinateTransform:

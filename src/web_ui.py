@@ -127,6 +127,10 @@ def describe_phase(phase_instr) -> str:
     if action == "FLIP":
         return f"翻炒（{params.get('num_cycles', '?')} 循環）"
 
+    if action == "MEASURE":
+        food = {"CUCUMBER": "小黃瓜", "CARROT": "紅蘿蔔"}.get(params.get("food_type", ""), "食材")
+        return f"量測{food}長度"
+
     if action == "HOME":
         return "手臂復歸"
 

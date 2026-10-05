@@ -17,6 +17,7 @@ class Phase(Enum):
     # 基本階段
     INIT = "INIT"               # 初始化
     PICKUP = "PICKUP"           # 取料
+    MEASURE = "MEASURE"         # 視覺量測（切割前量食材位置，不動手臂）
     CHOP = "CHOP"               # 切割
     PLACE = "PLACE"             # 放置
     FLIP = "FLIP"               # 翻炒
@@ -49,32 +50,88 @@ class FoodCutParams:
     description: str            # 說明
 
 
-# ⚠️ cut_thickness_mm 一定要是 5.0，改別的值兩臂會走不同步。
+# ⚠️ 切片厚度由左臂下刀點決定，cut_thickness_mm 改了沒有作用。
 #
-#    左臂 DO_CHOP 的下刀位置是「絕對教點陣列」chop_1[i] / chop_per[i]，
-#    31 個點、固定 5.0mm 間距、總跨距 150mm。迴圈裡那句 DRAW .thick,0,0
-#    下一圈馬上被 LMOVE chop_per[i] 這個絕對點蓋掉，所以 .thick 對左臂
-#    完全沒有作用——切割位置是教點決定的，不是參數決定的。
+#    第 i 格的下刀點 = chop_1[1] 沿 X 往後 (i-1)×5mm（左臂 AS 即時計算，跟教點陣列
+#    chop_1[1..30] 的值相同，但可以算到第 60 格）。.thick 只拿來檢查 > 0。
 #
-#    但右臂 DO_CHOP 沒有絕對點，整段就是靠 DRAW .thick,0,0 累加步進。
-#    .thick 一旦不等於教點間距，兩臂每切一刀就多分開一點：
-#        .thick=11.3 時第 15 刀左臂在 +70mm、右臂在 +158mm，差 88mm，
-#        右臂等於壓在離刀子很遠的地方，完全沒壓到食材。
+# ⚠️ 右臂跟著刀走：每一刀都是「右臂在離下刀處 10mm 的地方壓好 → 左臂切 → 右臂抬起」，
+#    下一刀兩臂一起往後移 5mm。右臂第 i 格壓點 = press_chop_zone 沿右臂 X 移
+#    (i-1)×5mm×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 chop_1[1]
+#    下刀處 10mm、還沒切的那一側。
 #
-#    要改切片厚度只能重教 chop_1[] / chop_per[] 的間距，改這裡沒用。
-#
-#        刀刃行程 = num_cuts × 5.0mm
-#
-# ⚠️ AS 端 DO_CHOP 擋掉 cuts > 20，所以現況一次最多切 100mm。
-#
-# ⚠️ 沒切到的尾段由人工去除，程式不處理
-#    切割時右臂壓在尾段上，左臂切不到；切後的廢料去除（丟棄點）已停用。
+# ⚠️ AS 端 DO_CHOP：刀數 1～60，最後一刀的格數 (起始格 + 刀數 - 1) 不超過 60。
 
-CHOP_STEP_MM = 5.0   # 必須等於左臂 chop_1[] 教點陣列的間距
+CHOP_STEP_MM = 5.0   # 必須等於左臂下刀點的間距（chop_1[] 教點陣列的間距）
 
-# CHOP 等手臂回應的秒數。2026-09-21 現場實測 15 刀（含當時的廢料去除）約 28 秒，
-# 抓 3 倍餘裕。逾時會停用連線、整道菜中止（不會重送），所以不要設得比實際動作短。
-CHOP_TIMEOUT_SEC = 90.0
+# CHOP 等手臂回應的秒數。2026-09-21 實測 15 刀約 28 秒（當時右臂只壓一次）；
+# 現在每刀都要等右臂抬起、移動、壓好，整根最多 60 刀，抓 300 秒。
+# 逾時會停用連線、整道菜中止（不會重送）。第一次實機後依實際時間調整。
+CHOP_TIMEOUT_SEC = 300.0
+
+
+class ChopPlanConfig:
+    """
+    小黃瓜 / 紅蘿蔔「整根切完」與生菜下刀位置的參數
+
+    流程：送進切割區 → MEASURE 拍照量出食材兩端在左臂座標的 X →
+    算出起始格與刀數 → CHOP,<食材>,<刀數>,5.0,<起始格>
+
+        起始格   = X 小那端 + TIP_OFFSET_MM 落在第幾格
+        最後一刀 = X 大那端 - TAIL_MARGIN_MM 之前的最後一格
+
+    ⚠️ 切割區還沒標定（config_vision.ChopZoneHomography 沒有 H）時不量測，
+       照舊「從第 1 格切 FOOD_CUT_PARAMS 的刀數」。
+    """
+
+    # 左臂 GBK 版 chop_1[1] 的 X（教點表 chop_1[1] 308.854706 ...）。重教點後要跟著改。
+    CHOP_1_FIRST_X_MM = 308.854706
+    MAX_CUTS = 60
+    MAX_INDEX = 60               # 最後一刀的格數上限（AS 端同一個值）
+
+    TIP_OFFSET_MM = 5.0          # 第一刀落在 X 小那端往內幾 mm（= 第一片的厚度）
+    TAIL_MARGIN_MM = 5.0         # 最後一刀至少離 X 大那端幾 mm（避免切到空氣）
+
+    MIN_LENGTH_MM = 30.0         # 比這短當成量錯
+    MAX_AXIS_ANGLE_DEG = 15.0    # 食材軸線跟刀子行進方向 (左臂 X 軸) 的夾角上限
+
+    # 生菜「中間切一刀」落在第幾格（第 i 格 = chop_1[1] 往後 (i-1)×5mm）。
+    # 待現場量測：用 test/chop_points.py ROMAINE --start N 預覽、教導器對點後填入。
+    # None = 還沒量 → 生菜不切，CHOP 階段直接失敗。
+    ROMAINE_START_INDEX: Optional[int] = None
+
+    @classmethod
+    def cut_x(cls, index: int) -> float:
+        return cls.CHOP_1_FIRST_X_MM + (index - 1) * CHOP_STEP_MM
+
+    @classmethod
+    def plan(cls, low_x_mm: float, high_x_mm: float) -> Tuple[Optional[Dict], str]:
+        """
+        依食材兩端的左臂 X 算出 {"start", "cuts"}
+
+        Returns:
+            (計畫, 說明)。計畫是 None 表示不能切，說明裡寫原因。
+        """
+        step = CHOP_STEP_MM
+        first = (low_x_mm + cls.TIP_OFFSET_MM - cls.CHOP_1_FIRST_X_MM) / step + 1
+        start = int(round(first))
+        if start < 1:
+            if start >= 0:
+                start = 1   # 差一格以內就從第 1 格切（第一片稍厚）
+            else:
+                return None, (f"食材前端超出切割範圍 {1 - first:.0f} 格"
+                              f"（約 {(1 - first) * step:.0f}mm），請往後放")
+
+        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.CHOP_1_FIRST_X_MM) // step) + 1
+        cuts = last - start + 1
+        if cuts < 1:
+            return None, f"量到的長度太短，切不到任何一刀（X {low_x_mm:.0f}～{high_x_mm:.0f}）"
+        if cuts > cls.MAX_CUTS or last > cls.MAX_INDEX:
+            return None, (f"要切第 {start}～{last} 格共 {cuts} 刀，"
+                          f"超過上限（{cls.MAX_CUTS} 刀、第 {cls.MAX_INDEX} 格）")
+
+        return {"start": start, "cuts": cuts}, f"從第 {start} 格切到第 {last} 格，共 {cuts} 刀"
+
 
 FOOD_CUT_PARAMS = {
     "CUCUMBER": FoodCutParams(
@@ -82,22 +139,21 @@ FOOD_CUT_PARAMS = {
         num_cuts=15,
         cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="小黃瓜：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切；右臂壓在尾段上）",
+        description="小黃瓜：整根切完（MEASURE 量長度決定刀數）；量不到時從第 1 格切 15 刀",
     ),
     "CARROT": FoodCutParams(
         food_type="CARROT",
         num_cuts=15,
         cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="紅蘿蔔：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切；右臂壓在尾段上）",
+        description="紅蘿蔔：整根切完（MEASURE 量長度決定刀數）；量不到時從第 1 格切 15 刀",
     ),
     "ROMAINE": FoodCutParams(
         food_type="ROMAINE",
         num_cuts=1,
         cut_thickness_mm=25.0,
         holding_arm="F60_R",
-        # 左臂 ROMAINE 不走 chop_1[] 陣列，下刀點是 chop_1[1] 往後 rom_mid_mm
-        # （左臂 INIT_CONST，待現場量測；0 時左臂回 ERROR,E4005）
+        # 下刀位置 = ChopPlanConfig.ROMAINE_START_INDEX（待現場量測）
         description="羅曼生菜：中間切 1 刀（葉菜易碎，不做多刀分段）",
     ),
 }
@@ -194,6 +250,13 @@ class MenuRecipes:
                 location="WORK_CHOP_ZONE",
                 params={"source": "PICKUP_CUCUMBER", "method": "SCOOP"},
             ),
+            # 量小黃瓜兩端位置，決定起始格、刀數、換壓點（不動手臂）
+            PhaseInstruction(
+                phase=Phase.MEASURE,
+                action="MEASURE",
+                location="WORK_CHOP_ZONE",
+                params={"food_type": "CUCUMBER"},
+            ),
             PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
@@ -244,6 +307,13 @@ class MenuRecipes:
                 action="PLACE",
                 location="WORK_CHOP_ZONE",
                 params={"source": "PICKUP_CARROT", "method": "SCOOP"},
+            ),
+            # 量紅蘿蔔兩端位置，決定起始格、刀數、換壓點（不動手臂）
+            PhaseInstruction(
+                phase=Phase.MEASURE,
+                action="MEASURE",
+                location="WORK_CHOP_ZONE",
+                params={"food_type": "CARROT"},
             ),
             PhaseInstruction(
                 phase=Phase.CHOP,
@@ -350,6 +420,13 @@ class MenuRecipes:
                 location="WORK_CHOP_ZONE",
                 params={"source": "PICKUP_CUCUMBER", "method": "SCOOP"},
             ),
+            # 量小黃瓜兩端位置，決定起始格、刀數、換壓點（不動手臂）
+            PhaseInstruction(
+                phase=Phase.MEASURE,
+                action="MEASURE",
+                location="WORK_CHOP_ZONE",
+                params={"food_type": "CUCUMBER"},
+            ),
             PhaseInstruction(
                 phase=Phase.CHOP,
                 action="CHOP",
@@ -385,6 +462,13 @@ class MenuRecipes:
                 action="PLACE",
                 location="WORK_CHOP_ZONE",
                 params={"source": "PICKUP_CARROT", "method": "SCOOP"},
+            ),
+            # 量紅蘿蔔兩端位置，決定起始格、刀數、換壓點（不動手臂）
+            PhaseInstruction(
+                phase=Phase.MEASURE,
+                action="MEASURE",
+                location="WORK_CHOP_ZONE",
+                params={"food_type": "CARROT"},
             ),
             PhaseInstruction(
                 phase=Phase.CHOP,
@@ -465,7 +549,7 @@ class MenuRecipes:
 # 搬運一律成對：PICKUP 夾起 → PLACE 放下。CHOP / FLIP 結束後食材是躺在
 # 檯面上的，要再 PICKUP 夾起來才能搬走，所以 CHOP 和 FLIP 的下一步是 PICKUP。
 #
-#   INIT → PICKUP → PLACE →─┬─→ CHOP → PICKUP → PLACE ...
+#   INIT → PICKUP → PLACE →─┬─→ (MEASURE →) CHOP → PICKUP → PLACE ...
 #                           │                      ↓
 #                           └──────────────→ FLIP → PICKUP → PLACE_FINAL
 #                                                                 ↓
@@ -473,7 +557,8 @@ class MenuRecipes:
 PHASE_TRANSITIONS = {
     Phase.INIT: [Phase.PICKUP],
     Phase.PICKUP: [Phase.PLACE, Phase.PLACE_FINAL],
-    Phase.PLACE: [Phase.CHOP, Phase.PICKUP, Phase.FLIP],
+    Phase.PLACE: [Phase.MEASURE, Phase.CHOP, Phase.PICKUP, Phase.FLIP],
+    Phase.MEASURE: [Phase.CHOP],
     Phase.CHOP: [Phase.PICKUP],
     Phase.FLIP: [Phase.PICKUP],
     Phase.PLACE_FINAL: [Phase.HOME],

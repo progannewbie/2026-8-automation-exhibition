@@ -33,8 +33,8 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import cv2  # noqa: E402
 
-from config_phase import CHOP_STEP_MM  # noqa: E402
-from config_vision import TableHomography  # noqa: E402
+from config_phase import CHOP_STEP_MM, ChopPlanConfig  # noqa: E402
+from config_vision import ChopZoneHomography, TableHomography  # noqa: E402
 from vision_skeleton import VisionSystem  # noqa: E402
 
 CAPTURE_DIR = ROOT / "test" / "captures"
@@ -152,6 +152,23 @@ def main() -> int:
             items.append((d, m))
             print_detection(i, d, m)
             history.setdefault(d["class_name"], []).append(m["length_mm"])
+
+        # 切割區標定好之後，再用正式流程的量測（左臂座標）算一次起始格與刀數
+        if ChopZoneHomography.is_calibrated():
+            for food in sorted({d["class_name"] for d in detections} & {"CUCUMBER", "CARROT"}):
+                r, why = vision.measure_in_chop_zone(food, image)
+                if r is None:
+                    print(f"\n  [切割區量測] {food}: ✗ {why}")
+                    continue
+                xs = sorted(p[0] for p in r["ends_mm"])
+                plan, note = ChopPlanConfig.plan(xs[0], xs[1])
+                print(f"\n  [切割區量測] {food}: 長 {r['length_mm']:.1f}mm  偏角 {r['axis_angle_deg']:.1f}°  "
+                      f"左臂 X {xs[0]:.1f}～{xs[1]:.1f}（端點來源 {r['source']}）")
+                print(f"      → {note}")
+                history.setdefault(f"{food}(切割區)", []).append(r["length_mm"])
+        elif shot == 1:
+            print("\n  （切割區還沒標定，只有上面用取料區粗估的 mm；"
+                  "標定方式見 test/calibrate_chop_zone.py）")
 
         if args.save:
             CAPTURE_DIR.mkdir(parents=True, exist_ok=True)

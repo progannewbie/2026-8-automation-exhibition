@@ -10,12 +10,13 @@ from enum import Enum
 
 from config_phase import (
     Phase, PhaseStatus, PhaseInstruction, PhaseLog, RetryPolicy, MENU,
-    get_recipe, get_phases, FOOD_CUT_PARAMS
+    get_recipe, get_phases, FOOD_CUT_PARAMS, ChopPlanConfig
 )
 from config_commands import (
     CommandParser, PickupCommand, ChopCommand, PlaceCommand,
     FlipCommand, HomeCommand, StatusCommand,
 )
+from config_vision import ChopZoneHomography
 from vision_skeleton import VisionSystem
 from comms_connection_skeleton import CommsManager
 
@@ -88,6 +89,10 @@ class PhaseController:
         # 單一階段可以補充的失敗細節（例如視覺沒找到），_set_phase_failure 會接在後面
         self._phase_detail = ""
 
+        # MEASURE 量出來、給下一個 CHOP 用的計畫
+        # {"food_type", "start", "cuts"}；None 表示沒量（CHOP 用 FOOD_CUT_PARAMS 預設值）
+        self._chop_plan: Optional[Dict] = None
+
         logger.info("✓ PhaseController 已初始化")
 
     def request_cancel(self):
@@ -144,6 +149,7 @@ class PhaseController:
         """
         self.failure_message = ""
         self._phase_detail = ""
+        self._chop_plan = None
 
         if not self.current_recipe:
             logger.error("✗ 未選擇菜色")
@@ -152,6 +158,15 @@ class PhaseController:
 
         if self.arms_off_home:
             self.failure_message = "上次流程中斷後手臂沒有復歸，請確認現場、把手臂移回原點後重新啟動程式"
+            logger.error(f"✗ {self.failure_message}")
+            return False
+
+        # 開跑前先擋設定不完整的切割，不要切到一半才失敗、讓手臂停在半路
+        needs_romaine = any(p.action == "CHOP" and (p.params or {}).get("food_type") == "ROMAINE"
+                            for p in self.phases)
+        if needs_romaine and ChopPlanConfig.ROMAINE_START_INDEX is None:
+            self.failure_message = ("生菜下刀位置還沒設定（config_phase.ChopPlanConfig."
+                                    "ROMAINE_START_INDEX），這道菜不能做")
             logger.error(f"✗ {self.failure_message}")
             return False
 
@@ -254,6 +269,8 @@ class PhaseController:
 
         if action == "PICKUP":
             success = self._handle_pickup(location, params, phase_instr.retries, timeout)
+        elif action == "MEASURE":
+            success = self._handle_measure(location, params, phase_instr.retries)
         elif action == "CHOP":
             success = self._handle_chop(location, params, phase_instr.retries, timeout)
         elif action == "PLACE":
@@ -400,18 +417,91 @@ class PhaseController:
         # PICKUP 兩臂會逐階段用 SYNC_STEP 會合，指令必須同時送給兩邊
         return self._send_motion("取料", cmds, max_retries, timeout)
 
+    def _handle_measure(self, location: str, params: Dict, max_retries: int) -> bool:
+        """
+        量切割區裡食材兩端的位置，決定 CHOP 的起始格與刀數（不動手臂）
+
+        切割區還沒標定時跳過，CHOP 照舊用 FOOD_CUT_PARAMS（從第 1 格切 15 刀）。
+        標定過但量不到、太短、放歪、超出範圍時中止，不送 CHOP——寧可停下來
+        請人調整，也不要切在錯的地方。
+        """
+        food_type = params.get("food_type", "CUCUMBER")
+        self._chop_plan = None
+
+        if not ChopZoneHomography.is_calibrated():
+            logger.warning("  ⚠️ 切割區尚未標定，略過量測，照舊從第 1 格切預設刀數"
+                           "（標定方式見 test/calibrate_chop_zone.py）")
+            return True
+
+        result, reason = None, ""
+        for attempt in range(max_retries):
+            image = self.vision.capture_frame()
+            if image is None:
+                reason = "相機拍照失敗"
+            else:
+                result, reason = self.vision.measure_in_chop_zone(food_type, image)
+            if result is not None:
+                break
+            logger.warning(f"  ⚠️ 量測 {food_type} 失敗 ({attempt+1}/{max_retries}): {reason}")
+            if attempt < max_retries - 1:
+                time.sleep(RetryPolicy.RETRY_DELAY_SEC)
+
+        if result is None:
+            self._phase_detail = f"量不到切割區裡的{food_type}（{reason}）"
+            logger.error(f"  ✗ {self._phase_detail}")
+            return False
+
+        length = result['length_mm']
+        if length < ChopPlanConfig.MIN_LENGTH_MM:
+            self._phase_detail = (f"{food_type} 只量到 {length:.0f}mm，"
+                                  f"短於 {ChopPlanConfig.MIN_LENGTH_MM:.0f}mm，判定量錯")
+            logger.error(f"  ✗ {self._phase_detail}")
+            return False
+
+        if result['axis_angle_deg'] > ChopPlanConfig.MAX_AXIS_ANGLE_DEG:
+            self._phase_detail = (f"{food_type} 放歪了 {result['axis_angle_deg']:.0f}°"
+                                  f"（上限 {ChopPlanConfig.MAX_AXIS_ANGLE_DEG:.0f}°），請擺正")
+            logger.error(f"  ✗ {self._phase_detail}")
+            return False
+
+        xs = sorted(p[0] for p in result['ends_mm'])
+        plan, note = ChopPlanConfig.plan(xs[0], xs[1])
+        if plan is None:
+            self._phase_detail = note
+            logger.error(f"  ✗ {note}")
+            return False
+
+        self._chop_plan = dict(plan, food_type=food_type)
+        logger.info(f"  ✓ {food_type} 長 {length:.0f}mm，兩端 X={xs[0]:.1f}～{xs[1]:.1f}；{note}")
+        return True
+
     def _handle_chop(self, location: str, params: Dict, max_retries: int,
                      timeout: Optional[float] = None) -> bool:
         """處理切割"""
         food_type = params.get("food_type", "CUCUMBER")
         num_cuts = params.get("num_cuts", 5)
         thickness = params.get("cut_thickness_mm", 4.0)
-        cmd = ChopCommand.create(food_type, num_cuts, thickness)
+        start = 1
+
+        if food_type == "ROMAINE":
+            start = ChopPlanConfig.ROMAINE_START_INDEX
+            if start is None:
+                self._phase_detail = ("生菜下刀位置還沒設定"
+                                      "（config_phase.ChopPlanConfig.ROMAINE_START_INDEX）")
+                logger.error(f"  ✗ {self._phase_detail}")
+                return False
+
+        # 前面的 MEASURE 量過同一種食材，就照量測結果切整根
+        plan, self._chop_plan = self._chop_plan, None
+        if plan and plan["food_type"] == food_type:
+            num_cuts, start = plan["cuts"], plan["start"]
+        cmd = ChopCommand.create(food_type, num_cuts, thickness, start)
 
         if not self._validate_command(cmd, CommandParser.validate_chop):
             return False
 
-        logger.info(f"  切割: {food_type} ({num_cuts} 次，{thickness} mm，雙臂協同)")
+        logger.info(f"  切割: {food_type} ({num_cuts} 刀，第 {start}～{start + num_cuts - 1} 格，"
+                    f"右臂跟刀壓，雙臂協同)")
         # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
         return self._send_motion("切割", cmd, max_retries, timeout)
 

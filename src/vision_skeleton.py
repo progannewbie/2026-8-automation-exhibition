@@ -13,7 +13,7 @@ import logging
 from config_vision import (
     YOLOConfig, YOLOOutput, ArUcoConfig, ArUcoOutput,
     HandEyeCalibrationConfig, CoordinateTransform, VisionPrecision,
-    VisionProcessingConfig, TableHomography
+    VisionProcessingConfig, TableHomography, ChopZoneHomography
 )
 import img_processing
 
@@ -180,6 +180,9 @@ class YOLODetector:
             # 'estimated' 只有 0–180° 週期的角度；偵測不到（例如 LETTUCE 刻意沒有
             # HSV 色域，見 img_processing.py）就保留原本角度，不影響既有流程。
             for detection in detections:
+                # 精算會把 angle_deg 換成「頭→尾」方向，但框本身的幾何（寬邊方向）
+                # 還是要用原本的角度，量長軸端點時才不會把框轉錯 90°
+                detection['box_angle_deg'] = detection['angle_deg']
                 try:
                     refined_angle = img_processing.refine_angle_with_yolo_box(
                         image,
@@ -655,4 +658,72 @@ class VisionSystem:
             detection['center_y_mm'],
             detection['angle_deg'],
         )
+
+    def measure_in_chop_zone(
+        self, food_name: str, image: np.ndarray
+    ) -> Tuple[Optional[Dict], str]:
+        """
+        量切割區裡食材的兩端位置（左臂基座座標），給「從頂點起切」決定下刀起點
+
+        只看落在切割區標定範圍內的偵測——取料區可能還放著別根同類食材，
+        不能拿來量。座標走 ChopZoneHomography，不是取料用的 TableHomography。
+
+        Args:
+            food_name: YOLO 類別名稱（例如 "CUCUMBER"）
+            image: 切割區畫面
+
+        Returns:
+            (結果, 說明)。結果為 None 表示量不到，說明寫原因；否則結果是
+            {
+                'ends_mm': [(x, y), (x, y)],   # 長軸兩端，左臂基座座標，不分頭尾
+                'length_mm': float,
+                'axis_angle_deg': float,      # 長軸跟左臂 X 軸的夾角，0～90°
+                'source': 'color' | 'obb',    # 端點來自色彩輪廓或 YOLO 框
+                'center_pixel': (u, v),
+            }
+        """
+        if not ChopZoneHomography.is_calibrated():
+            return None, "切割區尚未標定"
+
+        detections = self.yolo_detector.detect(image)
+        in_zone = [
+            d for d in detections
+            if d['class_name'] == food_name and
+            ChopZoneHomography.is_within_calibrated_area(d['center_x_pixel'], d['center_y_pixel'])
+        ]
+        if not in_zone:
+            return None, f"切割區裡找不到 {food_name}"
+        if len(in_zone) > 1:
+            logger.warning(f"⚠️ 切割區裡有 {len(in_zone)} 個 {food_name}，用信心度最高的那個")
+        d = max(in_zone, key=lambda x: x['confidence'] or 0.0)
+
+        ends = img_processing.measure_axis_endpoints(
+            image, d['class_name'],
+            d['center_x_pixel'], d['center_y_pixel'],
+            d['width_pixel'], d['height_pixel'],
+            d.get('box_angle_deg', d['angle_deg']) % 180.0,   # 框的寬邊方向，不是精算後的頭尾方向
+        )
+        if ends is None:
+            return None, f"{food_name} 的框大小異常，量不到兩端"
+
+        ends_mm = [ChopZoneHomography.pixel_to_mm(*ends['end1']),
+                   ChopZoneHomography.pixel_to_mm(*ends['end2'])]
+        dx = ends_mm[1][0] - ends_mm[0][0]
+        dy = ends_mm[1][1] - ends_mm[0][1]
+        angle = abs(math.degrees(math.atan2(dy, dx))) % 180.0
+        angle = min(angle, 180.0 - angle)
+
+        result = {
+            'ends_mm': ends_mm,
+            'length_mm': float(math.hypot(dx, dy)),
+            'axis_angle_deg': angle,
+            'source': ends['source'],
+            'center_pixel': (d['center_x_pixel'], d['center_y_pixel']),
+        }
+        logger.info(
+            f"✓ 切割區量測 {food_name}: 兩端 ({ends_mm[0][0]:.1f},{ends_mm[0][1]:.1f}) / "
+            f"({ends_mm[1][0]:.1f},{ends_mm[1][1]:.1f}) mm，長 {result['length_mm']:.1f}mm，"
+            f"偏角 {angle:.1f}°（端點來源: {ends['source']}）"
+        )
+        return result, "ok"
 
