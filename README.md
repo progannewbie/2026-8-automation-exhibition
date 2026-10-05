@@ -145,7 +145,8 @@ python main.py
 | `camera_test.py`、`yolo_camera_test.py` | 攝影機與 YOLO 即時偵測 |
 | `test_vision_coord.py` | 視覺座標轉換 |
 | `test_pickup.py`、`test_pickup_fixed.py` | 夾取 |
-| `test_pickup_chop.py` | 夾取 + 切割 |
+| `test_pickup_chop.py` | 夾取 + 切割（舊流程：缺少放到切割區的步驟，刀數也是舊的） |
+| `chop_points.py` | **不連手臂**：從 GBK 教點算出每一刀的下刀座標與右臂壓點，`--actual` 輸入手動量到的座標，算差距與建議的 `rom_mid_mm` / `press_mm` |
 | `test_flip.py` | 翻轉 |
 | `test_full_salad_workflow.py` | 沙拉完整流程（流程邏輯） |
 | `test_full_salad_real.py` | 沙拉完整流程（實機） |
