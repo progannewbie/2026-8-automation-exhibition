@@ -288,6 +288,10 @@ class SmartCookApp:
         duration = time.time() - start
 
         self.controller.print_execution_report()
+        if not success and self.controller.failure_message:
+            print(f"\n✗ {self.controller.failure_message}")
+            if self.controller.arms_off_home:
+                print("  請確認現場，用教導器把手臂移回原點後重新啟動程式。")
         self.handle_execution_complete(success, choice, duration)
 
         self.state = ProgramState.READY if self.state != ProgramState.ERROR else self.state

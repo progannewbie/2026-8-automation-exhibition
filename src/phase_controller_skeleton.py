@@ -76,6 +76,16 @@ class PhaseController:
         #    真正的緊急停止是實體急停按鈕，這個旗標不能當安全裝置用。
         self.cancel_requested = False
 
+        # 手臂可能不在原點：送出任何動作指令就舉起，HOME 兩臂都回 OK 才放下。
+        # 流程中途失敗時「不」自動復歸——手臂可能停在切割途中、刀還在食材上，
+        # 連線也可能已經因為逾時被停用，從未知位置直接走 HOME 有撞機風險。
+        # 這個旗標舉著的時候 execute() 拒絕開跑，要操作人員確認現場、用教導器
+        # 把手臂移回原點後重新啟動程式（重新建立 PhaseController）。
+        self.arms_off_home = False
+
+        # 最近一次 execute() 失敗的原因，給介面顯示用（成功時是空字串）
+        self.failure_message = ""
+
         logger.info("✓ PhaseController 已初始化")
 
     def request_cancel(self):
@@ -130,10 +140,18 @@ class PhaseController:
         Returns:
             True 成功，False 失敗
         """
+        self.failure_message = ""
+
         if not self.current_recipe:
             logger.error("✗ 未選擇菜色")
+            self.failure_message = "未選擇菜色"
             return False
-        
+
+        if self.arms_off_home:
+            self.failure_message = "上次流程中斷後手臂沒有復歸，請確認現場、把手臂移回原點後重新啟動程式"
+            logger.error(f"✗ {self.failure_message}")
+            return False
+
         self.start_time = time.time()
         self.cancel_requested = False
         logger.info(f"\n{'='*60}")
@@ -144,13 +162,17 @@ class PhaseController:
             # 初始化手臂
             if not self._initialize_arms():
                 logger.error("✗ 手臂初始化失敗")
+                self.failure_message = "手臂狀態檢查失敗（STATUS 沒有兩臂都回 OK）"
                 return False
 
             # 執行各階段
             for i, phase_instr in enumerate(self.phases):
                 if self.cancel_requested:
                     logger.warning(f"⚠️ 使用者要求停止，在第 {i+1} 階段前中止")
-                    self._handle_home("HOME_LEFT", {})
+                    if self._handle_home("HOME_LEFT", {}):
+                        self.failure_message = "已由操作人員停止，手臂已復歸"
+                    else:
+                        self.failure_message = "已由操作人員停止，但手臂復歸失敗"
                     return False
 
                 self.current_phase_index = i
@@ -159,13 +181,8 @@ class PhaseController:
 
                 if not self._execute_phase(phase_instr):
                     logger.error(f"✗ 階段執行失敗: {phase_instr.phase.value}")
-                    
-                    if self.is_continuous:
-                        logger.error("✗ 連續執行模式，無法恢復")
-                        return False
-                    else:
-                        logger.warning("⚠️ 可嘗試重試或重新開始")
-                        return False
+                    self._set_phase_failure(i, phase_instr)
+                    return False
             
             # 完成
             self.end_time = time.time()
@@ -181,8 +198,21 @@ class PhaseController:
             
         except Exception as e:
             logger.error(f"✗ 執行異常: {e}")
+            self.failure_message = f"執行異常: {e}"
+            if self.arms_off_home:
+                self.failure_message += "；手臂停在原處、沒有自動復歸"
             return False
-    
+
+    def _set_phase_failure(self, index: int, phase_instr: PhaseInstruction):
+        """記下是哪一步失敗、手臂是不是停在半路，給介面和操作人員看"""
+        self.failure_message = (
+            f"第 {index+1}/{len(self.phases)} 步 "
+            f"{phase_instr.action} {phase_instr.location} 失敗"
+        )
+        if self.arms_off_home:
+            self.failure_message += "；手臂停在原處、沒有自動復歸"
+            logger.error("✗ 手臂沒有自動復歸：請確認現場，用教導器把手臂移回原點後重新啟動程式")
+
     # ========================================================================
     # 單階段執行
     # ========================================================================
@@ -285,6 +315,8 @@ class PhaseController:
             timeout: 每臂等回應的秒數，None 則用連線層預設值
         """
         for attempt in range(max_retries):
+            # 指令一送出就當作手臂可能離開原點（見 __init__ 的 arms_off_home 說明）
+            self.arms_off_home = True
             responses = self.comms.send_command_dual(cmd, timeout=timeout)
             f, r = responses.get("F60_F"), responses.get("F60_R")
 
@@ -422,10 +454,12 @@ class PhaseController:
         try:
             logger.info(f"  復歸: F60_F + F60_R → {location}")
 
+            self.arms_off_home = True
             responses = self.comms.send_command_dual(cmds, timeout=timeout)
             response = f"F60_F={responses.get('F60_F')}, F60_R={responses.get('F60_R')}"
 
             if responses.get("F60_F") == "OK" and responses.get("F60_R") == "OK":
+                self.arms_off_home = False
                 logger.info(f"  ✓ 復歸完成")
                 return True
             else:

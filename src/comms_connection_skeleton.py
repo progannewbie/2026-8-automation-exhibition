@@ -318,7 +318,12 @@ class F60Connection:
                     logger.warning(f"[{self.arm_id}] 心跳無回應或格式異常")
 
             except Exception as e:
-                logger.error(f"[{self.arm_id}] 心跳異常: {e}")
+                if self.stop_heartbeat:
+                    break   # disconnect() 先關 socket 才停心跳，這裡的例外是預期中的
+                # 心跳會出例外幾乎都是 socket 已經壞了（sendall 失敗）。不能只是
+                # 默默結束迴圈——狀態還掛著 READY，介面和流程都會以為連線正常。
+                self.state = CONNECTION_STATES['ERROR']
+                logger.error(f"[{self.arm_id}] 心跳異常，連線已停用: {e}")
                 break
 
     def _stop_heartbeat(self):
@@ -590,6 +595,13 @@ class CommsManager:
             logger.error(f"連線失敗 (F60_F: {result_f}, F60_R: {result_r})")
             return False
     
+    def broken_arms(self) -> list:
+        """回傳目前不是 READY 的手臂 ID（例如心跳失敗或指令逾時被停用的）"""
+        return [
+            arm_id for arm_id, conn in (('F60_F', self.f60_f), ('F60_R', self.f60_r))
+            if conn is None or not conn.is_connected()
+        ]
+
     def disconnect_all(self):
         """斷開兩台 F60 的連線"""
         if self.f60_f:
