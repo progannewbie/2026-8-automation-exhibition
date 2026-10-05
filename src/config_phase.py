@@ -66,6 +66,9 @@ class FoodCutParams:
 #        刀刃行程 = num_cuts × 5.0mm
 #
 # ⚠️ AS 端 DO_CHOP 擋掉 cuts > 20，所以現況一次最多切 100mm。
+#
+# ⚠️ 沒切到的尾段由人工去除，程式不處理
+#    切割時右臂壓在尾段上，左臂切不到；切後的廢料去除（丟棄點）已停用。
 
 CHOP_STEP_MM = 5.0   # 必須等於左臂 chop_1[] 教點陣列的間距
 
@@ -75,14 +78,14 @@ FOOD_CUT_PARAMS = {
         num_cuts=15,
         cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="小黃瓜：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切）",
+        description="小黃瓜：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切；右臂壓在尾段上）",
     ),
     "CARROT": FoodCutParams(
         food_type="CARROT",
         num_cuts=15,
         cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="紅蘿蔔：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切）",
+        description="紅蘿蔔：15 刀 × 5mm，切前段 75mm（食材本身 170mm，尾段不切；右臂壓在尾段上）",
     ),
     "ROMAINE": FoodCutParams(
         food_type="ROMAINE",
