@@ -89,6 +89,52 @@ def print_detection(i: int, d: Dict, m: Dict):
           f"（無條件捨去 {math.floor(m['cuts'])}、四捨五入 {round(m['cuts'])}）")
 
 
+def suggested_offset(front_x: float) -> float:
+    """讓第 1 格剛好落在「前端 + TIP_OFFSET_MM」的偏移量（相對 chop_1[1]）"""
+    return front_x + ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.CHOP_1_FIRST_X_MM
+
+
+def raw_range(front_x: float, back_x: float, offset: float) -> Tuple[int, int]:
+    """不設上下限，照 ChopPlanConfig.plan 的算法回傳 (起始格, 最後一格)"""
+    first_x = ChopPlanConfig.CHOP_1_FIRST_X_MM + offset
+    start = int(round((front_x + ChopPlanConfig.TIP_OFFSET_MM - first_x) / CHOP_STEP_MM)) + 1
+    last = int((back_x - ChopPlanConfig.TAIL_MARGIN_MM - first_x) // CHOP_STEP_MM) + 1
+    return start, last
+
+
+def print_offset(food: str, r: Dict):
+    """切割區量測結果 → 建議偏移、第一刀位置、刀數（不設上下限，超出 AS 範圍只標示）"""
+    front, back = sorted(p[0] for p in r["ends_mm"])
+    sug = suggested_offset(front)
+    cur = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM
+    print(f"\n  [切割區量測] {food}: 長 {r['length_mm']:.1f}mm  偏角 {r['axis_angle_deg']:.1f}°"
+          f"（端點來源 {r['source']}）")
+    if r["axis_angle_deg"] > ChopPlanConfig.MAX_AXIS_ANGLE_DEG:
+        print(f"      ⚠️ 偏角超過 {ChopPlanConfig.MAX_AXIS_ANGLE_DEG:g}°：食材沒有順著刀子行進方向（左臂 X）擺，"
+              f"正式流程會拒切；下面的 X 範圍比實際長度短")
+    print(f"      左臂 X：前端 {front:.1f}  後端 {back:.1f}    chop_1[1] = {ChopPlanConfig.CHOP_1_FIRST_X_MM:.1f}")
+    print(f"      前端距 chop_1[1]：{front - ChopPlanConfig.CHOP_1_FIRST_X_MM:+.1f} mm")
+    for label, off in (("建議偏移", sug), ("目前設定", cur)):
+        start, last = raw_range(front, back, off)
+        cuts = last - start + 1
+        first_x = ChopPlanConfig.CHOP_1_FIRST_X_MM + off + (start - 1) * CHOP_STEP_MM
+        ok = (1 <= cuts <= ChopPlanConfig.MAX_CUTS and start >= 1 and
+              last <= ChopPlanConfig.MAX_INDEX and abs(off) <= 300)
+        print(f"      {label} {off:+7.1f} mm → 第 {start}～{last} 格、{cuts} 刀，第一刀 X={first_x:.1f}"
+              f"{'' if ok else '  ⚠️ 超出手臂允許範圍（60 刀 / 第 60 格 / ±300mm）'}")
+    print(f"      手動驗證：python test/chop_points.py {food} --cuts 3 --offset {sug:.1f}"
+          f"，教導器移到第 1 格看刀子是不是落在前端往內 {ChopPlanConfig.TIP_OFFSET_MM:g}mm")
+
+
+def print_offset_manual():
+    x1 = ChopPlanConfig.CHOP_1_FIRST_X_MM
+    print("\n  [偏移] 切割區還沒標定，視覺換算不出左臂座標，算不出偏移。")
+    print("      手動量法：用教導器把左臂刀尖移到小黃瓜前端（X 小那端），讀教導器上的 X，")
+    print(f"      偏移 = X + {ChopPlanConfig.TIP_OFFSET_MM:g} − {x1:.1f}（chop_1[1] 的 X），"
+          f"例如 X=250.0 → 偏移 {250.0 + ChopPlanConfig.TIP_OFFSET_MM - x1:+.1f}")
+    print("      要讓視覺自動算：先跑 test/calibrate_chop_zone.py 標定切割區")
+
+
 def annotate(image, items: List[Tuple[Dict, Dict]]):
     out = image.copy()
     for d, m in items:
@@ -153,22 +199,19 @@ def main() -> int:
             print_detection(i, d, m)
             history.setdefault(d["class_name"], []).append(m["length_mm"])
 
-        # 切割區標定好之後，再用正式流程的量測（左臂座標）算一次起始格與刀數
+        # 切割區標定好之後，用正式流程的量測（左臂座標）算偏移與刀數
         if ChopZoneHomography.is_calibrated():
             for food in sorted({d["class_name"] for d in detections} & {"CUCUMBER", "CARROT"}):
                 r, why = vision.measure_in_chop_zone(food, image)
                 if r is None:
                     print(f"\n  [切割區量測] {food}: ✗ {why}")
                     continue
-                xs = sorted(p[0] for p in r["ends_mm"])
-                plan, note = ChopPlanConfig.plan(xs[0], xs[1])
-                print(f"\n  [切割區量測] {food}: 長 {r['length_mm']:.1f}mm  偏角 {r['axis_angle_deg']:.1f}°  "
-                      f"左臂 X {xs[0]:.1f}～{xs[1]:.1f}（端點來源 {r['source']}）")
-                print(f"      → {note}")
-                history.setdefault(f"{food}(切割區)", []).append(r["length_mm"])
+                print_offset(food, r)
+                history.setdefault(f"{food}(切割區) 長度", []).append(r["length_mm"])
+                history.setdefault(f"{food}(切割區) 建議偏移",
+                                   []).append(suggested_offset(min(p[0] for p in r["ends_mm"])))
         elif shot == 1:
-            print("\n  （切割區還沒標定，只有上面用取料區粗估的 mm；"
-                  "標定方式見 test/calibrate_chop_zone.py）")
+            print_offset_manual()
 
         if args.save:
             CAPTURE_DIR.mkdir(parents=True, exist_ok=True)
@@ -177,7 +220,7 @@ def main() -> int:
             print(f"\n  標註圖: {path}")
 
     if shots > 1 and history:
-        print("\n=== 連拍統計（長度 mm）===")
+        print("\n=== 連拍統計（mm）===")
         for name, vals in history.items():
             print(f"  {name}: {len(vals)} 筆  平均 {mean(vals):.1f}  "
                   f"最小 {min(vals):.1f}  最大 {max(vals):.1f}  差距 {max(vals) - min(vals):.1f}")
