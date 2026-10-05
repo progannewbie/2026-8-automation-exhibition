@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# 執行日誌
+logs/*.log
+src/logs/
+src/stats/
+test/logs/
+
+# 攝影機擷取影像與壓縮檔（體積大，只留在本機）
+test/captures/
+test/captures 2/
+*.zip
+
+# 虛擬環境
+.venv/
+venv/

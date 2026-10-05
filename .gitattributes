@@ -1,0 +1,8 @@
+# Kawasaki AS 程式：保持原始位元組（GBK 編碼、原本的換行），不讓 git 轉換
+*.as -text diff
+
+# 二進位檔
+*.pt binary
+*.jpg binary
+*.pdf binary
+*.docx binary
