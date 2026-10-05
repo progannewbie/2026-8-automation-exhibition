@@ -4485,6 +4485,8 @@ exit_end:
       press_mm = 15    ;黃瓜下降高度
     SVALUE "CARROT":
       press_mm = 17    ;紅蘿蔔下降高度
+    SVALUE "ROMAINE":
+      press_mm = 15    ;生菜下降高度 (★ 暫用小黃瓜值，待現場試壓)
     ANY :
       CALL send_line ("ERROR,E4005");收到資料異常
       RETURN
@@ -4508,59 +4510,62 @@ exit_end:
   TWAIT 0.1
   SWAIT 1001
   DRAW 0, 0, press_mm
+  break
+  CALL sync_step (ok);切割完成
+  IF ok == 0 THEN
+    CALL send_line ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  ; ---- 廢料去除 (集中→抬升→丟棄點) 暫停用，切完直接回原點 ----
+  ; 左臂 DO_CHOP 同步停用，兩邊 SYNC_STEP 次數一致；要恢復時兩臂一起取消註解
   ;廢料去除
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  LMOVE level_per;準備點上方
-  break
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  LMOVE level_tg;下降準備點
-  break
-  CALL sync_step (ok);已到點位
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
+  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
+  ;LMOVE level_per;準備點上方
+  ;break
+  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
+  ;LMOVE level_tg;下降準備點
+  ;break
   ;
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  LMOVE level_ho;集中
-  break
-  CALL sync_step (ok); 已到集中
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  LMOVE level_up;抬升
-  break
-  CALL sync_step (ok); 已到集中
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
+  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
+  ;LMOVE level_ho;集中
+  ;break
+  ;CALL sync_step (ok); 已到集中
+  ;IF ok == 0 THEN
+    ;CALL send_line ("ERROR,E4023")
+    ;robot_busy = 0
+    ;RETURN
+  ;END
+  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
+  ;LMOVE level_up;抬升
+  ;break
+  ;CALL sync_step (ok); 已到集中
+  ;IF ok == 0 THEN
+    ;CALL send_line ("ERROR,E4023")
+    ;robot_busy = 0
+    ;RETURN
+  ;END
   ;丟棄點上方
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  LMOVE level2_per
-  break
-  CALL sync_step (ok); 已到集中
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
+  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
+  ;LMOVE level2_per
+  ;break
+  ;CALL sync_step (ok); 已到集中
+  ;IF ok == 0 THEN
+    ;CALL send_line ("ERROR,E4023")
+    ;robot_busy = 0
+    ;RETURN
+  ;END
   ;丟棄點
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  LMOVE level2_tg
-  break
-  CALL sync_step (ok); 已到集中
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  TWAIT 1
+  ;SPEED 50 MM/s ALWAYS   ;  絕對速度
+  ;LMOVE level2_tg
+  ;break
+  ;CALL sync_step (ok); 已到集中
+  ;IF ok == 0 THEN
+    ;CALL send_line ("ERROR,E4023")
+    ;robot_busy = 0
+    ;RETURN
+  ;END
+  ;TWAIT 1
   ;丟棄
   ;LMOVE level2_ho
   ;break
@@ -4578,6 +4583,7 @@ exit_end:
   ;  robot_busy = 0
   ;  RETURN
   ;END
+  ; ---- 廢料去除 結束 ----
   SPEED 500 MM/s ALWAYS   ;  絕對速度
   LMOVE home_right
   break

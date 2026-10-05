@@ -65,7 +65,7 @@ def _setup_logging() -> str:
 DISHES = [
     {"key": "1", "name": "小黃瓜",   "icon": "🥒", "desc": "切片裝盤"},
     {"key": "2", "name": "紅蘿蔔",   "icon": "🥕", "desc": "切片裝盤"},
-    {"key": "3", "name": "生菜",     "icon": "🥬", "desc": "整片裝盤"},
+    {"key": "3", "name": "生菜",     "icon": "🥬", "desc": "中間切一刀裝盤"},
     {"key": "4", "name": "生菜沙拉", "icon": "🥗", "desc": "三種食材，翻炒後裝盤"},
 ]
 
