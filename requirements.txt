@@ -1,0 +1,19 @@
+# SmartCook 執行環境
+#
+# 安裝:
+#     pip install -r requirements.txt
+#
+# 注意：ultralytics 會一併裝進 PyTorch，體積很大（CPU 版約 1GB 起跳）。
+# 展場控制電腦如果有獨顯，建議先照 pytorch.org 的指示裝對應 CUDA 版本的
+# torch，再裝 ultralytics，否則會裝到跑很慢的 CPU 版。
+
+# --- 視覺 ---
+numpy>=1.24
+opencv-python>=4.8        # cv2：相機擷取、ArUco、影像處理
+ultralytics>=8.1          # YOLO 食材偵測（會連帶安裝 torch）
+
+# --- 展場觸控介面 ---
+flask>=3.0                # src/web_ui.py
+
+# --- 機器人通訊 ---
+# 只用到 Python 內建的 socket / threading，沒有額外套件

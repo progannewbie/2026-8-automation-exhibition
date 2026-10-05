@@ -1,0 +1,62 @@
+{
+  "version": "7.0.4",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "CORN",
+      "points": [
+        [
+          367.4212034383955,
+          140.4011461318052
+        ],
+        [
+          289.5988538681949,
+          73.69627507163321
+        ],
+        [
+          302.66475644699153,
+          58.45272206303727
+        ],
+        [
+          380.48710601719205,
+          125.15759312320927
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "oriented_rectangle",
+      "flags": {},
+      "mask": null
+    },
+    {
+      "label": "CUCUMBER",
+      "points": [
+        [
+          13.266475644699128,
+          439.541547277937
+        ],
+        [
+          8.119598604038877,
+          306.8664946742506
+        ],
+        [
+          44.78510028653294,
+          305.4441260744986
+        ],
+        [
+          49.93197732719319,
+          438.1191786781851
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "oriented_rectangle",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "..\\images\\capture_002.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 640
+}

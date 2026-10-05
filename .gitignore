@@ -2,17 +2,20 @@
 __pycache__/
 *.pyc
 
-# 執行日誌
-logs/*.log
-src/logs/
-src/stats/
-test/logs/
-
-# 攝影機擷取影像與壓縮檔（體積大，只留在本機）
-test/captures/
-test/captures 2/
-*.zip
+# 系統/編輯器
+.DS_Store
+.claude/settings.local.json
 
 # 虛擬環境
 .venv/
 venv/
+
+# 測試時拍的照片/暫存，不是原始碼
+test/captures*/
+*.zip
+capture_*.jpg
+
+# 執行期日誌
+logs/
+src/stats/
+*.log

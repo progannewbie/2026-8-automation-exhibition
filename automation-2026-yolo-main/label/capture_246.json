@@ -1,0 +1,36 @@
+{
+  "version": "7.0.4",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "CARROT",
+      "points": [
+        [
+          417.49283667621773,
+          20.630372492836685
+        ],
+        [
+          350.89308853320676,
+          142.72991075502355
+        ],
+        [
+          399.1547277936962,
+          169.05444126074505
+        ],
+        [
+          465.7544759367072,
+          46.9549029985582
+        ]
+      ],
+      "group_id": null,
+      "description": "",
+      "shape_type": "oriented_rectangle",
+      "flags": {},
+      "mask": null
+    }
+  ],
+  "imagePath": "..\\images\\capture_246.jpg",
+  "imageData": null,
+  "imageHeight": 480,
+  "imageWidth": 640
+}

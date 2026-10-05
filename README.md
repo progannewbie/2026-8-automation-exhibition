@@ -41,6 +41,9 @@ robot/                             Kawasaki AS 語言手臂程式
 
 docs/                              規範文檔、快速參考、標定點、時間表與展出腳本 (docx/pdf)
 test/                              各功能測試腳本與攝影機擷取影像
+automation-2026-yolo-main/         YOLO 訓練專案：資料集、標註、訓練/驗證腳本、檯面清潔檢查
+座標/                              手臂座標與視覺座標對照表 (xlsx)
+requirements.txt                   Python 套件清單
 ```
 
 舊版本（`test0819/` 的 8/19 src 快照與 v1～v3 模型、`robot/robot/` 的 8 月初手臂程式）
@@ -81,8 +84,11 @@ git checkout a3f792a -- test0819
 ## 安裝與執行
 
 ```bash
-pip install flask opencv-python ultralytics numpy
+pip install -r requirements.txt
 ```
+
+> ultralytics 會連帶安裝 PyTorch（CPU 版約 1GB）。控制電腦若有獨顯，先依 pytorch.org
+> 安裝對應 CUDA 版本的 torch，再裝其他套件。
 
 ### 展場觸控介面（主要使用方式）
 

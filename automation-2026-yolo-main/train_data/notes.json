@@ -1,0 +1,25 @@
+{
+  "categories": [
+    {
+      "id": 0,
+      "name": "CUCUMBER"
+    },
+    {
+      "id": 1,
+      "name": "CORN"
+    },
+    {
+      "id": 2,
+      "name": "CARROT"
+    },
+    {
+      "id": 3,
+      "name": "LETTUCE"
+    }
+  ],
+  "info": {
+    "year": 2026,
+    "version": "1.0",
+    "contributor": "Label Studio"
+  }
+}
