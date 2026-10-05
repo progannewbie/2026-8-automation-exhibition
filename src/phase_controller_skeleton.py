@@ -85,6 +85,8 @@ class PhaseController:
 
         # 最近一次 execute() 失敗的原因，給介面顯示用（成功時是空字串）
         self.failure_message = ""
+        # 單一階段可以補充的失敗細節（例如視覺沒找到），_set_phase_failure 會接在後面
+        self._phase_detail = ""
 
         logger.info("✓ PhaseController 已初始化")
 
@@ -141,6 +143,7 @@ class PhaseController:
             True 成功，False 失敗
         """
         self.failure_message = ""
+        self._phase_detail = ""
 
         if not self.current_recipe:
             logger.error("✗ 未選擇菜色")
@@ -209,6 +212,8 @@ class PhaseController:
             f"第 {index+1}/{len(self.phases)} 步 "
             f"{phase_instr.action} {phase_instr.location} 失敗"
         )
+        if self._phase_detail:
+            self.failure_message += f"：{self._phase_detail}"
         if self.arms_off_home:
             self.failure_message += "；手臂停在原處、沒有自動復歸"
             logger.error("✗ 手臂沒有自動復歸：請確認現場，用教導器把手臂移回原點後重新啟動程式")
@@ -372,7 +377,9 @@ class PhaseController:
                     time.sleep(RetryPolicy.RETRY_DELAY_SEC)
 
             if detection is None:
-                logger.error(f"  ✗ 取料失敗：視覺始終未偵測到 {expected_food}")
+                self._phase_detail = (f"視覺找不到 {expected_food}，或位置超出標定範圍"
+                                      f"（請把食材放回取料區中央）")
+                logger.error(f"  ✗ 取料失敗：{self._phase_detail}")
                 return False
             x_mm, y_mm, angle_deg = detection
             logger.info(f"  視覺定位 {expected_food}: x={x_mm:.1f}mm, y={y_mm:.1f}mm, angle={angle_deg:.1f}°")

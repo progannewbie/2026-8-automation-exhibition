@@ -21,12 +21,18 @@ from config_connection import (
 
 os.makedirs(os.path.dirname(LOGGING_CONFIG['connection_log']), exist_ok=True)
 
-logging.basicConfig(
-    filename=LOGGING_CONFIG['connection_log'],
-    level=logging.DEBUG if LOGGING_CONFIG['verbose'] else logging.INFO,
-    format=LOGGING_CONFIG['log_format']
-)
+# 用本模組自己的 handler 寫 connection.log，不碰 root logger。
+# 舊版用 logging.basicConfig(filename=...)：誰先設定 root 誰贏——
+# web_ui.py 先設好日誌才 import 本模組，basicConfig 變成 no-op、connection.log
+# 根本不會產生；main.py 則是先 import 本模組，結果所有模組的日誌都灌進 connection.log。
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG if LOGGING_CONFIG['verbose'] else logging.INFO)
+if not any(getattr(h, '_smartcook_connection_log', False) for h in logger.handlers):
+    _conn_handler = logging.FileHandler(LOGGING_CONFIG['connection_log'], encoding='utf-8')
+    _conn_handler.setFormatter(logging.Formatter(LOGGING_CONFIG['log_format']))
+    _conn_handler._smartcook_connection_log = True
+    logger.addHandler(_conn_handler)
+# 仍會往上傳到 root，所以 web_ui_*.log / smartcook_*.log 也看得到連線紀錄
 
 # ============================================================================
 # 連線管理類別

@@ -45,7 +45,9 @@ HSV_PARAMS = {
 CLASS_TO_HSV_KEY = {
     "CUCUMBER": "cucumber",
     "CARROT": "carrot",
-    "ROMAINE": "baby_corn",  # 羅曼生菜暫用 baby_corn 參數（現已改為直接進混拌區，不需 tip detection）
+    # LETTUCE（羅曼生菜）刻意不列：生菜不切、夾起來直接進沙拉盤／混拌區，
+    # 不需要分頭尾，沿用 YOLO OBB 的 0–180° 角度即可。
+    # （舊版這裡寫的是 "ROMAINE"，但 v3 起模型類別已改名 LETTUCE，那行從來沒對到過。）
 }
 
 KERNEL = np.ones((5, 5), np.uint8)

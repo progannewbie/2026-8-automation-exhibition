@@ -79,6 +79,10 @@ git checkout a3f792a -- test0819
 - 類別：`CUCUMBER`、`CORN`、`CARROT`、`LETTUCE`、`CUCUMBER_SLICE`（v4 新增）
 - YOLO OBB 的角度只有 0–180° 週期，`img_processing.py` 會在 YOLO 框內用 HSV
   色域判斷食材頭尾，補成完整 0–360° 角度。目前 HSV 色域有 cucumber / carrot 兩組。
+  生菜 (LETTUCE) 不切、不需分頭尾，刻意沿用 OBB 的 0–180° 角度。
+- 食材落在檯面標定範圍外（像素 u 147–320、v 200–363，外加 20px）時視為沒找到，
+  不會把外推出來的座標送給手臂；取料會重拍，仍在範圍外就中止並提示把食材放回取料區中央。
+  取料區若本來就在範圍外，請重新標定（見 `config_vision.TableHomography`）。
 - 套件未安裝或模型檔不存在時，`vision_skeleton.py` 只會顯示警告、不會中斷程式。
 
 ## 安裝與執行

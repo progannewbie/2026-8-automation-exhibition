@@ -50,13 +50,20 @@ def _setup_logging() -> str:
 
     formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
 
+    # handler 也設 INFO：comms 模組自己開到 DEBUG（每拍心跳都記），那些只寫 connection.log
     file_handler = logging.FileHandler(log_path, encoding="utf-8")
     file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
+    console_handler.setLevel(logging.INFO)
 
     root_logger = logging.getLogger()
+    # vision / phase_controller 為了單獨跑測試腳本時有輸出，import 時會 basicConfig
+    # 掛一個 root handler；這裡由入口程式接手，先拿掉，不然終端機每行印兩次
+    for h in list(root_logger.handlers):
+        root_logger.removeHandler(h)
     root_logger.setLevel(logging.INFO)
     root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
@@ -153,6 +160,7 @@ class RobotRunner:
         self.finished_at = 0.0
         self.error = ""
         self.stopping = False
+        self.stoppable = True
 
         self.comms = None
         self.vision = None
@@ -193,8 +201,10 @@ class RobotRunner:
 
     # ---------------------------------------------------------------- 執行
 
-    def _begin(self, title: str, steps_text: list, phases: list) -> None:
+    def _begin(self, title: str, steps_text: list, phases: list,
+               stoppable: bool = True) -> None:
         """共用的開跑前置。呼叫端必須已持有 self.lock。"""
+        self.stoppable = stoppable
         self.recipe_name = title
         self.phases = phases
         self.steps_text = steps_text
@@ -246,7 +256,8 @@ class RobotRunner:
                 return {"ok": False, "msg": f"沒有這個動作: {key}"}
 
             self.choice = None
-            self._begin(task["name"], [f"{task['name']}中…"], [None])
+            # 維護動作是一句指令送出去就等到底，中間沒有階段邊界可以停
+            self._begin(task["name"], [f"{task['name']}中…"], [None], stoppable=False)
 
             self.thread = threading.Thread(target=self._run_task, args=(task,), daemon=True)
             self.thread.start()
@@ -303,7 +314,7 @@ class RobotRunner:
         try:
             if self.simulate:
                 time.sleep(4.0)
-                success = not self.stopping
+                success = True
             else:
                 resp = self.comms.send_command_dual(cmd)
                 logger.info(f"  F60_F={resp.get('F60_F')}  F60_R={resp.get('F60_R')}")
@@ -345,6 +356,9 @@ class RobotRunner:
         with self.lock:
             if self.state != "running":
                 return {"ok": False, "msg": "目前沒有在執行"}
+            if not self.stoppable:
+                return {"ok": False,
+                        "msg": f"{self.recipe_name}無法中途停止，緊急狀況請按實體急停按鈕"}
             self.stopping = True
 
         if self.controller:
@@ -403,6 +417,7 @@ class RobotRunner:
                 "step_text": step_text,
                 "elapsed": round(elapsed),
                 "stopping": self.stopping,
+                "stoppable": self.stoppable,
                 "error": self.error,
             }
 
