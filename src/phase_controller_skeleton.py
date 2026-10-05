@@ -495,12 +495,14 @@ class PhaseController:
         plan, self._chop_plan = self._chop_plan, None
         if plan and plan["food_type"] == food_type:
             num_cuts, start = plan["cuts"], plan["start"]
-        cmd = ChopCommand.create(food_type, num_cuts, thickness, start)
+        offset = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM
+        cmd = ChopCommand.create(food_type, num_cuts, thickness, start, offset)
 
         if not self._validate_command(cmd, CommandParser.validate_chop):
             return False
 
         logger.info(f"  切割: {food_type} ({num_cuts} 刀，第 {start}～{start + num_cuts - 1} 格，"
+                    f"左臂 X {ChopPlanConfig.cut_x(start):.1f}～{ChopPlanConfig.cut_x(start + num_cuts - 1):.1f}，"
                     f"右臂跟刀壓，雙臂協同)")
         # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
         return self._send_motion("切割", cmd, max_retries, timeout)

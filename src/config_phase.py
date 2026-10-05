@@ -52,13 +52,14 @@ class FoodCutParams:
 
 # ⚠️ 切片厚度由左臂下刀點決定，cut_thickness_mm 改了沒有作用。
 #
-#    第 i 格的下刀點 = chop_1[1] 沿 X 往後 (i-1)×5mm（左臂 AS 即時計算，跟教點陣列
-#    chop_1[1..30] 的值相同，但可以算到第 60 格）。.thick 只拿來檢查 > 0。
+#    第 i 格的下刀點 = chop_1[1] 沿 X 移 CHOP_ORIGIN_OFFSET_MM + (i-1)×5mm（左臂 AS 即時
+#    計算；偏移 0 時跟教點陣列 chop_1[1..30] 的值相同，但可以算到第 60 格）。
+#    .thick 只拿來檢查 > 0。
 #
 # ⚠️ 右臂跟著刀走：每一刀都是「右臂在離下刀處 10mm 的地方壓好 → 左臂切 → 右臂抬起」，
 #    下一刀兩臂一起往後移 5mm。右臂第 i 格壓點 = press_chop_zone 沿右臂 X 移
-#    (i-1)×5mm×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 chop_1[1]
-#    下刀處 10mm、還沒切的那一側。
+#    (偏移 + (i-1)×5mm)×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 chop_1[1]
+#    （原本的教點，不含偏移）下刀處 10mm、還沒切的那一側。
 #
 # ⚠️ AS 端 DO_CHOP：刀數 1～60，最後一刀的格數 (起始格 + 刀數 - 1) 不超過 60。
 
@@ -86,6 +87,12 @@ class ChopPlanConfig:
 
     # 左臂 GBK 版 chop_1[1] 的 X（教點表 chop_1[1] 308.854706 ...）。重教點後要跟著改。
     CHOP_1_FIRST_X_MM = 308.854706
+
+    # 第 1 格相對 chop_1[1] 的 X 偏移 (mm)。chop_1[1] 是以前「只切前段」的第一刀，
+    # 整根切完要從更前面開始時調這裡（負值 = 往 X 小的方向）。隨 CHOP 指令送給兩臂，
+    # 左臂下刀點、右臂壓點一起移；兩臂 AS 只接受 ±300mm。
+    # 待現場確認：用 test/chop_points.py --offset N 預覽、教導器對點後填入。
+    CHOP_ORIGIN_OFFSET_MM = 0.0
     MAX_CUTS = 60
     MAX_INDEX = 60               # 最後一刀的格數上限（AS 端同一個值）
 
@@ -102,7 +109,8 @@ class ChopPlanConfig:
 
     @classmethod
     def cut_x(cls, index: int) -> float:
-        return cls.CHOP_1_FIRST_X_MM + (index - 1) * CHOP_STEP_MM
+        """第 index 格下刀點的左臂 X"""
+        return cls.CHOP_1_FIRST_X_MM + cls.CHOP_ORIGIN_OFFSET_MM + (index - 1) * CHOP_STEP_MM
 
     @classmethod
     def plan(cls, low_x_mm: float, high_x_mm: float) -> Tuple[Optional[Dict], str]:
@@ -113,7 +121,7 @@ class ChopPlanConfig:
             (計畫, 說明)。計畫是 None 表示不能切，說明裡寫原因。
         """
         step = CHOP_STEP_MM
-        first = (low_x_mm + cls.TIP_OFFSET_MM - cls.CHOP_1_FIRST_X_MM) / step + 1
+        first = (low_x_mm + cls.TIP_OFFSET_MM - cls.cut_x(1)) / step + 1
         start = int(round(first))
         if start < 1:
             if start >= 0:
@@ -122,7 +130,7 @@ class ChopPlanConfig:
                 return None, (f"食材前端超出切割範圍 {1 - first:.0f} 格"
                               f"（約 {(1 - first) * step:.0f}mm），請往後放")
 
-        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.CHOP_1_FIRST_X_MM) // step) + 1
+        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.cut_x(1)) // step) + 1
         cuts = last - start + 1
         if cuts < 1:
             return None, f"量到的長度太短，切不到任何一刀（X {low_x_mm:.0f}～{high_x_mm:.0f}）"

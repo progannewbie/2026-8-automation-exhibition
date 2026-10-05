@@ -94,20 +94,23 @@ class ChopCommand:
     """
     切割指令格式
     
-    CSV: CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>,<START_INDEX>
+    CSV: CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>,<START_INDEX>,<OFFSET_MM>
 
-    START_INDEX：左臂從第幾格開始下刀（第 i 格 = chop_1[1] 往後 (i-1)×5mm），
-    右臂壓點跟著刀走。一律帶上（沒量測時是 1），AS 端不用處理欄位不存在的情況。
+    START_INDEX：左臂從第幾格開始下刀，右臂壓點跟著刀走
+    OFFSET_MM  ：第 1 格相對 chop_1[1] 的 X 偏移（ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM）
+                 第 i 格下刀點 = chop_1[1] 往後 OFFSET_MM + (i-1)×5mm
+    兩欄一律帶上，AS 端不用處理欄位不存在的情況。
     限制（兩臂 AS 相同）：NUM_CUTS 1～60、START_INDEX ≥ 1、
-    START_INDEX + NUM_CUTS - 1 ≤ 60。見 config_phase.ChopPlanConfig。
+    START_INDEX + NUM_CUTS - 1 ≤ 60、|OFFSET_MM| ≤ 300。見 config_phase.ChopPlanConfig。
 
     例子:
-        CHOP,CUCUMBER,15,5.0,1      # 沒量測：從第 1 格切 15 刀
-        CHOP,CUCUMBER,41,5.0,3      # 量測後：第 3～43 格，整根切完
-        CHOP,ROMAINE,1,25.0,17      # 生菜中間一刀落在第 17 格
+        CHOP,CUCUMBER,15,5.0,1,0.0       # 沒量測：從第 1 格切 15 刀
+        CHOP,CUCUMBER,41,5.0,3,-60.0     # 量測後：第 3～43 格，第 1 格在 chop_1[1] 前 60mm
+        CHOP,ROMAINE,1,25.0,17,-60.0     # 生菜中間一刀落在第 17 格
     """
 
-    FORMAT = "CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>,<START_INDEX>"
+    FORMAT = "CHOP,<FOOD_TYPE>,<NUM_CUTS>,<CUT_THICKNESS_MM>,<START_INDEX>,<OFFSET_MM>"
+    MAX_OFFSET_MM = 300.0
     MAX_CUTS = 60
     MAX_INDEX = 60
 
@@ -134,9 +137,9 @@ class ChopCommand:
     
     @staticmethod
     def create(food_type: str, num_cuts: int, thickness_mm: float,
-               start_index: int = 1) -> str:
-        """建立切割指令（起始格一律帶上）"""
-        return f"CHOP,{food_type},{num_cuts},{thickness_mm},{int(start_index)}"
+               start_index: int = 1, offset_mm: float = 0.0) -> str:
+        """建立切割指令（起始格、偏移一律帶上）"""
+        return f"CHOP,{food_type},{num_cuts},{thickness_mm},{int(start_index)},{float(offset_mm):.1f}"
 
 
 # ============================================================================
@@ -441,10 +444,12 @@ class CommandParser:
             num_cuts = int(params[1])
             thickness = float(params[2])
             start = int(params[3]) if len(params) > 3 else 1
+            offset = float(params[4]) if len(params) > 4 else 0.0
             # 跟兩臂 AS DO_CHOP 一樣的檢查
             return (food_type in ChopCommand.FOOD_TYPES and
                     1 <= num_cuts <= ChopCommand.MAX_CUTS and thickness > 0 and
-                    start >= 1 and start + num_cuts - 1 <= ChopCommand.MAX_INDEX)
+                    start >= 1 and start + num_cuts - 1 <= ChopCommand.MAX_INDEX and
+                    abs(offset) <= ChopCommand.MAX_OFFSET_MM)
         except ValueError:
             return False
     

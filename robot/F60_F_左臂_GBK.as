@@ -3853,7 +3853,7 @@ listen:
 		SVALUE "PICKUP":
 			CALL DO_PICKUP ($fld[2], $fld[3], VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
 		SVALUE "CHOP":
-			CALL DO_CHOP ($fld[2], VAL ($fld[3]), VAL ($fld[4]), VAL ($fld[5]))
+			CALL DO_CHOP ($fld[2], VAL ($fld[3]), VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
 		SVALUE "PLACE":
 			CALL DO_PLACE ($fld[2], $fld[3], $fld[4])
 		SVALUE "FLIP":
@@ -4025,14 +4025,15 @@ listen:
   robot_busy = 0
   CALL SEND_LINE ("OK")
 .END
-.PROGRAM DO_CHOP(.$food,.cuts,.thick,.start) #153
+.PROGRAM DO_CHOP(.$food,.cuts,.thick,.start,.offset) #153
 	IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
 		CALL SEND_LINE ("ERROR,E4004")
 		RETURN
 	END
-	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切
-	; 第 i 格下刀點 = chop_1[1] 沿 X 往後 (i-1)*5mm（跟教點陣列 chop_1[1..30] 相同，可算到第 60 格）
-	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 THEN
+	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切，.offset = 第 1 格相對 chop_1[1] 的 X 偏移 (mm)
+	; 第 i 格下刀點 = chop_1[1] 沿 X 移 .offset + (i-1)*5mm（.offset = 0 時跟教點陣列 chop_1[1..30] 相同）
+	; .offset 由 PC 送（config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM），右臂壓點跟著移一樣多
+	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 THEN
 		CALL SEND_LINE ("ERROR,E4005")
 		RETURN
 	END
@@ -4054,7 +4055,7 @@ listen:
 	; 右臂 do_chop 每刀 SYNC 一次、等一次 PULSE，兩邊次數必須一致
 	i = .start
 	DO
-		POINT chop_now = SHIFT (chop_1[1] BY (i - 1) * 5, 0, 0)
+		POINT chop_now = SHIFT (chop_1[1] BY .offset + (i - 1) * 5, 0, 0)
 		POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
 		LMOVE chop_now_per
 		break

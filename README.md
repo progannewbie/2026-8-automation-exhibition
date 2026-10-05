@@ -78,18 +78,22 @@ git checkout 10d83385 -- "robot/F60_F_左臂_slow.as"
 ### 切菜
 
 - **刀數依長度**：MEASURE 拍照量出食材兩端在左臂座標的 X，算出起始格與刀數
-  （[`ChopPlanConfig`](src/config_phase.py)），指令是 `CHOP,<食材>,<刀數>,5.0,<起始格>`。
-  上限 60 刀、最後一刀不超過第 60 格。第 i 格下刀點 = `chop_1[1]` 往後 (i-1)×5 mm，
-  左臂即時計算，可超過教點陣列 `chop_1[1..30]`。
+  （[`ChopPlanConfig`](src/config_phase.py)），指令是 `CHOP,<食材>,<刀數>,5.0,<起始格>,<偏移>`。
+  上限 60 刀、最後一刀不超過第 60 格。
+- **下刀位置**：第 i 格 = `chop_1[1]` + 偏移 + (i-1)×5 mm，左臂即時計算。
+  `chop_1[1]` 是以前「只切前段」的第一刀；整根切完要從更前面開始時調
+  `ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM`（負值 = 往 X 小的方向，±300 mm 內），
+  左臂下刀點和右臂壓點一起移，教點不用動。
 - **右臂跟刀壓**：每一刀都是「右臂在離下刀處 10 mm、還沒切的那一側壓好 → 左臂切 →
   右臂抬起」，下一刀兩臂一起往後移 5 mm。
-- **生菜**：中間一刀落在 `ChopPlanConfig.ROMAINE_START_INDEX` 那一格。
+- **生菜**：中間一刀落在 `ChopPlanConfig.ROMAINE_START_INDEX` 那一格（從偏移後的第 1 格算起，改偏移要一起確認）。
 
 > ⚠️ 上機前要在現場完成，否則會被擋下：
 >
 > | 項目 | 沒做的話 |
 > |---|---|
-> | 右臂 `press_chop_zone` 重教在離 `chop_1[1]` 下刀處 10 mm，確認 `press_dir` 方向後把右臂 `INIT_CONST` 的 `press_follow_ready` 改成 1 | 右臂拒絕切割，所有切菜都不能做 |
+> | 右臂 `press_chop_zone` 重教在離 `chop_1[1]`（原本教點，不含偏移）下刀處 10 mm，確認 `press_dir` 方向後把右臂 `INIT_CONST` 的 `press_follow_ready` 改成 1 | 右臂拒絕切割，所有切菜都不能做 |
+> | 決定第 1 格的偏移 `CHOP_ORIGIN_OFFSET_MM`（`chop_points.py --offset` 預覽） | 第 1 格就是 `chop_1[1]` |
 > | 用 `test/calibrate_chop_zone.py` 標定切割區，結果貼回 `config_vision.ChopZoneHomography` | 不量測，照舊從第 1 格切 15 刀 |
 > | 量生菜中間位置，填 `ChopPlanConfig.ROMAINE_START_INDEX` | 菜色 3、4 開跑前就被擋下 |
 > | 試壓各食材的 `press_mm`（右臂 `do_chop`） | 壓太淺壓不住、太深壓爛 |

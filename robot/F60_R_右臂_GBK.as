@@ -4449,7 +4449,7 @@ exit_end:
 		SVALUE "PICKUP":
 			CALL do_pickup ($fld[2], $fld[3], VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
 		SVALUE "CHOP":
-			CALL do_chop ($fld[2], VAL ($fld[3]), VAL ($fld[4]), VAL ($fld[5]))
+			CALL do_chop ($fld[2], VAL ($fld[3]), VAL ($fld[4]), VAL ($fld[5]), VAL ($fld[6]))
 		SVALUE "PLACE":
 			CALL do_place ($fld[2], $fld[3], $fld[4])
 		SVALUE "FLIP":
@@ -4474,7 +4474,7 @@ exit_end:
 			CALL send_line ("ERROR,E4021")
 	END
 .END
-.PROGRAM do_chop(.$food,.cuts,.thick,.start) #159
+.PROGRAM do_chop(.$food,.cuts,.thick,.start,.offset) #159
   ABS.SPEED ON
   ; press_chop_zone 要重教在離左臂 chop_1[1] 下刀處 10mm、還沒切的那一側，
   ; 教好、確認 press_dir 方向後把 INIT_CONST 的 press_follow_ready 改成 1。
@@ -4483,7 +4483,7 @@ exit_end:
     CALL send_line ("ERROR,E4005")
     RETURN
   END
-  IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 THEN
+  IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 THEN
     CALL send_line ("ERROR,E4005")
     RETURN
   END
@@ -4509,10 +4509,11 @@ exit_end:
   LMOVE home_right
   break
   ; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
-  ; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (i-1)*5mm*press_dir，跟著刀子走
+  ; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*5mm)*press_dir，跟著刀子走
+  ; （.offset = 第 1 格相對 chop_1[1] 的偏移，跟左臂同一個值，由 PC 送）
   i = .start
   DO
-    POINT press_now = SHIFT (press_chop_zone BY (i - 1) * 5 * press_dir, 0, 0)
+    POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * 5) * press_dir, 0, 0)
     SPEED 500 MM/s ALWAYS   ;  絕對速度
     LMOVE press_now
     break
@@ -5982,7 +5983,7 @@ exit_end:
 	timeout_flip = 30
 	robot_busy = 0
 	$rxbuf = ""
-	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (i-1)*5mm*press_dir
+	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (offset + (i-1)*5mm)*press_dir
 	press_dir = 1           ; ★ 待現場確認：壓點往反方向跑就改 -1
 	press_follow_ready = 0  ; ★ press_chop_zone 重教在離 chop_1[1] 下刀處 10mm 後改 1，否則拒絕切割
 .END
