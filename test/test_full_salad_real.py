@@ -16,8 +16,8 @@ LOG_DIR = Path(__file__).resolve().parent / "logs"
 class RobotController:
     """機器人 TCP 控制器"""
 
-    def __init__(self, host_f60f="192.168.5.2", port_f60f=9000,
-                 host_f60r="192.168.5.7", port_f60r=9000):
+    def __init__(self, host_f60f="192.168.11.2", port_f60f=9000,
+                 host_f60r="192.168.11.7", port_f60r=9000):
         self.host_f60f = host_f60f
         self.port_f60f = port_f60f
         self.host_f60r = host_f60r

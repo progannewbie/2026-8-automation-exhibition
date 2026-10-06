@@ -93,8 +93,8 @@
 前置檢查 (Pre-flight Checks):
   ✓ Python ≥ 3.8
   ✓ 依賴套件 (opencv, ultralytics, numpy 等)
-  ✓ F60_F 連接 (192.168.5.2)
-  ✓ F60_R 連接 (192.168.5.7)
+  ✓ F60_F 連接 (192.168.11.2)
+  ✓ F60_R 連接 (192.168.11.7)
   ✓ 相機設備
   ✓ YOLO 模型文件
   ✓ Hand-eye 標定文件

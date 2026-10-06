@@ -4,10 +4,10 @@ SmartCook 連線排錯工具 (Connection Test)
 不牽涉 comms_connection_skeleton.py 或其他模組，方便獨立驗證通訊層。
 
 用法:
-    python connection_test.py --ip 192.168.5.2          # 連 F60_F
-    python connection_test.py --ip 192.168.5.7           # 連 F60_R
-    python connection_test.py --ip 192.168.5.2 --port 9000
-    python connection_test.py --ip 192.168.5.2 --interactive   # 連上後手動輸入訊息互動
+    python connection_test.py --ip 192.168.11.2          # 連 F60_F
+    python connection_test.py --ip 192.168.11.7           # 連 F60_R
+    python connection_test.py --ip 192.168.11.2 --port 9000
+    python connection_test.py --ip 192.168.11.2 --interactive   # 連上後手動輸入訊息互動
 """
 
 import argparse
@@ -73,7 +73,7 @@ def interactive_loop(sock: socket.socket) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--ip", required=True, help="機器人控制器 IP (F60_F: 192.168.5.2 / F60_R: 192.168.5.7)")
+    parser.add_argument("--ip", required=True, help="機器人控制器 IP (F60_F: 192.168.11.2 / F60_R: 192.168.11.7)")
     parser.add_argument("--port", type=int, default=9000, help="埠號 (預設 9000)")
     parser.add_argument("--timeout", type=float, default=5.0, help="連線逾時秒數 (預設 5)")
     parser.add_argument("--interactive", action="store_true", help="握手+心跳測試通過後，進入手動輸入互動模式")
