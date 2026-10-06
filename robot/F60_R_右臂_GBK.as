@@ -3413,9 +3413,11 @@ TM_GET_JUDGE_DAYS      10
 .IDE_CMT
 @@@ PROJECT @@@
 @@@ PROJECTNAME @@@
-star_trace
+F60_R_右臂_GBK
 @@@ HISTORY @@@
 16.09.2026 13:24:42
+06.10.2026 11:15:20
+
 @@@ INSPECTION @@@
 @@@ CONNECTION @@@
 Rs07_R
@@ -3438,49 +3440,81 @@ Rs07_R
 0:disconnect:F
 0:dispatch:F
 0:do_chop:F
+.cuts 
+.thick 
+.start 
+.offset 
+.offset_y 
+.last 
 0:do_chop_0814:F
+.cuts 
+.thick 
 0:do_chop_test:F
+.cuts 
+.thick 
 0:do_clean:F
 0:do_con135:F
+.ok 
 0:do_con45:F
+.ok 
 0:do_con90:F
+.ok 
 0:do_flip:F
+.cycles 
+.speed_pct 
 0:do_flip_teach:F
+.cycles 
+.speed_pct 
 0:do_handshake:F
+.ok 
 0:do_home:F
 0:do_iotest:F
 0:do_pickup:F
+.x_mm 
+.y_mm 
+.angle_deg 
 0:do_pickup_test:F
 0:do_place:F
 0:do_place_test:F
 0:do_ready:F
 0:do_reset:F
 0:do_rturn135:F
+.ok 
 0:do_rturn45:F
+.ok 
 0:do_rturn90:F
+.ok 
 0:do_status:F
 0:do_stop:F
 0:ethernet_test:F
+.n 
 0:fry_burger:F
 0:fry_lunchmeat:F
 0:get:F
+.n 
 0:get01630:F
 0:get_delicatesse:F
 0:get_ok_netosw:F
 0:hb:F
 0:heartput:F
 0:init:F
+.PC 
 0:init1222:F
+.PC 
 0:init_const:F
 0:init_points:F
 0:init_switches:F
+.PC 
 0:init_tool:F
 0:loveheart:F
 0:main:F
 0:main1222:F
 0:open_listen:F
 0:open_socket:F
+.er_count 
 0:pg0812:F
+.x_mm 
+.y_mm 
 0:pg20260916:F
 0:point_move:F
 0:point_teach:F
@@ -3491,7 +3525,9 @@ Rs07_R
 0:rcon60:F
 0:rcon90:F
 0:recv:F
+.num 
 0:recv_line:F
+.rok 
 0:remove:F
 0:remove_1:F
 0:remove_2:F
@@ -3501,18 +3537,27 @@ Rs07_R
 0:rturn45:F
 0:rturn90:F
 0:send:F
+.ret 
 0:send_line:F
 0:split_csv:F
 0:star_trace:F
 0:sync_step:F
+.ok 
 0:teach:F
 0:teach_origin:F
 0:test_timer:F
 0:test_wai_signal:F
 0:test_wait_off:F
 0:wait_accept:F
+.accepted 
 0:wait_signal:F
+.sig_no 
+.timeout_sec 
+.ok 
 0:wait_signal_off:F
+.sig_no 
+.timeout_sec 
+.ok 
 0:wave_trace:F
 @@@ TRANS @@@
 @@@ JOINTS @@@
@@ -4474,80 +4519,80 @@ exit_end:
 	END
 .END
 .PROGRAM do_chop(.$food,.cuts,.thick,.start,.offset,.offset_y) #159
-	ABS.SPEED ON
-	; press_chop_zone 要教在離左臂 cu（偏移 0 的第一刀）下刀處 10mm、還沒切的那一側，
-	; 教好、確認 press_dir 方向後把 init_const 的 press_ready 改成 1。
-	; 沒改之前一律拒絕切割（左臂會在 SYNC 逾時回 E4023），避免壓在舊位置。
-	IF press_ready <> 1 THEN
-		CALL send_line ("ERROR,E4005")
-		RETURN
-	END
-	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
-		CALL send_line ("ERROR,E4005")
-		RETURN
-	END
-	.last = .start + .cuts - 1
-	IF .last > 60 THEN
-		CALL send_line ("ERROR,E4005")
-		RETURN
-	END
-	SCASE .$food OF
-		SVALUE "CUCUMBER":
-			press_mm = 15    ;黃瓜下降高度
-		SVALUE "CARROT":
-			press_mm = 17    ;紅蘿蔔下降高度
-		SVALUE "ROMAINE":
-			press_mm = 15    ;生菜下降高度 (★ 暫用小黃瓜值，待現場試壓)
-		ANY :
-			CALL send_line ("ERROR,E4005");收到資料異常
-			RETURN
-	END
-	robot_busy = 1
-	SPEED 50 MM/s ALWAYS   ;  絕對速度
-	TOOL right_spatula
-	LMOVE home_right
-	break
-	; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
-	; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*5mm)*press_dir，跟著刀子走
-	; （.offset = 第 1 格相對左臂 cu 的偏移，跟左臂同一個值，由 PC 送）
-	; 食材放置的 Y 偏移 .offset_y 也跟左臂一樣，沿本臂 Y 移 .offset_y*press_dir_y
-	i = .start
-	DO
-		POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * 5) * press_dir, .offset_y * press_dir_y, 0)
-		SPEED 500 MM/s ALWAYS   ;  絕對速度
-		LMOVE press_now
-		break
-		SPEED 50 MM/s ALWAYS   ;  絕對速度
-		DRAW 0, 0, -press_mm
-		break
-		CALL sync_step (ok);壓好，左臂可以下刀
-		IF ok == 0 THEN
-			CALL send_line ("ERROR,E4023")
-			robot_busy = 0
-			RETURN
-		END
-		SWAIT -1001    ;等左臂 SYNC 的 0.1 秒脈衝結束，不然會被當成「這刀切完」
-		SWAIT 1001     ;等左臂這刀切完 (PULSE)
-		DRAW 0, 0, press_mm
-		break
-		i = i + 1
-	UNTIL i > .last
-	CALL sync_step (ok);切割完成
-	IF ok == 0 THEN
-		CALL send_line ("ERROR,E4023")
-		robot_busy = 0
-		RETURN
-	END
-	SPEED 500 MM/s ALWAYS   ;  絕對速度
-	LMOVE home_right
-	break
-	SIGNAL sig_out_step
-	SWAIT sig_in_step
-	SIGNAL -sig_out_step
-	ABS.SPEED OFF
-	TWAIT 0.5
-	robot_busy = 0
-	CALL send_line ("OK")
+  ABS.SPEED ON
+  ; press_chop_zone 要教在離左臂 cu（偏移 0 的第一刀）下刀處 10mm、還沒切的那一側，
+  ; 教好、確認 press_dir 方向後把 init_const 的 press_ready 改成 1。
+  ; 沒改之前一律拒絕切割（左臂會在 SYNC 逾時回 E4023），避免壓在舊位置。
+  IF press_ready <> 1 THEN
+    CALL send_line ("ERROR,E4005")
+    RETURN
+  END
+  IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
+    CALL send_line ("ERROR,E4005")
+    RETURN
+  END
+  .last = .start + .cuts - 1
+  IF .last > 60 THEN
+    CALL send_line ("ERROR,E4005")
+    RETURN
+  END
+  SCASE .$food OF
+    SVALUE "CUCUMBER":
+      press_mm = 15    ;黃瓜下降高度
+    SVALUE "CARROT":
+      press_mm = 17    ;紅蘿蔔下降高度
+    SVALUE "ROMAINE":
+      press_mm = 15    ;生菜下降高度 (★ 暫用小黃瓜值，待現場試壓)
+    ANY :
+      CALL send_line ("ERROR,E4005");收到資料異常
+      RETURN
+  END
+  robot_busy = 1
+  SPEED 500 MM/s ALWAYS   ;  絕對速度
+  TOOL right_spatula
+  LMOVE home_right
+  break
+  ; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
+  ; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*5mm)*press_dir，跟著刀子走
+  ; （.offset = 第 1 格相對左臂 cu 的偏移，跟左臂同一個值，由 PC 送）
+  ; 食材放置的 Y 偏移 .offset_y 也跟左臂一樣，沿本臂 Y 移 .offset_y*press_dir_y
+  i = .start
+  DO
+    POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * 5) * press_dir, .offset_y * press_dir_y, 0)
+    SPEED 500 MM/s ALWAYS   ;  絕對速度
+    LMOVE press_now
+    break
+    SPEED 500 MM/s ALWAYS   ;  絕對速度
+    DRAW 0, 0, -press_mm
+    break
+    CALL sync_step (ok);壓好，左臂可以下刀
+    IF ok == 0 THEN
+      CALL send_line ("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
+    SWAIT -1001    ;等左臂 SYNC 的 0.1 秒脈衝結束，不然會被當成「這刀切完」
+    SWAIT 1001     ;等左臂這刀切完 (PULSE)
+    DRAW 0, 0, press_mm
+    break
+    i = i + 1
+  UNTIL i > .last
+  CALL sync_step (ok);切割完成
+  IF ok == 0 THEN
+    CALL send_line ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  SPEED 500 MM/s ALWAYS   ;  絕對速度
+  LMOVE home_right
+  break
+  SIGNAL sig_out_step
+  SWAIT sig_in_step
+  SIGNAL -sig_out_step
+  ABS.SPEED OFF
+  TWAIT 0.5
+  robot_busy = 0
+  CALL send_line ("OK")
 .END
 .PROGRAM do_chop_0814(.$food,.cuts,.thick) #0;
 	IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
@@ -6080,38 +6125,38 @@ exit_end:
 	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[-76.169,54.057,-92.937,-8.318,18.917,-169.17] ;start point
 .END
 .PROGRAM main() #0
-	;CALL heartput
-	CALL init_switches
-	CALL init_const
-	;CALL init_points     ; 點位已現場教過，不重跑避免蓋回佔位值 0
-	CALL init_tool
-	SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-	ACCURACY 1
-	SIGNAL -sig_out_step
-	LMOVE home_right
-	CALL clean_socket
-	CALL open_listen
-	DO
-		CALL wait_accept (accepted)
-		IF accepted == 1 THEN
-			sock_open_flag = 1
-			$rxbuf = ""
-			CALL do_handshake (hs_ok)
-			IF hs_ok == 1 THEN
-				conn_lost = 0
-				DO
-					CALL recv_line ($line, rok)
-					IF rok == 0 THEN
-						conn_lost = 1
-					ELSE
-						CALL split_csv ($line)
-						CALL dispatch
-					END
-				UNTIL conn_lost == 1
-			END
-			CALL disconnect
-		END
-	UNTIL 1 == 0
+  ;CALL heartput
+  CALL init_switches
+  CALL init_const
+  ;CALL init_points     ; 點位已現場教過，不重跑避免蓋回佔位值 0
+  CALL init_tool
+  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  ACCURACY 1
+  SIGNAL -sig_out_step
+  LMOVE home_right
+  CALL clean_socket
+  CALL open_listen
+  DO
+    CALL wait_accept (accepted)
+    IF accepted == 1 THEN
+      sock_open_flag = 1
+      $rxbuf = ""
+      CALL do_handshake (hs_ok)
+      IF hs_ok == 1 THEN
+        conn_lost = 0
+        DO
+          CALL recv_line ($line, rok)
+          IF rok == 0 THEN
+            conn_lost = 1
+          ELSE
+            CALL split_csv ($line)
+            CALL dispatch
+          END
+        UNTIL conn_lost == 1
+      END
+      CALL disconnect
+    END
+  UNTIL 1 == 0
 .END
 .PROGRAM main1222() #2; 联动
 	CALL init1222;初始设定

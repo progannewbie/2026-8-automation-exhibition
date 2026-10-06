@@ -3423,10 +3423,12 @@ F60_F_左臂_GBK
 13.08.2026 09:38:19
 14.08.2026 14:49:09
 15.08.2026 18:45:59
+06.10.2026 11:06:18
+
 @@@ INSPECTION @@@
 @@@ CONNECTION @@@
 Rs07_F
-192.168.5.2
+192.168.11.2
 23
 @@@ PROGRAM @@@
 0:INIT_SWITCHES:F
@@ -3470,6 +3472,7 @@ Rs07_F
 .start 
 .offset 
 .last 
+.offset_y 
 0:DO_PLACE:F
 0:DO_LTURN45:F
 .ok 
@@ -3505,6 +3508,8 @@ Rs07_F
 .cuts 
 .thick 
 .t 
+.ox 
+.oy 
 0:do_place_test:F
 0:ethernet_test:F
 .n 
@@ -3548,12 +3553,20 @@ Rs07_F
 0:pg0811:F
 0:DO_PREPARE:F
 0:do_chop_0814:F
+.cuts 
+.thick 
 0:do_clean:F
 0:do_con135:F
+.ok 
 0:do_con45:F
+.ok 
 0:do_con90:F
+.ok 
 0:do_flip_teach:F
+.cycles 
+.speed_pct 
 0:point_move:F
+.t 
 0:teach_origin:F
 0:test0820:F
 @@@ TRANS @@@
@@ -3705,38 +3718,38 @@ TOOL: NULL
 	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
 .END
 .PROGRAM MAIN() #0
-	;CALL heartput
-	CALL INIT_SWITCHES
-	CALL INIT_CONST
-	;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
-	CALL INIT_TOOL
-	SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-	ACCURACY 1
-	SIGNAL -sig_out_step
-	LMOVE home_left
-	CALL CLEAN_SOCKET
-	CALL OPEN_LISTEN
-	DO
-		CALL WAIT_ACCEPT (accepted)
-		IF accepted == 1 THEN
-			sock_open_flag = 1
-			$rxbuf = ""
-			CALL DO_HANDSHAKE (hs_ok)
-			IF hs_ok == 1 THEN
-				conn_lost = 0
-				DO
-					CALL RECV_LINE ($line, rok)
-					IF rok == 0 THEN
-						conn_lost = 1
-					ELSE
-						CALL SPLIT_CSV ($line)
-						CALL DISPATCH
-					END
-				UNTIL conn_lost == 1
-			END
-			CALL DISCONNECT
-		END
-	UNTIL 1 == 0
+  ;CALL heartput
+  CALL INIT_SWITCHES
+  CALL INIT_CONST
+  ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
+  CALL INIT_TOOL
+  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  ACCURACY 1
+  SIGNAL -sig_out_step
+  LMOVE home_left
+  CALL CLEAN_SOCKET
+  CALL OPEN_LISTEN
+  DO
+    CALL WAIT_ACCEPT (accepted)
+    IF accepted == 1 THEN
+      sock_open_flag = 1
+      $rxbuf = ""
+      CALL DO_HANDSHAKE (hs_ok)
+      IF hs_ok == 1 THEN
+        conn_lost = 0
+        DO
+          CALL RECV_LINE ($line, rok)
+          IF rok == 0 THEN
+            conn_lost = 1
+          ELSE
+            CALL SPLIT_CSV ($line)
+            CALL DISPATCH
+          END
+        UNTIL conn_lost == 1
+      END
+      CALL DISCONNECT
+    END
+  UNTIL 1 == 0
 .END
 .PROGRAM DISCONNECT() #212
 	TCP_CLOSE cret, sock_id
@@ -4037,72 +4050,72 @@ listen:
 	CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_CHOP(.$food,.cuts,.thick,.start,.offset,.offset_y) #153
-	IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
-		CALL SEND_LINE ("ERROR,E4004")
-		RETURN
-	END
-	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切，.offset = 第 1 格相對 cu 的 X 偏移 (mm)
-	; cu = 偏移 (0, 0) 時第一刀的位置（教點）。第 i 格下刀點 = cu 沿 X 移 .offset + (i-1)*5mm、沿 Y 移 .offset_y
-	; 只從 cu 算、不改寫任何教點；chop_1[] / chop_per[] 陣列已不使用
-	; .offset 由 PC 送（config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM），右臂壓點跟著移一樣多
-	; .offset_y = 食材放置的 Y 偏移 (mm)，每一刀的下刀點都沿 Y 移這麼多（CHOP_ORIGIN_OFFSET_Y_MM）
-	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
-		CALL SEND_LINE ("ERROR,E4005")
-		RETURN
-	END
-	.last = .start + .cuts - 1
-	IF .last > 60 THEN
-		CALL SEND_LINE ("ERROR,E4005")
-		RETURN
-	END
-	robot_busy = 1
-	ABS.SPEED ON
-	SPEED 50 MM/s ALWAYS
-	TOOL left_spatula
-	LMOVE home_left
-	break
-	SPEED 500 MM/s ALWAYS
-	JMOVE #work_chop_zone
-	break
-	; 每一刀：到下刀點上方 → 等右臂在離下刀處 10mm 壓好 (SYNC) → 切 → 抬刀 → 通知右臂抬起 (PULSE)
-	; 右臂 do_chop 每刀 SYNC 一次、等一次 PULSE，兩邊次數必須一致
-	i = .start
-	DO
-		POINT chop_now = SHIFT (cu BY .offset + (i - 1) * 5, .offset_y, 0)
-		POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
-		LMOVE chop_now_per
-		break
-		CALL SYNC_STEP (ok);右臂壓好
-		IF ok == 0 THEN
-			CALL SEND_LINE ("ERROR,E4023")
-			robot_busy = 0
-			RETURN
-		END
-		LMOVE chop_now
-		break
-		LMOVE chop_now_per
-		break
-		PULSE sig_out_step, 0.1   ; 這刀切完，通知右臂抬起
-		i = i + 1
-	UNTIL i > .last
-	CALL SYNC_STEP (ok);切割完成
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		robot_busy = 0
-		RETURN
-	END
-	SPEED 500 MM/s ALWAYS
-	LMOVE #work_chop_zone
-	break
-	TOOL left_spatula
-	break
-	SPEED 500 MM/s ALWAYS
-	JMOVE home_left
-	robot_busy = 0
-	SWAIT sig_in_step
-	PULSE sig_out_step, 0.1
-	robot_busy = 0
-	CALL SEND_LINE ("OK")
+  IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN
+    CALL SEND_LINE ("ERROR,E4004")
+    RETURN
+  END
+  ; .cuts = 刀數 (1～60)，.start = 從第幾格開始切，.offset = 第 1 格相對 cu 的 X 偏移 (mm)
+  ; cu = 偏移 (0, 0) 時第一刀的位置（教點）。第 i 格下刀點 = cu 沿 X 移 .offset + (i-1)*5mm、沿 Y 移 .offset_y
+  ; 只從 cu 算、不改寫任何教點；chop_1[] / chop_per[] 陣列已不使用
+  ; .offset 由 PC 送（config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM），右臂壓點跟著移一樣多
+  ; .offset_y = 食材放置的 Y 偏移 (mm)，每一刀的下刀點都沿 Y 移這麼多（CHOP_ORIGIN_OFFSET_Y_MM）
+  IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
+    CALL SEND_LINE ("ERROR,E4005")
+    RETURN
+  END
+  .last = .start + .cuts - 1
+  IF .last > 60 THEN
+    CALL SEND_LINE ("ERROR,E4005")
+    RETURN
+  END
+  robot_busy = 1
+  ABS.SPEED ON
+  SPEED 50 MM/s ALWAYS
+  TOOL left_spatula
+  LMOVE home_left
+  break
+  SPEED 50 MM/s ALWAYS
+  JMOVE #work_chop_zone
+  break
+  ; 每一刀：到下刀點上方 → 等右臂在離下刀處 10mm 壓好 (SYNC) → 切 → 抬刀 → 通知右臂抬起 (PULSE)
+  ; 右臂 do_chop 每刀 SYNC 一次、等一次 PULSE，兩邊次數必須一致
+  i = .start
+  DO
+    POINT chop_now = SHIFT (cu BY .offset + (i - 1) * 5, .offset_y, 0)
+    POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
+    LMOVE chop_now_per
+    break
+    CALL SYNC_STEP (ok);右臂壓好
+    IF ok == 0 THEN
+      CALL SEND_LINE ("ERROR,E4023")
+      robot_busy = 0
+      RETURN
+    END
+    LMOVE chop_now
+    break
+    LMOVE chop_now_per
+    break
+    PULSE sig_out_step, 0.1   ; 這刀切完，通知右臂抬起
+    i = i + 1
+  UNTIL i > .last
+  CALL SYNC_STEP (ok);切割完成
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    robot_busy = 0
+    RETURN
+  END
+  SPEED 500 MM/s ALWAYS
+  LMOVE #work_chop_zone
+  break
+  TOOL left_spatula
+  break
+  SPEED 500 MM/s ALWAYS
+  JMOVE home_left
+  robot_busy = 0
+  SWAIT sig_in_step
+  PULSE sig_out_step, 0.1
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_PLACE(.$source,.$location,.$method) #296
 	; 解析目的地
