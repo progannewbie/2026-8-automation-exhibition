@@ -535,7 +535,7 @@ def main() -> int:
         print(f"  觸控介面: {url}/?key={token}")
         print("  ⚠️ 需要金鑰：每台平板第一次請用上面這個完整網址開啟")
         if args.host == "0.0.0.0":
-            print("     （0.0.0.0 請換成控制電腦的 IP，例如 192.168.11.1）")
+            print("     （0.0.0.0 請換成控制電腦的 IP，例如 192.168.11.100）")
     else:
         print(f"  觸控介面: {url}")
     if args.simulate:
