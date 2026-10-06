@@ -118,7 +118,7 @@ class ChopPlanConfig:
     # 夾取有自己的座標系：原點是兩臂教點 cut_pick（夾取偏移 (0, 0) 時、第一刀位置的夾緊點），
     # 偏移跟切菜分開算（TableOffsetEstimate.PICK_X/Y_REFERENCE）。兩臂沿 Y 從兩側收攏。
     # 對點資料不夠估時用下面兩個手動值；也是 None 就退回 mix_zone_pi 夾一次。
-    PICK_FOLLOW_CUT = False
+    PICK_FOLLOW_CUT = True     # 2026-10-06 打開（兩臂 cut_pick 已現場教好）
     PICK_PASSES = 3
     PICK_OFFSET_X_MM: Optional[float] = None
     PICK_OFFSET_Y_MM: Optional[float] = None

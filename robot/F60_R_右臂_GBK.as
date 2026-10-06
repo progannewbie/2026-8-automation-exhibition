@@ -6012,7 +6012,7 @@ exit_end:
 	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (offset + (i-1)*5mm)*press_dir
 	; --- CUT_SEG 夾切好的一段（do_pickup）---
 	pick_margin = 50      ; 夾取前從 +Y 側多少 mm 開始收攏（同 do_pickup_test，★ 待現場調整）
-	pick_ready = 0        ; ★ cut_pick 教好後改 1，否則 CUT_SEG 回 ERROR,E4007
+	pick_ready = 1        ; cut_pick 已現場教好（2026-10-06）；0 = CUT_SEG 回 ERROR,E4007、不動
 	press_dir = 1           ; ★ 待現場確認：壓點往反方向跑就改 -1
 	press_dir_y = 1         ; ★ 待現場確認：Y 偏移時壓點往反方向跑就改 -1
 	press_ready = 1         ; press_chop_zone 已教在離左臂 cu 下刀處 10mm（2026-10-06 現場確認）；0 = 拒絕切割

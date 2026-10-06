@@ -3646,7 +3646,7 @@ TOOL: NULL
 	scoop_dy = 20
 	; --- CUT_SEG 夾切好的一段（DO_PICKUP）---
 	pick_margin = 50      ; 夾取前從 -Y 側多少 mm 開始收攏（同 DO_PICKUP_test，★ 待現場調整）
-	pick_ready = 0        ; ★ cut_pick 教好後改 1，否則 CUT_SEG 回 ERROR,E4007
+	pick_ready = 1        ; cut_pick 已現場教好（2026-10-06）；0 = CUT_SEG 回 ERROR,E4007、不動
 	scoop_tilt_deg = 60   ; PLACE 釋放階段 (SCOOP)：傾倒角度 (★ 佔位值，待現場測試)
 	; --- 逾時設定 (秒) ---
 	timeout_io_sec = 30
