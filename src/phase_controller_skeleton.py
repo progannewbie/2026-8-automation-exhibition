@@ -373,7 +373,11 @@ class PhaseController:
         # 切完要夾起來：跟著切的位置走，分段夾（見 ChopPlanConfig.PICK_FOLLOW_CUT）
         chop, self._last_chop = self._last_chop, None
         if location == "MIX_ZONE" and ChopPlanConfig.PICK_FOLLOW_CUT and chop:
-            return self._pickup_cut_segments(chop, max_retries, timeout)
+            if chop["pick_offset_x"] is None or chop["pick_offset_y"] is None:
+                logger.warning("  ⚠️ 沒有夾取偏移（對點資料不夠、也沒設 PICK_OFFSET_X/Y_MM），"
+                               "改用 mix_zone_pi 夾一次")
+            else:
+                return self._pickup_cut_segments(chop, max_retries, timeout)
 
         # PICKUP_<食材> 這幾個點位改用 YOLO + 手眼標定即時算座標；
         # WAIT_ZONE 這類暫存區沒有視覺目標，維持送 0,0,0（AS 端會忽略，用教點）
@@ -440,11 +444,12 @@ class PhaseController:
             logger.error(f"  ✗ {self._phase_detail}")
             return False
 
-        segs = ChopPlanConfig.pick_segments(chop["offset"], chop["start"], chop["cuts"])
-        oy = chop["offset_y"]
+        segs = ChopPlanConfig.pick_segments(chop["pick_offset_x"], chop["start"], chop["cuts"])
+        oy = chop["pick_offset_y"]
         for k, (d1, d2) in enumerate(segs, 1):
             label = f"取料（第 {k}/{len(segs)} 段）"
-            logger.info(f"  {label}: 切割段 X 距 cu {d1:+.1f}～{d2:+.1f}mm、Y {oy:+.1f}mm (雙臂協同)")
+            logger.info(f"  {label}: 夾取座標系 X 距 cut_pick {d1:+.1f}～{d2:+.1f}mm"
+                        f"（夾在 {(d1 + d2) / 2:+.1f}）、Y {oy:+.1f}mm (雙臂協同)")
             cmds = {a: PickupCommand.create("CUT_SEG", a, d1, oy, d2) for a in ("F60_F", "F60_R")}
             if not self._validate_command(cmds["F60_F"], CommandParser.validate_pickup):
                 return False
@@ -548,11 +553,14 @@ class PhaseController:
                 return False
 
         # 前面的 MEASURE 量過同一種食材，就照量測結果切整根（有估偏移就用估的）
+        pick_x, pick_y = ChopPlanConfig.PICK_OFFSET_X_MM, ChopPlanConfig.PICK_OFFSET_Y_MM
         plan, self._chop_plan = self._chop_plan, None
         if plan and plan["food_type"] == food_type:
             num_cuts, start = plan["cuts"], plan["start"]
             offset = plan.get("offset_x", offset)
             offset_y = plan.get("offset_y", offset_y)
+            pick_x = plan.get("pick_offset_x", pick_x)
+            pick_y = plan.get("pick_offset_y", pick_y)
         cmd = ChopCommand.create(food_type, num_cuts, thickness, start, offset, offset_y)
 
         if not self._validate_command(cmd, CommandParser.validate_chop):
@@ -567,7 +575,7 @@ class PhaseController:
         ok = self._send_motion("切割", cmd, max_retries, timeout)
         if ok and num_cuts > 1:
             self._last_chop = {"food_type": food_type, "start": start, "cuts": num_cuts,
-                               "offset": offset, "offset_y": offset_y}
+                               "pick_offset_x": pick_x, "pick_offset_y": pick_y}
         return ok
 
     def _handle_place(self, location: str, params: Dict, max_retries: int,

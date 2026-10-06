@@ -159,6 +159,17 @@ def print_offset_estimate(d: Dict, m: Dict) -> Optional[float]:
               f"對點資料誤差 ±{err:.1f}mm）{warn}")
     print(f"      目前 config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM = "
           f"{ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM:+.1f}")
+
+    # 夾取座標系（原點 cut_pick），跟切菜分開
+    right_x = max(m["m1"][0], m["m2"][0])
+    pick = TableOffsetEstimate.estimate_pick(right_x, right_y)
+    if pick:
+        n = len(TableOffsetEstimate.PICK_X_REFERENCE)
+        print(f"  ==> 夾取偏移 X {pick[0]:+.1f} / Y {pick[1]:+.1f} mm（相對 cut_pick，對點資料 {n} 筆）")
+    else:
+        print(f"  ==> 夾取偏移：還沒有對點資料。這次右端 X = {right_x:.1f}、Y = {right_y:.1f}，")
+        print("      對點後把「右端 X、Y 和確認的夾取 X / Y 偏移」加進 "
+              "config_phase.TableOffsetEstimate.PICK_X/Y_REFERENCE")
     return off
 
 

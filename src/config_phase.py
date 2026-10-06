@@ -114,12 +114,22 @@ class ChopPlanConfig:
     # 切完夾到盤子上：跟著切的位置走（PICKUP CUT_SEG），把切好的那段分 PICK_PASSES 次夾。
     # 前幾次各自「夾 → 倒進下一步 PLACE 的位置」，最後一次夾完交給食譜原本的 PLACE。
     # False = 照舊用固定教點 mix_zone_pi 夾一次（兩臂 cut_pick 教好、pick_ready 改 1 之後才打開）
+    #
+    # 夾取有自己的座標系：原點是兩臂教點 cut_pick（夾取偏移 (0, 0) 時、第一刀位置的夾緊點），
+    # 偏移跟切菜分開算（TableOffsetEstimate.PICK_X/Y_REFERENCE）。兩臂沿 Y 從兩側收攏。
+    # 對點資料不夠估時用下面兩個手動值；也是 None 就退回 mix_zone_pi 夾一次。
     PICK_FOLLOW_CUT = False
     PICK_PASSES = 3
+    PICK_OFFSET_X_MM: Optional[float] = None
+    PICK_OFFSET_Y_MM: Optional[float] = None
 
     @classmethod
     def pick_segments(cls, offset: float, start: int, cuts: int) -> List[Tuple[float, float]]:
-        """把第 start～start+cuts-1 格平分成 PICK_PASSES 段，回傳每段 (起點距離, 終點距離)（從 cu 沿 X）"""
+        """
+        把第 start～start+cuts-1 格平分成 PICK_PASSES 段，回傳每段 (起點距離, 終點距離)
+
+        距離在夾取座標系裡：從 cut_pick 沿 X 算，offset 是夾取的 X 偏移（第 1 格的位置）
+        """
         n = max(1, min(cls.PICK_PASSES, cuts))
         segs = []
         for k in range(n):
@@ -196,19 +206,28 @@ class TableOffsetEstimate:
         (-11.8, -36.9),  # 第一刀 Y 535.977
         (10.3, -12.4),   # 第一刀 Y 560.5（公式估的值，現場確認正確）
     ]
+    # 夾取座標系（原點 cut_pick）的對點資料，跟切菜分開：
+    # 用教導器把鏟子移到「這個擺法第一刀位置的夾緊點」，記下相對 cut_pick 的偏移，
+    # 對照同一張照片的取料區右端 X / Y。(0, 0) = 教 cut_pick 當時的擺法。
+    #     (取料區右端 X, 確認的夾取 X 偏移)
+    PICK_X_REFERENCE: List[Tuple[float, float]] = []
+    #     (取料區右端 Y, 確認的夾取 Y 偏移)；只有 1 筆時沿用切菜 Y 的比例
+    PICK_Y_REFERENCE: List[Tuple[float, float]] = []
+
     # 只檢查長軸是否沿取料區 X 方向擺（0°/180° 都算），不分頭尾
     MAX_AXIS_ANGLE_DEG = 30.0
 
-    @classmethod
-    def x_fit(cls) -> Tuple[float, float]:
-        """回傳 (K, 最大誤差)"""
-        k = sum(off - tab for tab, off in cls.X_REFERENCE) / len(cls.X_REFERENCE)
-        return k, max(abs(off - tab - k) for tab, off in cls.X_REFERENCE)
+    @staticmethod
+    def _k_fit(pts) -> Optional[Tuple[float, float]]:
+        """偏移 = 取料區座標 + K（1:1），回傳 (K, 最大誤差)"""
+        if not pts:
+            return None
+        k = sum(off - tab for tab, off in pts) / len(pts)
+        return k, max(abs(off - tab - k) for tab, off in pts)
 
-    @classmethod
-    def y_fit(cls) -> Optional[Tuple[float, float, float]]:
-        """Y 偏移 = a × 右端 Y + b，回傳 (a, b, 最大誤差)；資料不足或分不出斜率回 None"""
-        pts = cls.Y_REFERENCE
+    @staticmethod
+    def _line_fit(pts) -> Optional[Tuple[float, float, float]]:
+        """偏移 = a × 取料區座標 + b，回傳 (a, b, 最大誤差)；資料不足或分不出斜率回 None"""
         if len(pts) < 2:
             return None
         mx = sum(p[0] for p in pts) / len(pts)
@@ -219,6 +238,34 @@ class TableOffsetEstimate:
         a = sum((p[0] - mx) * (p[1] - my) for p in pts) / sxx
         b = my - a * mx
         return a, b, max(abs(a * p[0] + b - p[1]) for p in pts)
+
+    @classmethod
+    def x_fit(cls) -> Tuple[float, float]:
+        """切菜 X：回傳 (K, 最大誤差)"""
+        return cls._k_fit(cls.X_REFERENCE)
+
+    @classmethod
+    def y_fit(cls) -> Optional[Tuple[float, float, float]]:
+        """切菜 Y：回傳 (a, b, 最大誤差)"""
+        return cls._line_fit(cls.Y_REFERENCE)
+
+    @classmethod
+    def pick_y_fit(cls) -> Optional[Tuple[float, float, float]]:
+        """夾取 Y：2 筆以上自己擬合；只有 1 筆時用切菜 Y 的比例 a、由那一筆定截距"""
+        fit = cls._line_fit(cls.PICK_Y_REFERENCE)
+        if fit or len(cls.PICK_Y_REFERENCE) != 1 or cls.y_fit() is None:
+            return fit
+        a = cls.y_fit()[0]
+        tab, off = cls.PICK_Y_REFERENCE[0]
+        return a, off - a * tab, 0.0
+
+    @classmethod
+    def estimate_pick(cls, right_x: float, right_y: float) -> Optional[Tuple[float, float]]:
+        """右端在取料區的 (X, Y) → 夾取座標系的 (X 偏移, Y 偏移)；資料不足回 None"""
+        kx, fy = cls._k_fit(cls.PICK_X_REFERENCE), cls.pick_y_fit()
+        if kx is None or fy is None:
+            return None
+        return right_x + kx[0], fy[0] * right_y + fy[1]
 
     @classmethod
     def available(cls) -> bool:
@@ -235,7 +282,8 @@ class TableOffsetEstimate:
     def plan(cls, right_x: float, right_y: float, length_mm: float) -> Tuple[Optional[Dict], str]:
         """
         Returns:
-            ({"start", "cuts", "offset_x", "offset_y"}, 說明)；計畫是 None 表示不能切
+            ({"start", "cuts", "offset_x", "offset_y"[, "pick_offset_x", "pick_offset_y"]}, 說明)；
+            計畫是 None 表示不能切。夾取偏移只有對點資料夠時才有
         """
         ox, oy = cls.estimate(right_x, right_y)
         cuts = int((length_mm - ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.TAIL_MARGIN_MM)
@@ -248,8 +296,13 @@ class TableOffsetEstimate:
         if cuts > ChopPlanConfig.MAX_CUTS:
             return None, (f"量到的長度 {length_mm:.0f}mm 要切 {cuts} 刀，"
                           f"超過上限 {ChopPlanConfig.MAX_CUTS} 刀")
-        return ({"start": 1, "cuts": cuts, "offset_x": ox, "offset_y": oy},
-                f"偏移 X {ox:+.1f} / Y {oy:+.1f}mm，長 {length_mm:.0f}mm → {cuts} 刀")
+        plan = {"start": 1, "cuts": cuts, "offset_x": ox, "offset_y": oy}
+        note = f"偏移 X {ox:+.1f} / Y {oy:+.1f}mm，長 {length_mm:.0f}mm → {cuts} 刀"
+        pick = cls.estimate_pick(right_x, right_y)
+        if pick:
+            plan["pick_offset_x"], plan["pick_offset_y"] = pick
+            note += f"；夾取偏移 X {pick[0]:+.1f} / Y {pick[1]:+.1f}mm"
+        return plan, note
 
 
 FOOD_CUT_PARAMS = {
