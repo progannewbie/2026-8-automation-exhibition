@@ -147,6 +147,91 @@ class ChopPlanConfig:
         return {"start": start, "cuts": cuts}, f"從第 {start} 格切到第 {last} 格，共 {cuts} 刀"
 
 
+class TableOffsetEstimate:
+    """
+    切割區還沒標定時，用取料區座標（TableHomography）+ 現場對點資料估偏移與刀數
+
+    手動對點：用教導器找出「這個擺法第一刀該落的位置」，記下要填的偏移，
+    對照同一張照片 vision_chop_test.py 印出的取料區座標：
+      X 偏移 = 右端 X（取料區 X 較大那端）+ K，K 取對點資料平均（1:1）
+      Y 偏移 = a × 右端 Y + b，最小平方擬合（至少 2 筆）
+      刀數   = 長度扣掉 TIP_OFFSET_MM、TAIL_MARGIN_MM 後每 5mm 一刀
+
+    ⚠️ 相機、切割區或手臂點位（cu）動過就失效，要重新手動對點、更新兩組資料。
+    ⚠️ 資料只用小黃瓜量過；紅蘿蔔沿用同一組公式。
+    """
+
+    # (取料區右端 X, 確認的 CHOP_ORIGIN_OFFSET_MM)
+    X_REFERENCE: List[Tuple[float, float]] = [
+        (314.6, 0.0),    # 2026-10-05 點位重教後的 (0, 0) 擺法
+        (314.4, 0.0),    # 同一個 (0, 0) 擺法再拍一次
+        (237.1, -77.4),  # 第一刀 X 328.9、Y 625.88
+        (248.2, -66.3),  # 第一刀 X 340.0（公式估的值，現場確認正確）
+    ]
+    # (取料區右端 Y, 確認的 CHOP_ORIGIN_OFFSET_Y_MM)
+    # 小黃瓜擺放會斜，用中心 Y 會差到 30mm 以上，所以用右端（第一刀那端）的 Y
+    Y_REFERENCE: List[Tuple[float, float]] = [
+        (21.9, 0.0),     # (0, 0) 擺法兩次右端 Y 的平均（26.2、17.5），算同一個基準點
+        (67.9, 53.0),    # 第一刀 Y 625.88（cu 的 Y 572.925）
+        (-11.8, -36.9),  # 第一刀 Y 535.977
+        (10.3, -12.4),   # 第一刀 Y 560.5（公式估的值，現場確認正確）
+    ]
+    # 只檢查長軸是否沿取料區 X 方向擺（0°/180° 都算），不分頭尾
+    MAX_AXIS_ANGLE_DEG = 30.0
+
+    @classmethod
+    def x_fit(cls) -> Tuple[float, float]:
+        """回傳 (K, 最大誤差)"""
+        k = sum(off - tab for tab, off in cls.X_REFERENCE) / len(cls.X_REFERENCE)
+        return k, max(abs(off - tab - k) for tab, off in cls.X_REFERENCE)
+
+    @classmethod
+    def y_fit(cls) -> Optional[Tuple[float, float, float]]:
+        """Y 偏移 = a × 右端 Y + b，回傳 (a, b, 最大誤差)；資料不足或分不出斜率回 None"""
+        pts = cls.Y_REFERENCE
+        if len(pts) < 2:
+            return None
+        mx = sum(p[0] for p in pts) / len(pts)
+        my = sum(p[1] for p in pts) / len(pts)
+        sxx = sum((p[0] - mx) ** 2 for p in pts)
+        if sxx < 1e-6:
+            return None
+        a = sum((p[0] - mx) * (p[1] - my) for p in pts) / sxx
+        b = my - a * mx
+        return a, b, max(abs(a * p[0] + b - p[1]) for p in pts)
+
+    @classmethod
+    def available(cls) -> bool:
+        return bool(cls.X_REFERENCE) and cls.y_fit() is not None
+
+    @classmethod
+    def estimate(cls, right_x: float, right_y: float) -> Tuple[float, float]:
+        """右端在取料區的 (X, Y) → (X 偏移, Y 偏移)"""
+        k, _ = cls.x_fit()
+        a, b, _ = cls.y_fit()
+        return right_x + k, a * right_y + b
+
+    @classmethod
+    def plan(cls, right_x: float, right_y: float, length_mm: float) -> Tuple[Optional[Dict], str]:
+        """
+        Returns:
+            ({"start", "cuts", "offset_x", "offset_y"}, 說明)；計畫是 None 表示不能切
+        """
+        ox, oy = cls.estimate(right_x, right_y)
+        cuts = int((length_mm - ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.TAIL_MARGIN_MM)
+                   // CHOP_STEP_MM) + 1
+        if abs(ox) > 300 or abs(oy) > 100:
+            return None, (f"估出的偏移 X {ox:+.1f} / Y {oy:+.1f}mm 超出手臂允許範圍"
+                          f"（±300 / ±100mm），食材擺放離基準太遠")
+        if cuts < 1:
+            return None, f"量到的長度 {length_mm:.0f}mm 太短，切不到任何一刀"
+        if cuts > ChopPlanConfig.MAX_CUTS:
+            return None, (f"量到的長度 {length_mm:.0f}mm 要切 {cuts} 刀，"
+                          f"超過上限 {ChopPlanConfig.MAX_CUTS} 刀")
+        return ({"start": 1, "cuts": cuts, "offset_x": ox, "offset_y": oy},
+                f"偏移 X {ox:+.1f} / Y {oy:+.1f}mm，長 {length_mm:.0f}mm → {cuts} 刀")
+
+
 FOOD_CUT_PARAMS = {
     "CUCUMBER": FoodCutParams(
         food_type="CUCUMBER",

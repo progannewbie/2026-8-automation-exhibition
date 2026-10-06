@@ -86,8 +86,9 @@ git checkout 10d83385 -- "robot/F60_F_左臂_slow.as"
   左臂下刀點和右臂壓點一起移，教點不用動。
 - **Y 偏移**：食材放置時 Y 方向的偏差用 `ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM`（±100 mm 內），
   每一刀下刀點與右臂壓點都沿 Y 移；右臂方向由 `INIT_CONST` 的 `press_dir_y` 決定（待現場確認）。
-- `test/vision_chop_test.py` 會依現場手動對點的資料估出 X / Y 偏移（`OFFSET_REFERENCE` /
-  `OFFSET_Y_REFERENCE`），相機或切割區移動過要重新對點。
+- **自動偏移與刀數**：切割區還沒標定時，MEASURE 用取料區座標 + 現場對點資料（`config_phase.TableOffsetEstimate`）
+  估出這根食材的 X / Y 偏移，長度換算刀數，整根切完；`test/vision_chop_test.py` 用同一份資料（
+  相機、切割區或 `cu` 動過要重新對點，更新 `X_REFERENCE` / `Y_REFERENCE`）。
 - **右臂跟刀壓**：每一刀都是「右臂在離下刀處 10 mm、還沒切的那一側壓好 → 左臂切 →
   右臂抬起」，下一刀兩臂一起往後移 5 mm。
 - **生菜**：中間一刀落在 `ChopPlanConfig.ROMAINE_START_INDEX` 那一格（從偏移後的第 1 格算起，改偏移要一起確認）。

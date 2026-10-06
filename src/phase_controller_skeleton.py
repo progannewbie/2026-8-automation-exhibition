@@ -10,7 +10,7 @@ from enum import Enum
 
 from config_phase import (
     Phase, PhaseStatus, PhaseInstruction, PhaseLog, RetryPolicy, MENU,
-    get_recipe, get_phases, FOOD_CUT_PARAMS, ChopPlanConfig
+    get_recipe, get_phases, FOOD_CUT_PARAMS, ChopPlanConfig, TableOffsetEstimate, CHOP_STEP_MM
 )
 from config_commands import (
     CommandParser, PickupCommand, ChopCommand, PlaceCommand,
@@ -419,18 +419,28 @@ class PhaseController:
 
     def _handle_measure(self, location: str, params: Dict, max_retries: int) -> bool:
         """
-        量切割區裡食材兩端的位置，決定 CHOP 的起始格與刀數（不動手臂）
+        拍照量切割區裡的食材，決定 CHOP 的偏移與刀數（不動手臂）
 
-        切割區還沒標定時跳過，CHOP 照舊用 FOOD_CUT_PARAMS（從第 1 格切 15 刀）。
-        標定過但量不到、太短、放歪、超出範圍時中止，不送 CHOP——寧可停下來
-        請人調整，也不要切在錯的地方。
+        依序選一種方式：
+          1. 切割區已標定（ChopZoneHomography）：量左臂座標，算起始格與刀數，
+             偏移用 config 的 CHOP_ORIGIN_OFFSET_MM / _Y_MM
+          2. 有現場對點資料（TableOffsetEstimate）：用取料區座標估 X / Y 偏移，
+             長度算刀數，從第 1 格切
+          3. 都沒有：跳過，CHOP 照舊用 config 的偏移切 FOOD_CUT_PARAMS 的刀數
+
+        量不到、太短、放歪、超出範圍時中止，不送 CHOP——寧可停下來請人調整，
+        也不要切在錯的地方。
         """
         food_type = params.get("food_type", "CUCUMBER")
         self._chop_plan = None
 
-        if not ChopZoneHomography.is_calibrated():
-            logger.warning("  ⚠️ 切割區尚未標定，略過量測，照舊從第 1 格切預設刀數"
-                           "（標定方式見 test/calibrate_chop_zone.py）")
+        if ChopZoneHomography.is_calibrated():
+            measure, source = self.vision.measure_in_chop_zone, "切割區"
+        elif TableOffsetEstimate.available():
+            measure, source = self.vision.measure_on_table, "取料區座標 + 對點資料"
+        else:
+            logger.warning("  ⚠️ 切割區尚未標定、也沒有對點資料，略過量測，"
+                           "照舊用設定的偏移切預設刀數")
             return True
 
         result, reason = None, ""
@@ -439,7 +449,7 @@ class PhaseController:
             if image is None:
                 reason = "相機拍照失敗"
             else:
-                result, reason = self.vision.measure_in_chop_zone(food_type, image)
+                result, reason = measure(food_type, image)
             if result is not None:
                 break
             logger.warning(f"  ⚠️ 量測 {food_type} 失敗 ({attempt+1}/{max_retries}): {reason}")
@@ -458,21 +468,27 @@ class PhaseController:
             logger.error(f"  ✗ {self._phase_detail}")
             return False
 
-        if result['axis_angle_deg'] > ChopPlanConfig.MAX_AXIS_ANGLE_DEG:
+        max_angle = (ChopPlanConfig.MAX_AXIS_ANGLE_DEG if ChopZoneHomography.is_calibrated()
+                     else TableOffsetEstimate.MAX_AXIS_ANGLE_DEG)
+        if result['axis_angle_deg'] > max_angle:
             self._phase_detail = (f"{food_type} 放歪了 {result['axis_angle_deg']:.0f}°"
-                                  f"（上限 {ChopPlanConfig.MAX_AXIS_ANGLE_DEG:.0f}°），請擺正")
+                                  f"（上限 {max_angle:.0f}°），請擺正")
             logger.error(f"  ✗ {self._phase_detail}")
             return False
 
-        xs = sorted(p[0] for p in result['ends_mm'])
-        plan, note = ChopPlanConfig.plan(xs[0], xs[1])
+        if ChopZoneHomography.is_calibrated():
+            xs = sorted(p[0] for p in result['ends_mm'])
+            plan, note = ChopPlanConfig.plan(xs[0], xs[1])
+        else:
+            rx, ry = result['right_end_mm']
+            plan, note = TableOffsetEstimate.plan(rx, ry, length)
         if plan is None:
             self._phase_detail = note
             logger.error(f"  ✗ {note}")
             return False
 
         self._chop_plan = dict(plan, food_type=food_type)
-        logger.info(f"  ✓ {food_type} 長 {length:.0f}mm，兩端 X={xs[0]:.1f}～{xs[1]:.1f}；{note}")
+        logger.info(f"  ✓ {food_type}（{source}）：{note}")
         return True
 
     def _handle_chop(self, location: str, params: Dict, max_retries: int,
@@ -482,6 +498,8 @@ class PhaseController:
         num_cuts = params.get("num_cuts", 5)
         thickness = params.get("cut_thickness_mm", 4.0)
         start = 1
+        offset = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM
+        offset_y = ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM
 
         if food_type == "ROMAINE":
             start = ChopPlanConfig.ROMAINE_START_INDEX
@@ -491,19 +509,21 @@ class PhaseController:
                 logger.error(f"  ✗ {self._phase_detail}")
                 return False
 
-        # 前面的 MEASURE 量過同一種食材，就照量測結果切整根
+        # 前面的 MEASURE 量過同一種食材，就照量測結果切整根（有估偏移就用估的）
         plan, self._chop_plan = self._chop_plan, None
         if plan and plan["food_type"] == food_type:
             num_cuts, start = plan["cuts"], plan["start"]
-        offset = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM
-        offset_y = ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM
+            offset = plan.get("offset_x", offset)
+            offset_y = plan.get("offset_y", offset_y)
         cmd = ChopCommand.create(food_type, num_cuts, thickness, start, offset, offset_y)
 
         if not self._validate_command(cmd, CommandParser.validate_chop):
             return False
 
+        first_x = ChopPlanConfig.CU_X_MM + offset + (start - 1) * CHOP_STEP_MM
+        last_x = first_x + (num_cuts - 1) * CHOP_STEP_MM
         logger.info(f"  切割: {food_type} ({num_cuts} 刀，第 {start}～{start + num_cuts - 1} 格，"
-                    f"左臂 X {ChopPlanConfig.cut_x(start):.1f}～{ChopPlanConfig.cut_x(start + num_cuts - 1):.1f}，"
+                    f"偏移 X {offset:+.1f} / Y {offset_y:+.1f}mm，左臂 X {first_x:.1f}～{last_x:.1f}，"
                     f"右臂跟刀壓，雙臂協同)")
         # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
         return self._send_motion("切割", cmd, max_retries, timeout)

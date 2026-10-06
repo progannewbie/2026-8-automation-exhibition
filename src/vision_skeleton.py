@@ -25,6 +25,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def long_axis_endpoints_px(d: Dict) -> Tuple[Tuple[float, float], Tuple[float, float], float]:
+    """
+    偵測框長軸的兩個端點（像素）與長軸長度
+
+    OBB 的 angle_deg 是寬邊 (width) 的方向；高比寬長時長軸要轉 90°。
+    非 OBB 模型 (angle_source='estimated') 的框是軸對齊的，angle 只有 0/90 的粗估。
+    色彩精算過的 angle (color_head_tail) 是頭尾方向，本身就沿長軸。
+    """
+    w, h = d['width_pixel'], d['height_pixel']
+    length = max(w, h)
+    if d['angle_source'] == 'color_head_tail':
+        theta = math.radians(d['angle_deg'])
+    elif d['angle_source'] == 'obb':
+        theta = math.radians(d['angle_deg'] + (90.0 if h > w else 0.0))
+    else:  # estimated：軸對齊框
+        theta = math.radians(90.0 if h > w else 0.0)
+    dx, dy = math.cos(theta) * length / 2, math.sin(theta) * length / 2
+    cx, cy = d['center_x_pixel'], d['center_y_pixel']
+    return (cx - dx, cy - dy), (cx + dx, cy + dy), length
+
+
 # ============================================================================
 # 1. YOLO 檢測器
 # ============================================================================
@@ -658,6 +679,50 @@ class VisionSystem:
             detection['center_y_mm'],
             detection['angle_deg'],
         )
+
+    def measure_on_table(
+        self, food_name: str, image: np.ndarray
+    ) -> Tuple[Optional[Dict], str]:
+        """
+        用取料區座標（TableHomography）量食材兩端，給切割區還沒標定時的偏移估算用
+        （config_phase.TableOffsetEstimate）
+
+        切割區通常在取料區標定範圍外，座標是外推值——位置不能直接拿來下刀，
+        只靠現場對點資料換算成偏移；長度只用到比例尺，相對可靠。
+        畫面上有多個同類偵測時用信心度最高的（畫面邊緣常有別根或誤判）。
+
+        Returns:
+            (結果, 說明)。結果為 None 表示量不到；否則
+            {
+                'ends_mm': [(x, y), (x, y)],   # 取料區座標，不分頭尾
+                'right_end_mm': (x, y),        # X 較大那端（第一刀那端）
+                'length_mm': float,
+                'axis_angle_deg': float,       # 長軸跟取料區 X 軸的夾角，0～90°
+                'confidence': float,
+            }
+        """
+        detections = [d for d in self.yolo_detector.detect(image) if d['class_name'] == food_name]
+        if not detections:
+            return None, f"畫面裡找不到 {food_name}"
+        d = max(detections, key=lambda x: x['confidence'] or 0.0)
+
+        p1, p2, _ = long_axis_endpoints_px(d)
+        m1, m2 = TableHomography.pixel_to_mm(*p1), TableHomography.pixel_to_mm(*p2)
+        dx, dy = m2[0] - m1[0], m2[1] - m1[1]
+        angle = abs(math.degrees(math.atan2(dy, dx))) % 180.0
+        result = {
+            'ends_mm': [m1, m2],
+            'right_end_mm': max(m1, m2, key=lambda p: p[0]),
+            'length_mm': float(math.hypot(dx, dy)),
+            'axis_angle_deg': min(angle, 180.0 - angle),
+            'confidence': d['confidence'],
+        }
+        logger.info(
+            f"✓ 取料區座標量測 {food_name}: 兩端 ({m1[0]:.1f},{m1[1]:.1f}) / ({m2[0]:.1f},{m2[1]:.1f}) mm，"
+            f"長 {result['length_mm']:.1f}mm，偏角 {result['axis_angle_deg']:.1f}°，"
+            f"信心度 {d['confidence']:.2f}（共 {len(detections)} 個偵測）"
+        )
+        return result, ""
 
     def measure_in_chop_zone(
         self, food_name: str, image: np.ndarray
