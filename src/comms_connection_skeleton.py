@@ -361,8 +361,11 @@ class F60Connection:
         Returns:
             去掉 \n 的字串，或 None 如果接收失敗／逾時
         """
+        # 失敗原因給 send_command 用：逾時跟手臂端斷線要分開講，不然看 log 會誤判
+        self._last_recv_error = None
         if not self.socket:
             logger.error(f"[{self.arm_id}] Socket 未初始化")
+            self._last_recv_error = "socket 未初始化"
             return None
 
         budget = timeout if timeout else self.read_timeout
@@ -386,6 +389,7 @@ class F60Connection:
                 chunk = self.socket.recv(4096)
                 if not chunk:
                     logger.error(f"[{self.arm_id}] 連線已關閉")
+                    self._last_recv_error = "手臂端關閉了連線"
                     return None
                 self._rx_buf += chunk
 
@@ -396,9 +400,11 @@ class F60Connection:
                 logger.warning(f"[{self.arm_id}] 讀取超時（緩衝區保留 {held} bytes 半行資料）")
             else:
                 logger.warning(f"[{self.arm_id}] 讀取超時")
+            self._last_recv_error = "逾時"
             return None
         except Exception as e:
             logger.error(f"[{self.arm_id}] 接收異常: {e}")
+            self._last_recv_error = f"連線中斷（{e}）"
             return None
         finally:
             try:
@@ -489,7 +495,9 @@ class F60Connection:
                 # 不是這個指令的回應。舊版直接收下，導致 PICKUP 拿到 HEARTBEAT_ACK
                 # 被判定失敗，但手臂其實已經把食材夾走了。
                 hb_ack = HEARTBEAT.get('ack', 'HEARTBEAT_ACK')
-                deadline = time.monotonic() + wait_sec
+                sent_at = time.monotonic()
+                deadline = sent_at + wait_sec
+                why = "逾時"
                 response = None
                 while True:
                     remain = deadline - time.monotonic()
@@ -497,6 +505,7 @@ class F60Connection:
                         break
                     candidate = self._recv_line(timeout=remain)
                     if candidate is None:
+                        why = getattr(self, "_last_recv_error", None) or "逾時"
                         break
                     if hb_ack in candidate:
                         logger.warning(
@@ -514,10 +523,16 @@ class F60Connection:
 
             if response:
                 logger.info(f"[{self.arm_id}] 回應: {response}")
-            else:
+            elif why == "逾時":
                 logger.error(
                     f"[{self.arm_id}] {wait_sec:.0f} 秒內等不到 {cmd.split(',')[0]} 的回應，"
                     f"連線已停用：請確認手臂狀態後重新啟動程式"
+                )
+            else:
+                logger.error(
+                    f"[{self.arm_id}] 送出 {cmd.split(',')[0]} 後 {time.monotonic() - sent_at:.0f} 秒"
+                    f"{why}，連線已停用：手臂程式可能已停止（急停 / 錯誤），"
+                    f"請看教導器上的錯誤訊息，確認手臂狀態後重新啟動程式"
                 )
             return response
 
