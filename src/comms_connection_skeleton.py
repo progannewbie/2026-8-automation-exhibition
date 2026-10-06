@@ -19,20 +19,29 @@ from config_connection import (
 # 日誌設定
 # ============================================================================
 
-os.makedirs(os.path.dirname(LOGGING_CONFIG['connection_log']), exist_ok=True)
-
 # 用本模組自己的 handler 寫 connection.log，不碰 root logger。
 # 舊版用 logging.basicConfig(filename=...)：誰先設定 root 誰贏——
 # web_ui.py 先設好日誌才 import 本模組，basicConfig 變成 no-op、connection.log
 # 根本不會產生；main.py 則是先 import 本模組，結果所有模組的日誌都灌進 connection.log。
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG if LOGGING_CONFIG['verbose'] else logging.INFO)
-if not any(getattr(h, '_smartcook_connection_log', False) for h in logger.handlers):
-    _conn_handler = logging.FileHandler(LOGGING_CONFIG['connection_log'], encoding='utf-8')
-    _conn_handler.setFormatter(logging.Formatter(LOGGING_CONFIG['log_format']))
-    _conn_handler._smartcook_connection_log = True
-    logger.addHandler(_conn_handler)
 # 仍會往上傳到 root，所以 web_ui_*.log / smartcook_*.log 也看得到連線紀錄
+
+
+def set_connection_log(mode: int):
+    """connection.log 開關：1 = 記錄，2 = 不記錄（入口程式依 --log 呼叫）"""
+    for h in [h for h in logger.handlers if getattr(h, '_smartcook_connection_log', False)]:
+        logger.removeHandler(h)
+        h.close()
+    if mode == 1:
+        os.makedirs(os.path.dirname(LOGGING_CONFIG['connection_log']), exist_ok=True)
+        handler = logging.FileHandler(LOGGING_CONFIG['connection_log'], encoding='utf-8')
+        handler.setFormatter(logging.Formatter(LOGGING_CONFIG['log_format']))
+        handler._smartcook_connection_log = True
+        logger.addHandler(handler)
+
+
+set_connection_log(LOGGING_CONFIG['log_to_file'])
 
 # ============================================================================
 # 連線管理類別

@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, jsonify, make_response, render_template, request
 
 from config_phase import MENU, get_recipe, get_phases, Phase
+from config_connection import LOGGING_CONFIG
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOG_DIR = os.path.join(_BASE_DIR, "logs")
@@ -43,17 +44,26 @@ LOG_DIR = os.path.join(_BASE_DIR, "logs")
 logger = logging.getLogger(__name__)
 
 
-def _setup_logging() -> str:
-    """設定日誌：同時輸出到檔案與終端機"""
-    os.makedirs(LOG_DIR, exist_ok=True)
-    log_path = os.path.join(LOG_DIR, datetime.now().strftime("web_ui_%Y%m%d_%H%M%S.log"))
+def _setup_logging(log_mode: int = 1) -> Optional[str]:
+    """
+    設定日誌：終端機一律輸出；log_mode 1 = 也寫 log 檔，2 = 不寫
+
+    connection.log 跟著同一個開關。回傳 log 檔路徑，不記錄時回傳 None。
+    """
+    from comms_connection_skeleton import set_connection_log
+    set_connection_log(log_mode)
 
     formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
 
-    # handler 也設 INFO：comms 模組自己開到 DEBUG（每拍心跳都記），那些只寫 connection.log
-    file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.INFO)
+    log_path = None
+    file_handler = None
+    if log_mode == 1:
+        os.makedirs(LOG_DIR, exist_ok=True)
+        log_path = os.path.join(LOG_DIR, datetime.now().strftime("web_ui_%Y%m%d_%H%M%S.log"))
+        # handler 也設 INFO：comms 模組自己開到 DEBUG（每拍心跳都記），那些只寫 connection.log
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -65,7 +75,8 @@ def _setup_logging() -> str:
     for h in list(root_logger.handlers):
         root_logger.removeHandler(h)
     root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(file_handler)
+    if file_handler:
+        root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
 
     return log_path
@@ -511,6 +522,9 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=5000)
     ap.add_argument("--token", default=None,
                     help="存取金鑰。--host 不是本機時沒給就自動產生一組")
+    ap.add_argument("--log", type=int, choices=(1, 2), default=LOGGING_CONFIG['log_to_file'],
+                    help="1 = 記錄 log 檔，2 = 不記錄（只顯示在終端機）。"
+                         "預設取 config_connection.LOGGING_CONFIG['log_to_file']")
     args = ap.parse_args()
 
     # 開放給其他裝置時一定要有金鑰，否則同網段任何人都能驅動手臂
@@ -518,8 +532,8 @@ def main() -> int:
     if not token and args.host not in LOOPBACK_HOSTS:
         token = secrets.token_urlsafe(6)
 
-    log_path = _setup_logging()
-    logger.info(f"日誌檔案: {log_path}")
+    log_path = _setup_logging(args.log)
+    logger.info(f"日誌檔案: {log_path}" if log_path else "日誌: 不記錄（--log 2），只顯示在終端機")
 
     runner = RobotRunner(simulate=args.simulate)
     if not runner.initialize():

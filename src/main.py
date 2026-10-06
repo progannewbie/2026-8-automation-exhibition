@@ -3,6 +3,7 @@ SmartCook 主程序 (Main Program)
 菜單、主循環、系統協調
 """
 
+import argparse
 import os
 import sys
 import json
@@ -13,6 +14,7 @@ from enum import Enum
 from typing import Dict, List, Optional
 
 from config_phase import MENU, get_recipe
+from config_connection import LOGGING_CONFIG
 from comms_connection_skeleton import CommsManager
 from vision_skeleton import VisionSystem
 from phase_controller_skeleton import PhaseController
@@ -41,17 +43,26 @@ logger = logging.getLogger(__name__)
 # 日誌設定
 # ============================================================================
 
-def _setup_logging() -> str:
-    """設定日誌：同時輸出到檔案與終端機"""
-    os.makedirs(LOG_DIR, exist_ok=True)
-    log_path = os.path.join(LOG_DIR, datetime.now().strftime("smartcook_%Y%m%d_%H%M%S.log"))
+def _setup_logging(log_mode: int = 1) -> Optional[str]:
+    """
+    設定日誌：終端機一律輸出；log_mode 1 = 也寫 log 檔，2 = 不寫
+
+    connection.log 跟著同一個開關。回傳 log 檔路徑，不記錄時回傳 None。
+    """
+    from comms_connection_skeleton import set_connection_log
+    set_connection_log(log_mode)
 
     formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s")
 
-    # handler 也設 INFO：comms 模組自己開到 DEBUG（每拍心跳都記），那些只寫 connection.log
-    file_handler = logging.FileHandler(log_path, encoding="utf-8")
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.INFO)
+    log_path = None
+    file_handler = None
+    if log_mode == 1:
+        os.makedirs(LOG_DIR, exist_ok=True)
+        log_path = os.path.join(LOG_DIR, datetime.now().strftime("smartcook_%Y%m%d_%H%M%S.log"))
+        # handler 也設 INFO：comms 模組自己開到 DEBUG（每拍心跳都記），那些只寫 connection.log
+        file_handler = logging.FileHandler(log_path, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.INFO)
 
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
@@ -63,7 +74,8 @@ def _setup_logging() -> str:
     for h in list(root_logger.handlers):
         root_logger.removeHandler(h)
     root_logger.setLevel(logging.INFO)
-    root_logger.addHandler(file_handler)
+    if file_handler:
+        root_logger.addHandler(file_handler)
     root_logger.addHandler(console_handler)
 
     return log_path
@@ -429,7 +441,13 @@ def main() -> int:
         sys.stdout.reconfigure(errors="backslashreplace")
     except (AttributeError, ValueError):
         pass
-    _setup_logging()
+    ap = argparse.ArgumentParser(description="SmartCook 主程序（終端機菜單）")
+    ap.add_argument("--log", type=int, choices=(1, 2), default=LOGGING_CONFIG['log_to_file'],
+                    help="1 = 記錄 log 檔，2 = 不記錄（只顯示在終端機）。"
+                         "預設取 config_connection.LOGGING_CONFIG['log_to_file']")
+    args = ap.parse_args()
+    log_path = _setup_logging(args.log)
+    logger.info(f"日誌檔案: {log_path}" if log_path else "日誌: 不記錄（--log 2），只顯示在終端機")
     app = SmartCookApp()
     return app.run()
 

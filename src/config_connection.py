@@ -120,6 +120,9 @@ LOGGING_CONFIG = {
     # 絕對路徑：comms 模組在 import 時就會建目錄並開檔，用相對路徑的話
     # 會跟著當前工作目錄跑，在哪裡下指令就在哪裡長出一個 logs/
     'connection_log': os.path.join(_BASE_DIR, 'logs', 'connection.log'),
+    # 是否寫 log 檔：1 = 記錄（web_ui_*.log / smartcook_*.log / connection.log），
+    #               2 = 不記錄（只顯示在終端機）。執行時可用 --log 1 / --log 2 覆蓋
+    'log_to_file': 1,
     'verbose': True,  # 詳細日誌模式
     'log_format': '[%(asctime)s] %(levelname)s | %(message)s',
 }

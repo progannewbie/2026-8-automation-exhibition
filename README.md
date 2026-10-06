@@ -134,6 +134,7 @@ python web_ui.py                 # 連接實體手臂
 python web_ui.py --simulate      # 不連手臂，純測介面（任何電腦都能跑）
 python web_ui.py --host 0.0.0.0  # 讓平板/手機連進來（需要金鑰，見下方）
 python web_ui.py --port 8080     # 改用其他埠（預設 5000）
+python web_ui.py --log 2          # 不記錄 log 檔（1 = 記錄，預設取 LOGGING_CONFIG['log_to_file']）
 ```
 
 啟動後用瀏覽器全螢幕開 <http://localhost:5000> 當觸控畫面。
