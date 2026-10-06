@@ -96,7 +96,7 @@ git checkout 10d83385 -- "robot/F60_F_左臂_slow.as"
 >
 > | 項目 | 沒做的話 |
 > |---|---|
-> | 右臂 `press_chop_zone` 重教在離 `cu`（偏移 0 的第一刀）下刀處 10 mm，確認 `press_dir` 方向後把右臂 `INIT_CONST` 的 `press_follow_ready` 改成 1 | 右臂拒絕切割，所有切菜都不能做 |
+> | ~~右臂 `press_chop_zone` 教在離 `cu` 下刀處 10 mm，`press_ready` 改成 1~~（2026-10-06 已完成） | 右臂拒絕切割，所有切菜都不能做 |
 > | 決定第 1 格的偏移 `CHOP_ORIGIN_OFFSET_MM`（`chop_points.py --offset` 預覽） | 第 1 格就是 `cu` |
 > | 用 `test/calibrate_chop_zone.py` 標定切割區，結果貼回 `config_vision.ChopZoneHomography` | 不量測，照舊從第 1 格切 15 刀 |
 > | 量生菜中間位置，填 `ChopPlanConfig.ROMAINE_START_INDEX` | 菜色 3、4 開跑前就被擋下 |

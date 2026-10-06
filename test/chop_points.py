@@ -151,13 +151,13 @@ def main() -> int:
     press_mm = press_table[food]
     press_dir = read_const(right_text, "press_dir")
     press_dir_y = read_const(right_text, "press_dir_y")
-    ready = read_const(right_text, "press_follow_ready")
+    ready = read_const(right_text, "press_ready")
 
     print(f"{FOODS[food]} ({food})：第 {start}～{last} 格，共 {cuts} 刀；"
           f"第 1 格 = cu X {offset:+g}mm、Y {offset_y:+g}mm")
-    print(f"右臂 press_mm = {press_mm:g}，press_dir = {press_dir:g}，press_follow_ready = {ready:g}")
+    print(f"右臂 press_mm = {press_mm:g}，press_dir = {press_dir:g}，press_ready = {ready:g}")
     if ready != 1:
-        print("⚠️ 右臂 press_follow_ready 還是 0：press_chop_zone 重教在離 cu 下刀處 10mm、"
+        print("⚠️ 右臂 press_ready 還是 0：press_chop_zone 重教在離 cu 下刀處 10mm、"
               "確認方向後改成 1，否則手臂拒絕切割。下面右臂座標是用目前的 press_chop_zone 算的。")
     print(f"教點來源: {LEFT_AS.name} / {RIGHT_AS.name}（.TRANS 區段，單位 mm / deg）")
 

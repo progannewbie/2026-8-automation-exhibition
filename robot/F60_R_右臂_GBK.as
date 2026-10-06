@@ -1361,38 +1361,38 @@ ZSWITCH ZCBS_CHGENV     OFF  -513
 .END
 .OPE_INFO1
 OPEINFO  30 10 6 6873  1715187219  ;(24/5/8 16:53:39) RS007L-B001 
-CONT_TIM  985.1 
-SERV_TIM  316.2 
-MTON_CNT  9740 
+CONT_TIM  1000.9 
+SERV_TIM  323.4 
+MTON_CNT  9781 
 ESTP_CNT  16 
-BRKE_CNT  10844 
-CON_PWR  86.100 
-SUP_PWR  86.100 
+BRKE_CNT  10885 
+CON_PWR  87.577 
+SUP_PWR  87.577 
 REG_PWR  0.000 
-MOVE_TJT  25.2 35.4 32.1 25.1 28.5 26.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
-DIST_DJT  722.757 1502.209 1203.718 1581.768 1487.122 1691.489 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
-DIST_DJT_PLUS  361.954 750.309 601.345 790.748 743.854 844.410 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
-OPEINFO TP_BKLIGHT  0 394.1 50000 
+MOVE_TJT  25.3 35.6 32.3 25.2 28.7 26.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+DIST_DJT  725.904 1507.548 1208.696 1586.539 1491.737 1698.616 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+DIST_DJT_PLUS  363.554 752.974 603.834 793.143 746.138 847.954 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+OPEINFO TP_BKLIGHT  0 397.4 50000 
 OPEINFO MC  0 0 2000000 
 OPEINFO PARTS1  0 0 0 0 0 0 0 0 0 0 0 
 OPEINFO PARTS2  0 0 0 0 0 0 0 0 0 0 0 
 OPEINFO PARTS3  0 0 0 0 0 0 0 0 0 0 0 
 M_OPEINFO  30 10 6 6873  1712159022  ;(24/4/3 15:43:42) RS007L-B001 
-M_CONT_TIM  985.2 
-M_SERV_TIM  316.2 
-M_MTON_CNT  9740 
+M_CONT_TIM  1001.0 
+M_SERV_TIM  323.4 
+M_MTON_CNT  9781 
 M_ESTP_CNT  16 
-M_BRKE_CNT  10844 
-M_CON_PWR  86.104 
-M_SUP_PWR  86.104 
+M_BRKE_CNT  10885 
+M_CON_PWR  87.581 
+M_SUP_PWR  87.581 
 M_REG_PWR  0.000 
-M_MOVE_TJT  25.2 35.4 32.1 25.1 28.5 26.7 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
-M_DIST_DJT  722.757 1502.209 1203.718 1581.768 1487.122 1691.489 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
-M_DIST_DJT_PLUS  361.954 750.309 601.345 790.748 743.854 844.410 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+M_MOVE_TJT  25.3 35.6 32.3 25.2 28.7 26.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+M_DIST_DJT  725.904 1507.548 1208.696 1586.539 1491.737 1698.616 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+M_DIST_DJT_PLUS  363.554 752.974 603.834 793.143 746.138 847.954 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
 M_MOVE_TJT_OVERDRIVE  0.0 0.0 0.0 0.0 0.0 0.0 
 M_DIST_DJT_OVERDRIVE  0.000 0.000 0.000 0.000 0.000 0.000 
 M_WARN_CJT_OVERDRIVE  0 0 0 0 0 0 
-HOUR_MTR  985.2 
+HOUR_MTR  1001.0 
 .END
 .SYSDATA
 REG_POINT       0
@@ -1893,8 +1893,8 @@ FB_MOLEX_PFB_FILES[1] QlpoOTFBWSZTWbakmgoAIHl/h8KQACBQA//iESDaDv/v30AABEAAAEQACF
 FB_MOLEX_PFB_FILES[2] Sc5yk3YsjAAe+ykkkrCszCa3tJAaY0zpnXpt3aab5Ab8EB7/TzIDz1Ve/MBpVVsttVWDVhndm1MaSSTRa0ESQRAACQRJBEkESQCMcgiSCMiy2DDkvd6zicca7ccVWREkESQUbm0nYAALJJJWAALWq1syNtzdLdtNaaPMvNtca5zVUkklI3iTaSvGkATmmZjDpLDMmJ0Z5Xlez2xiFZ5MAAwPDYGG2RpABWgAA3eVKxjWqmKNaSSSjZo4kkk2kkk1yUU2BeRuAADEkkrAAVdpSxK9ntjEKGq17gATJsJqSSjAezGo2kxuWd5UxfFVVkFMRmRIxsyWcKzAZzTMBncLVGc1LiaQrJWgIy4UGjYmpo95nF8bZzYVNDYNpsekGAAQvuIACDAAGqe833xe
 FB_MOLEX_PFB_FILES[3] +MQCu0SiIiIiELcSSSW7kAAz5c8+nR1aJBVeH+gNvw4lVXiqq8gDrAbID91VaoD9KqvxAdOKqvzAfFugP5VVt66qumqrOaqtoDIDqAO0+bjgPu6oDWA6oDjugB0QHLVVz1Vcm/ADpqq/nDFVXPVVrbAH3qq5+OqrTIDra/95OCqtVVWkB5eHXVVrAcwDVAcWYBycIDsKquwA80gv+LuSKcKEhbUk0FA=
 FB_CIFX_FILES[0] 2
-FB_CIFX_FILES[1] QlpoOTFBWSZTWeEY1bsAAQB/zsYQACBAA/+CKyHcCv/v3+AAJEAAAAJAAAAIMAGYIqhJJE2qeTTTJqeptGoaDQ00NPUaPUwyhgAAAAAAAAAAEppBBDU2Q1GjQaA0aaDTQBp3B3hgDeDhQOkykDM1uTIOGQECIK2p3cGmBYCAHCHqnRLpa9lCLa15wekKgqBw3Y7Rt2yvbsjMXuiNH1tjSXM7WBfjALVIEAOgDGBrNacNLRZwTPRR6JCaIcs2qM7J4D9QLRQgqok4UsozAdSloCIRwSZKHPGTCEESbggxgtCsWm5oD7Z347Sztj/e3d8brYS3KFtuAatbXcQeHE2lPyotgmz8H2KwNti878L8OX1OLg0sm+oIiLpWE7kztf65SSw4s8rOV1UBDUKVSDLKG8GFCQOPV/aEgrClqJhnG4BNH8C6ebeQr/QhfJNwNlyXzs
-FB_CIFX_FILES[2] y4dFF6gM2LU7lMKbGyHxJ2hq6YZZEyVHpHKTk9kyraqSHNEEF0XnEezK1OERpIBAxUPqz2mYxZWuAVOq2uyjHFWsAgyPeUxx5wkyVjdwB/i7kinChIcIxq3YA=
+FB_CIFX_FILES[1] QlpoOTFBWSZTWVZ3RxYAAQB/zsYQACBAA/+CKyHcCv/v3+AAJEAAAAJAAAAIMAGYJKhKIpPyp7RNTynqY0epGgDTQz1RkwTyhgAAAAAAAAAAEiTSBU9MxMlHqGhoDJ6mg0yAep8A7A8QcwgLSG06gkst+/GgbwYMIviIBWAbQYBAU+zhlfWuCdJXJ/SkXBeF4QHfjkLv7cO7tmwfgybf13TcZqFtDXEAydQYBDAMQORycB1KVANWlHb9WxqQ6a2K84pxJHsTm3zBGAXlXE0XnaKOtshITKwfpiKVBjDpa5oTgmVIpm3q0/FZuZmVml/zLX9a5YCXUEpXho8138geHI1FmxHaRFycXxSIaop63X3X8/uoTitENuIHDtFzxhOPb4QsNk18exwvxrQnUWxYDW4PuDFJSDst9AVDALlbYHEW4an+BnZrzKYf0KcKtblpv4
+FB_CIFX_FILES[2] WbdKM9dyNOvo0M50iUzqg9yMyrbZgogiolftNQVFUaUtXFCc5BhnMWSRt0V2wZ1FAodFsdfHI1OjRZgO7ryhTXO61Lwbhe8smmyBDDaL3gH+LuSKcKEgrO6OLA
 FB_DISCON_MASK_ERR[0]          0         0
 FB_DISCON_MASK_ERR[1]          0         0
 KLOGIC_AS_SIGNUM    0
@@ -2433,10 +2433,10 @@ CURALM_PERIOD  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 CURALM_COUNTER1  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 CURALM_COUNTER2  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 CURALM_PRI_FLG  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-MNTWARN_CONT_TIM 6927382 6927382 -1 10000 24 0
-MNTWARN_SERV_TIM 2223625 2223625 -1 5000 24 0
-MNTWARN_MTON_CNT 9740 9740 -1 0 0 0
-MNTWARN_BRKE_CNT 10844 10844 -1 0 0 0
+MNTWARN_CONT_TIM 7038238 7038238 -1 10000 24 0
+MNTWARN_SERV_TIM 2273618 2273618 -1 5000 24 0
+MNTWARN_MTON_CNT 9781 9781 -1 0 0 0
+MNTWARN_BRKE_CNT 10885 10885 -1 0 0 0
 MNTWARN_ESTP_CNT 16 16 -1 0 0 0
 MNTWARN_WARNMSG_J1 メンテナンスを夸京します。呵大のカワサキロボットサ〖ビスへお啼圭せ布さい。
 MNTWARN_WARNMSG_E1 Please contact your nearest Kawasaki Robot Service.
@@ -2468,7 +2468,7 @@ SWITCH HOLD.STEP       OFF
 SWITCH WS_COMPOFF      OFF
 SWITCH WS.ZERO         OFF
 SWITCH SLOW_START      OFF
-SWITCH ABS.SPEED       OFF
+SWITCH ABS.SPEED       ON 
 SWITCH UDP_EMSG        ON 
 SWITCH TOUCH.ENA       ON 
 SWITCH TOUCHST.ENA     ON 
@@ -2536,15 +2536,15 @@ SWITCH CURALMFUNC      OFF
 .CONDITION
 AS_VER       ASF_01000001T
 SV_VER       SVF_010000026
-ELOG_NUM            494
+ELOG_NUM            499
 CHK_ONCE      255
-MAN_SPEED     4
-CHK_SPEED     4
+MAN_SPEED     3
+CHK_SPEED     3
 MON_SPEED        20.000
 PRG_ACCEL       100.000
-PRG_SPEED        10.000
+PRG_SPEED       100.000
 PRG_DECEL       100.000
-PRM_SPEED        10.000
+PRM_SPEED       100.000
 PRM_ACCEL       100.000
 PRM_DECEL       100.000
 BLK_SPEED       100.000
@@ -2570,14 +2570,12 @@ CINT_PRG_ACCEL    100.000
 CINT_PRM_DECEL    100.000
 CINT_PRG_DECEL    100.000
 PRG_ACCEL_ORG    100.000
-PRG_SPEED_ORG     10.000
+PRG_SPEED_ORG    100.000
 PRG_DECEL_ORG    100.000
 PRG_JT_ACCEL    100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000
 PRG_JT_DECEL    100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000
 PRM_JT_ACCEL    100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000
 PRM_JT_DECEL    100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000
-STEP1ENV_CALL_PRGNAME main
-STEP1ENV_PRG_STEP          9
 USR_DO1      00000000000000000000001000000000
 USR_DO2      00000000000000000000000000000000
 USR_DO3      00000000000000000000000000000000
@@ -3415,13 +3413,13 @@ TM_GET_JUDGE_DAYS      10
 .IDE_CMT
 @@@ PROJECT @@@
 @@@ PROJECTNAME @@@
-F60_R_右臂_GBK
+star_trace
 @@@ HISTORY @@@
 16.09.2026 13:24:42
 @@@ INSPECTION @@@
 @@@ CONNECTION @@@
 Rs07_R
-192.168.5.7
+192.168.11.7
 23
 @@@ PROGRAM @@@
 0:spiral_trace:F
@@ -3533,6 +3531,7 @@ TOOL: NULL
 .INTER_PANEL_D
 0,1,"原点","","","",10,15,4,15,2001,0
 1,2,"go","","","",0,15,0,2020,0
+28,2,"go","","","",0,15,0,2026,0
 .END
 .INTER_PANEL_TITLE
 "",0
@@ -4475,80 +4474,80 @@ exit_end:
 	END
 .END
 .PROGRAM do_chop(.$food,.cuts,.thick,.start,.offset,.offset_y) #159
-  ABS.SPEED ON
-  ; press_chop_zone 要重教在離左臂 cu（偏移 0 的第一刀）下刀處 10mm、還沒切的那一側，
-  ; 教好、確認 press_dir 方向後把 INIT_CONST 的 press_follow_ready 改成 1。
-  ; 沒改之前一律拒絕切割（左臂會在 SYNC 逾時回 E4023），避免壓在舊位置。
-  IF press_follow_ready <> 1 THEN
-    CALL send_line ("ERROR,E4005")
-    RETURN
-  END
-  IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
-    CALL send_line ("ERROR,E4005")
-    RETURN
-  END
-  .last = .start + .cuts - 1
-  IF .last > 60 THEN
-    CALL send_line ("ERROR,E4005")
-    RETURN
-  END
-  SCASE .$food OF
-    SVALUE "CUCUMBER":
-      press_mm = 15    ;黃瓜下降高度
-    SVALUE "CARROT":
-      press_mm = 17    ;紅蘿蔔下降高度
-    SVALUE "ROMAINE":
-      press_mm = 15    ;生菜下降高度 (★ 暫用小黃瓜值，待現場試壓)
-    ANY :
-      CALL send_line ("ERROR,E4005");收到資料異常
-      RETURN
-  END
-  robot_busy = 1
-  SPEED 50 MM/s ALWAYS   ;  絕對速度
-  TOOL right_spatula
-  LMOVE home_right
-  break
-  ; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
-  ; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*5mm)*press_dir，跟著刀子走
-  ; （.offset = 第 1 格相對左臂 cu 的偏移，跟左臂同一個值，由 PC 送）
-  ; 食材放置的 Y 偏移 .offset_y 也跟左臂一樣，沿本臂 Y 移 .offset_y*press_dir_y
-  i = .start
-  DO
-    POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * 5) * press_dir, .offset_y * press_dir_y, 0)
-    SPEED 500 MM/s ALWAYS   ;  絕對速度
-    LMOVE press_now
-    break
-    SPEED 50 MM/s ALWAYS   ;  絕對速度
-    DRAW 0, 0, -press_mm
-    break
-    CALL sync_step (ok);壓好，左臂可以下刀
-    IF ok == 0 THEN
-      CALL send_line ("ERROR,E4023")
-      robot_busy = 0
-      RETURN
-    END
-    SWAIT -1001    ;等左臂 SYNC 的 0.1 秒脈衝結束，不然會被當成「這刀切完」
-    SWAIT 1001     ;等左臂這刀切完 (PULSE)
-    DRAW 0, 0, press_mm
-    break
-    i = i + 1
-  UNTIL i > .last
-  CALL sync_step (ok);切割完成
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    robot_busy = 0
-    RETURN
-  END
-  SPEED 500 MM/s ALWAYS   ;  絕對速度
-  LMOVE home_right
-  break
-  SIGNAL sig_out_step
-  SWAIT sig_in_step
-  SIGNAL -sig_out_step
-  ABS.SPEED OFF
-  TWAIT 0.5
-  robot_busy = 0
-  CALL send_line ("OK")
+	ABS.SPEED ON
+	; press_chop_zone 要教在離左臂 cu（偏移 0 的第一刀）下刀處 10mm、還沒切的那一側，
+	; 教好、確認 press_dir 方向後把 init_const 的 press_ready 改成 1。
+	; 沒改之前一律拒絕切割（左臂會在 SYNC 逾時回 E4023），避免壓在舊位置。
+	IF press_ready <> 1 THEN
+		CALL send_line ("ERROR,E4005")
+		RETURN
+	END
+	IF .cuts < 1 OR .cuts > 60 OR .thick <= 0 OR .start < 1 OR ABS (.offset) > 300 OR ABS (.offset_y) > 100 THEN
+		CALL send_line ("ERROR,E4005")
+		RETURN
+	END
+	.last = .start + .cuts - 1
+	IF .last > 60 THEN
+		CALL send_line ("ERROR,E4005")
+		RETURN
+	END
+	SCASE .$food OF
+		SVALUE "CUCUMBER":
+			press_mm = 15    ;黃瓜下降高度
+		SVALUE "CARROT":
+			press_mm = 17    ;紅蘿蔔下降高度
+		SVALUE "ROMAINE":
+			press_mm = 15    ;生菜下降高度 (★ 暫用小黃瓜值，待現場試壓)
+		ANY :
+			CALL send_line ("ERROR,E4005");收到資料異常
+			RETURN
+	END
+	robot_busy = 1
+	SPEED 50 MM/s ALWAYS   ;  絕對速度
+	TOOL right_spatula
+	LMOVE home_right
+	break
+	; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
+	; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*5mm)*press_dir，跟著刀子走
+	; （.offset = 第 1 格相對左臂 cu 的偏移，跟左臂同一個值，由 PC 送）
+	; 食材放置的 Y 偏移 .offset_y 也跟左臂一樣，沿本臂 Y 移 .offset_y*press_dir_y
+	i = .start
+	DO
+		POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * 5) * press_dir, .offset_y * press_dir_y, 0)
+		SPEED 500 MM/s ALWAYS   ;  絕對速度
+		LMOVE press_now
+		break
+		SPEED 50 MM/s ALWAYS   ;  絕對速度
+		DRAW 0, 0, -press_mm
+		break
+		CALL sync_step (ok);壓好，左臂可以下刀
+		IF ok == 0 THEN
+			CALL send_line ("ERROR,E4023")
+			robot_busy = 0
+			RETURN
+		END
+		SWAIT -1001    ;等左臂 SYNC 的 0.1 秒脈衝結束，不然會被當成「這刀切完」
+		SWAIT 1001     ;等左臂這刀切完 (PULSE)
+		DRAW 0, 0, press_mm
+		break
+		i = i + 1
+	UNTIL i > .last
+	CALL sync_step (ok);切割完成
+	IF ok == 0 THEN
+		CALL send_line ("ERROR,E4023")
+		robot_busy = 0
+		RETURN
+	END
+	SPEED 500 MM/s ALWAYS   ;  絕對速度
+	LMOVE home_right
+	break
+	SIGNAL sig_out_step
+	SWAIT sig_in_step
+	SIGNAL -sig_out_step
+	ABS.SPEED OFF
+	TWAIT 0.5
+	robot_busy = 0
+	CALL send_line ("OK")
 .END
 .PROGRAM do_chop_0814(.$food,.cuts,.thick) #0;
 	IF .cuts < 1 OR .cuts > 20 OR .thick <= 0 THEN
@@ -4683,15 +4682,15 @@ exit_end:
 	LMOVE home_right
 .END
 .PROGRAM do_clean() #0; 清理檯面
-  TOOL right_spatula
-  SPEED 200 MM/S ALWAYS
-  LMOVE home_right
-  BREAK
-  TWAIT 2
-  SWAIT 1001
-  ABS.SPEED OFF
-  robot_busy = 0
-  CALL SEND_LINE ("OK")
+	TOOL right_spatula
+	SPEED 200 MM/s ALWAYS
+	LMOVE home_right
+	break
+	TWAIT 2
+	SWAIT 1001
+	ABS.SPEED OFF
+	robot_busy = 0
+	CALL send_line ("OK")
 .END
 .PROGRAM do_con135(.ok) #8;
 	ABS.SPEED ON
@@ -4962,16 +4961,16 @@ exit_end:
 	END
 .END
 .PROGRAM do_home(.$arm) #184
-  IF .$arm <> $this_arm THEN
-    CALL send_line ("ERROR,E4003")
-    RETURN
-  END
-  robot_busy = 1
-  SPEED 30 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL right_spatula
-  LMOVE home_right
-  robot_busy = 0
-  CALL send_line ("OK")
+	IF .$arm <> $this_arm THEN
+		CALL send_line ("ERROR,E4003")
+		RETURN
+	END
+	robot_busy = 1
+	SPEED 30 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+	TOOL right_spatula
+	LMOVE home_right
+	robot_busy = 0
+	CALL send_line ("OK")
 .END
 .PROGRAM do_iotest(.$op) #0
 	; 純 i/O 接線測試，跳過 sync_step/動作流程，直接操作/讀取訊號腳位
@@ -4996,103 +4995,103 @@ exit_end:
 	END
 .END
 .PROGRAM do_pickup(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #277
-  IF .$arm <> "F60_R" THEN
-    CALL send_line ("ERROR,E4003")
-    RETURN
-  END
-  found = 1
-  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
-    POINT target_pt = TRANS (.x_mm - 10, .y_mm, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
-    POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
-  ELSE
-    IF .$location == "WAIT_ZONE" THEN
-      POINT target_pt = wait_zone
-      POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
-    ELSE
-      IF .$location == "MIX_ZONE" THEN
-        POINT target_pt = mix_zone_pi
-        POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
-      ELSE
-        IF .$location == "MIX_ZONE2" THEN
-          POINT mix_zone_pi2 = SHIFT(mix_zone_pi BY 0,-50 ,0)
-          POINT target_pt = mix_zone_pi2
-          POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
-        ELSE
-          found = 0
-        END
-      END
-    END
-  END
-  IF found == 0 THEN
-    CALL send_line ("ERROR,E4002")
-    RETURN
-  END
-  ABS.SPEED ON
-  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
-  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
-  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
-  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
-  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
-  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
-  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
-  robot_busy = 1
-  break
-  CALL sync_step (ok)
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    TOOL right_spatula
-    robot_busy = 0
-    RETURN
-  END
-  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
-  LMOVE target_pt_appro
-  CALL sync_step (ok)
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    TOOL right_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 2: 下降 — 一起下降到取料高度
-  SPEED 100 MM/s ALWAYS
-  LMOVE target_conv
-  CALL sync_step (ok)
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    TOOL right_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
-  SPEED 100 MM/s ALWAYS
-  LMOVE target_pt
-  break
-  CALL sync_step (ok)
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    TOOL right_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
-  ; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
-  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
-  SPEED 500 MM/s ALWAYS
-  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
-  LMOVE depart_pt
-  CALL sync_step (ok)
-  IF ok == 0 THEN
-    CALL send_line ("ERROR,E4023")
-    TOOL right_spatula
-    robot_busy = 0
-    RETURN
-  END
-  ABS.SPEED OFF
-  TOOL right_spatula
-  robot_busy = 0
-  CALL send_line ("OK")
+	IF .$arm <> "F60_R" THEN
+		CALL send_line ("ERROR,E4003")
+		RETURN
+	END
+	found = 1
+	IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+		POINT target_pt = TRANS (.x_mm - 10, .y_mm, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+		POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
+	ELSE
+		IF .$location == "WAIT_ZONE" THEN
+			POINT target_pt = wait_zone
+			POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
+		ELSE
+			IF .$location == "MIX_ZONE" THEN
+				POINT target_pt = mix_zone_pi
+				POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
+			ELSE
+				IF .$location == "MIX_ZONE2" THEN
+					POINT mix_zone_pi2 = SHIFT (mix_zone_pi BY 0, -50, 0)
+					POINT target_pt = mix_zone_pi2
+					POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
+				ELSE
+					found = 0
+				END
+			END
+		END
+	END
+	IF found == 0 THEN
+		CALL send_line ("ERROR,E4002")
+		RETURN
+	END
+	ABS.SPEED ON
+	; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
+	; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
+	; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
+	POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
+	; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
+	; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
+	; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
+	robot_busy = 1
+	break
+	CALL sync_step (ok)
+	IF ok == 0 THEN
+		CALL send_line ("ERROR,E4023")
+		TOOL right_spatula
+		robot_busy = 0
+		RETURN
+	END
+	SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+	TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+	; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
+	LMOVE target_pt_appro
+	CALL sync_step (ok)
+	IF ok == 0 THEN
+		CALL send_line ("ERROR,E4023")
+		TOOL right_spatula
+		robot_busy = 0
+		RETURN
+	END
+	; 階段 2: 下降 — 一起下降到取料高度
+	SPEED 100 MM/s ALWAYS
+	LMOVE target_conv
+	CALL sync_step (ok)
+	IF ok == 0 THEN
+		CALL send_line ("ERROR,E4023")
+		TOOL right_spatula
+		robot_busy = 0
+		RETURN
+	END
+	; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
+	SPEED 100 MM/s ALWAYS
+	LMOVE target_pt
+	break
+	CALL sync_step (ok)
+	IF ok == 0 THEN
+		CALL send_line ("ERROR,E4023")
+		TOOL right_spatula
+		robot_busy = 0
+		RETURN
+	END
+	; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
+	; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
+	; 直接引用階段 3 的目標點位比讀「目前位置」準確。
+	SPEED 500 MM/s ALWAYS
+	POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
+	LMOVE depart_pt
+	CALL sync_step (ok)
+	IF ok == 0 THEN
+		CALL send_line ("ERROR,E4023")
+		TOOL right_spatula
+		robot_busy = 0
+		RETURN
+	END
+	ABS.SPEED OFF
+	TOOL right_spatula
+	robot_busy = 0
+	CALL send_line ("OK")
 .END
 .PROGRAM do_pickup_test() #0
 	TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
@@ -5987,7 +5986,7 @@ exit_end:
 	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (offset + (i-1)*5mm)*press_dir
 	press_dir = 1           ; ★ 待現場確認：壓點往反方向跑就改 -1
 	press_dir_y = 1         ; ★ 待現場確認：Y 偏移時壓點往反方向跑就改 -1
-	press_follow_ready = 0  ; ★ press_chop_zone 重教在離左臂 cu 下刀處 10mm 後改 1，否則拒絕切割
+	press_ready = 1         ; press_chop_zone 已教在離左臂 cu 下刀處 10mm（2026-10-06 現場確認）；0 = 拒絕切割
 .END
 .PROGRAM init_points() #0
 	POINT origin = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 檯面左下角基準點 (須在 BASE ba 生效後教點，見 INIT_TOOL)
@@ -6064,38 +6063,38 @@ exit_end:
 	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[-76.169,54.057,-92.937,-8.318,18.917,-169.17] ;start point
 .END
 .PROGRAM main() #0
-  ;CALL heartput
-  CALL init_switches
-  CALL init_const
-  ;CALL init_points     ; 點位已現場教過，不重跑避免蓋回佔位值 0
-  CALL init_tool
-  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-  ACCURACY 1
-  SIGNAL -sig_out_step
-  LMOVE home_right
-  CALL clean_socket
-  CALL open_listen
-  DO
-    CALL wait_accept (accepted)
-    IF accepted == 1 THEN
-      sock_open_flag = 1
-      $rxbuf = ""
-      CALL do_handshake (hs_ok)
-      IF hs_ok == 1 THEN
-        conn_lost = 0
-        DO
-          CALL recv_line ($line, rok)
-          IF rok == 0 THEN
-            conn_lost = 1
-          ELSE
-            CALL split_csv ($line)
-            CALL dispatch
-          END
-        UNTIL conn_lost == 1
-      END
-      CALL disconnect
-    END
-  UNTIL 1 == 0
+	;CALL heartput
+	CALL init_switches
+	CALL init_const
+	;CALL init_points     ; 點位已現場教過，不重跑避免蓋回佔位值 0
+	CALL init_tool
+	SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+	ACCURACY 1
+	SIGNAL -sig_out_step
+	LMOVE home_right
+	CALL clean_socket
+	CALL open_listen
+	DO
+		CALL wait_accept (accepted)
+		IF accepted == 1 THEN
+			sock_open_flag = 1
+			$rxbuf = ""
+			CALL do_handshake (hs_ok)
+			IF hs_ok == 1 THEN
+				conn_lost = 0
+				DO
+					CALL recv_line ($line, rok)
+					IF rok == 0 THEN
+						conn_lost = 1
+					ELSE
+						CALL split_csv ($line)
+						CALL dispatch
+					END
+				UNTIL conn_lost == 1
+			END
+			CALL disconnect
+		END
+	UNTIL 1 == 0
 .END
 .PROGRAM main1222() #2; 联动
 	CALL init1222;初始设定
@@ -7382,7 +7381,7 @@ chop_depart_pt -353.790710 563.920898 -362.637207 99.063927 167.559235 101.55741
 chop_rep -434.574158 448.398468 -377.252167 96.910446 177.533401 -176.011017
 chop_rep1 -399.893951 448.695374 -381.261993 117.695839 177.862946 173.443604
 chop_spread_pt -353.787842 487.201660 -404.981659 99.070129 167.562546 101.563347
-chop_teach -351.457947 472.846741 -330.676819 -1.006170 121.739418 90.280037
+chop_teach -351.462097 472.812927 -335.670898 -1.005785 121.738945 90.275955
 cu_10 -237.358673 734.677429 -192.031525 -178.034683 74.373825 88.123131
 cu_20 -356.417603 552.694763 -348.154053 0.118493 111.286804 89.616013
 cu_30 -356.423615 552.675842 -370.642303 0.124634 111.288429 89.620064
@@ -7497,6 +7496,7 @@ level_tg -211.757416 460.034729 -362.107727 -4.843252 110.247147 93.086845
 level_up -349.381897 462.877899 -310.227509 -1.051557 111.189430 93.185661
 mix_zone -450.295227 462.182434 -363.284607 99.590538 179.516403 -168.359833
 mix_zone_pi -479.172607 446.141174 -409.733582 152.267899 173.372299 -117.437355
+mix_zone_pi2 -479.172607 396.141174 -409.733582 152.267899 173.372299 -117.437355
 mix_zone_up -410.843689 462.183838 -363.285431 17.839327 179.057190 109.890572
 now -37.811569 61.683239 937.473938 5.550230 41.390221 -93.534866
 org -343.817169 539.086670 -334.437408 -87.571404 102.660973 -84.654846
@@ -7508,7 +7508,7 @@ pickup_origin -553.709106 446.610901 -410.921387 121.780022 175.892548 -145.5479
 press_chop_1 -258.956177 452.339600 -353.057861 2.480422 109.062843 89.191467
 press_chop_per -340.723022 449.403595 -372.087891 2.491133 108.988434 89.185951
 press_chop_zo -353.747223 448.044006 -397.381073 141.681259 176.946442 143.944626
-press_chop_zone -351.461487 472.877777 -318.130249 -1.004270 121.742302 90.285332
+press_chop_zone -351.462097 472.812927 -320.670898 -1.005785 121.738945 90.275955
 rcon120_con -424.097961 657.764099 -354.052246 -149.212662 60.025761 88.413231
 rcon120_down -43.542801 827.730042 -351.430603 -150.383102 60.001701 89.004936
 rcon120_ready -43.501141 827.824219 -272.371613 -150.332520 59.605076 88.266579
@@ -7561,7 +7561,7 @@ star -344.473541 523.949707 -282.561890 -25.967569 174.136215 -27.097530
 target_conv -379.172607 446.141174 -409.733582 152.267899 173.372299 -117.437355
 target_out -251.989929 716.686401 -312.405945 15.729055 171.138535 102.388077
 target_per -304.331146 713.164246 -298.257812 150.101746 173.861786 -119.600861
-target_pt -479.172607 446.141174 -409.733582 152.267899 173.372299 -117.437355
+target_pt -304.331146 713.164246 -348.257812 150.101746 173.861786 -119.600861
 target_pt_appro -379.172607 446.141174 -359.733582 152.267899 173.372299 -117.437355
 target_pt_conve -399.505249 446.826721 -447.424591 -91.233513 179.241684 -3.975388
 target_up -251.989929 716.686401 -362.405945 15.729055 171.138535 102.388077
@@ -7658,7 +7658,7 @@ recv_n = 1
 ret = 0
 robot_busy = 0
 rok = 1
-rret = 0
+rret = -34024
 rsock_id = 36
 s = 1
 sig_in_step = 1001
