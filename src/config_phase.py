@@ -210,9 +210,13 @@ class TableOffsetEstimate:
     # 用教導器把鏟子移到「這個擺法第一刀位置的夾緊點」，記下相對 cut_pick 的偏移，
     # 對照同一張照片的取料區右端 X / Y。(0, 0) = 教 cut_pick 當時的擺法。
     #     (取料區右端 X, 確認的夾取 X 偏移)
-    PICK_X_REFERENCE: List[Tuple[float, float]] = []
+    PICK_X_REFERENCE: List[Tuple[float, float]] = [
+        (122.9, -47.1),  # 2026-10-06 第 1 筆：左臂夾緊點 X 610.7 再 -170 → 440.7（cut_pick 487.8）
+    ]
     #     (取料區右端 Y, 確認的夾取 Y 偏移)；只有 1 筆時沿用切菜 Y 的比例
-    PICK_Y_REFERENCE: List[Tuple[float, float]] = []
+    PICK_Y_REFERENCE: List[Tuple[float, float]] = [
+        (38.1, 38.1),    # 2026-10-06 第 1 筆：左臂夾緊點 Y 564.3（cut_pick 526.2）
+    ]
 
     # 只檢查長軸是否沿取料區 X 方向擺（0°/180° 都算），不分頭尾
     MAX_AXIS_ANGLE_DEG = 30.0
