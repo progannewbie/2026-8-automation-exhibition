@@ -3640,6 +3640,10 @@ TOOL: NULL
 	chop_spread_dy = 30
 	scoop_dx = 0e+00          ; PLACE 撈取階段：鏟面滑入食材下方的位移量 (★ 佔位值，待現場設計確認)
 	scoop_dy = 20
+	; --- CUT_SEG 夾切好的一段（DO_PICKUP）---
+	pick_margin = 20      ; 從切割段外側多少 mm 開始推 (★ 待現場調整)
+	pick_gap = 15         ; 兩鏟會合時各停在中點前後多少 mm (★ 待現場調整)
+	pick_ready = 0        ; ★ cut_pick 教好後改 1，否則 CUT_SEG 回 ERROR,E4007
 	scoop_tilt_deg = 60   ; PLACE 釋放階段 (SCOOP)：傾倒角度 (★ 佔位值，待現場測試)
 	; --- 逾時設定 (秒) ---
 	timeout_io_sec = 30
@@ -3943,7 +3947,20 @@ listen:
 					POINT target_pt = mix_zone_pi2
 					POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
 				ELSE
-					found = 0
+					IF .$location == "CUT_SEG" THEN
+						; 夾切好的一段：.x_mm = 起點距離、.y_mm = Y 偏移、.angle_deg = 終點距離
+						; （距離都是從 cu 沿 X 算，跟 CHOP 的偏移同一套）。左臂從起點外側 pick_margin 往中點推，停在中點前 pick_gap
+						; cut_pick = 偏移 (0, 0) 時鏟子在 cu 位置的取料姿態，教好後 pick_ready 改 1
+						IF pick_ready <> 1 THEN
+							CALL SEND_LINE ("ERROR,E4007")
+							RETURN
+						END
+						.dm = (.x_mm + .angle_deg) / 2
+						POINT target_conv = SHIFT (cut_pick BY .x_mm - pick_margin, .y_mm, 0)
+						POINT target_pt = SHIFT (cut_pick BY .dm - pick_gap, .y_mm, 0)
+					ELSE
+						found = 0
+					END
 				END
 			END
 		END

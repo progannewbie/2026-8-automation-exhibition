@@ -5017,7 +5017,20 @@ exit_end:
 					POINT target_pt = mix_zone_pi2
 					POINT target_conv = SHIFT (target_pt BY 100, 0, 0)
 				ELSE
-					found = 0
+					IF .$location == "CUT_SEG" THEN
+						; 夾切好的一段：.x_mm = 起點距離、.y_mm = Y 偏移、.angle_deg = 終點距離
+						; （距離都是從 cu 沿 X 算，跟 CHOP 的偏移同一套）。右臂從終點外側 pick_margin 往中點推，停在中點後 pick_gap
+						; cut_pick = 偏移 (0, 0) 時鏟子在 cu 位置的取料姿態，教好後 pick_ready 改 1
+						IF pick_ready <> 1 THEN
+							CALL send_line ("ERROR,E4007")
+							RETURN
+						END
+						.dm = (.x_mm + .angle_deg) / 2
+						POINT target_conv = SHIFT (cut_pick BY (.angle_deg + pick_margin) * press_dir, .y_mm * press_dir_y, 0)
+						POINT target_pt = SHIFT (cut_pick BY (.dm + pick_gap) * press_dir, .y_mm * press_dir_y, 0)
+					ELSE
+						found = 0
+					END
 				END
 			END
 		END
@@ -5984,6 +5997,10 @@ exit_end:
 	robot_busy = 0
 	$rxbuf = ""
 	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (offset + (i-1)*5mm)*press_dir
+	; --- CUT_SEG 夾切好的一段（do_pickup）---
+	pick_margin = 20      ; 從切割段外側多少 mm 開始推 (★ 待現場調整)
+	pick_gap = 15         ; 兩鏟會合時各停在中點前後多少 mm (★ 待現場調整)
+	pick_ready = 0        ; ★ cut_pick 教好後改 1，否則 CUT_SEG 回 ERROR,E4007
 	press_dir = 1           ; ★ 待現場確認：壓點往反方向跑就改 -1
 	press_dir_y = 1         ; ★ 待現場確認：Y 偏移時壓點往反方向跑就改 -1
 	press_ready = 1         ; press_chop_zone 已教在離左臂 cu 下刀處 10mm（2026-10-06 現場確認）；0 = 拒絕切割

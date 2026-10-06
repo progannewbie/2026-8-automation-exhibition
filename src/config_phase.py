@@ -111,6 +111,23 @@ class ChopPlanConfig:
     MIN_LENGTH_MM = 30.0         # 比這短當成量錯
     MAX_AXIS_ANGLE_DEG = 15.0    # 食材軸線跟刀子行進方向 (左臂 X 軸) 的夾角上限
 
+    # 切完夾到盤子上：跟著切的位置走（PICKUP CUT_SEG），把切好的那段分 PICK_PASSES 次夾。
+    # 前幾次各自「夾 → 倒進下一步 PLACE 的位置」，最後一次夾完交給食譜原本的 PLACE。
+    # False = 照舊用固定教點 mix_zone_pi 夾一次（兩臂 cut_pick 教好、pick_ready 改 1 之後才打開）
+    PICK_FOLLOW_CUT = False
+    PICK_PASSES = 3
+
+    @classmethod
+    def pick_segments(cls, offset: float, start: int, cuts: int) -> List[Tuple[float, float]]:
+        """把第 start～start+cuts-1 格平分成 PICK_PASSES 段，回傳每段 (起點距離, 終點距離)（從 cu 沿 X）"""
+        n = max(1, min(cls.PICK_PASSES, cuts))
+        segs = []
+        for k in range(n):
+            a = start + round(k * cuts / n)
+            b = start + round((k + 1) * cuts / n) - 1
+            segs.append((offset + (a - 1) * CHOP_STEP_MM, offset + (b - 1) * CHOP_STEP_MM))
+        return segs
+
     # 生菜「中間切一刀」落在第幾格（第 i 格 = cu + 偏移 往後 (i-1)×5mm）。
     # 待現場量測：用 test/chop_points.py ROMAINE --start N 預覽、教導器對點後填入。
     # None = 還沒量 → 生菜不切，CHOP 階段直接失敗。

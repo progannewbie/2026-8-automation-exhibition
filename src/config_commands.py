@@ -63,6 +63,10 @@ class PickupCommand:
         # 混拌區第二鏟點：一鏟撈不乾淨，分兩次從不同位置撈起再倒同一個碗。
         # AS 端要在 DO_PICKUP / do_pickup 補 MIX_ZONE2 分支 + 教 mix_zone2_pi。
         "MIX_ZONE2",
+        # 夾切好的一段（跟著切的位置走）。這個位置的三個欄位意思不同：
+        #   X_MM = 起點距離、Y_MM = Y 偏移、ANGLE_DEG = 終點距離（都從 cu 沿 X 算）
+        # AS 端要教 cut_pick 並把 pick_ready 改 1，否則回 ERROR,E4007
+        "CUT_SEG",
     ]
 
     # 這幾個位置的座標由 YOLO + 手眼標定即時算出；其餘位置忽略 X/Y/ANGLE，用教點

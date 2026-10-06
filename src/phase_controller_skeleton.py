@@ -89,6 +89,10 @@ class PhaseController:
         # 單一階段可以補充的失敗細節（例如視覺沒找到），_set_phase_failure 會接在後面
         self._phase_detail = ""
 
+        # 最近一次成功的 CHOP（切的位置），給接著的 PICKUP MIX_ZONE 跟著切的位置夾
+        # {"food_type", "start", "cuts", "offset", "offset_y"}
+        self._last_chop: Optional[Dict] = None
+
         # MEASURE 量出來、給下一個 CHOP 用的計畫
         # {"food_type", "start", "cuts"}；None 表示沒量（CHOP 用 FOOD_CUT_PARAMS 預設值）
         self._chop_plan: Optional[Dict] = None
@@ -150,6 +154,7 @@ class PhaseController:
         self.failure_message = ""
         self._phase_detail = ""
         self._chop_plan = None
+        self._last_chop = None
 
         if not self.current_recipe:
             logger.error("✗ 未選擇菜色")
@@ -365,6 +370,11 @@ class PhaseController:
         """處理取料"""
         arm = params.get("arm", "F60_F")
 
+        # 切完要夾起來：跟著切的位置走，分段夾（見 ChopPlanConfig.PICK_FOLLOW_CUT）
+        chop, self._last_chop = self._last_chop, None
+        if location == "MIX_ZONE" and ChopPlanConfig.PICK_FOLLOW_CUT and chop:
+            return self._pickup_cut_segments(chop, max_retries, timeout)
+
         # PICKUP_<食材> 這幾個點位改用 YOLO + 手眼標定即時算座標；
         # WAIT_ZONE 這類暫存區沒有視覺目標，維持送 0,0,0（AS 端會忽略，用教點）
         expected_food = location if location in PickupCommand.VISION_LOCATIONS else None
@@ -416,6 +426,34 @@ class PhaseController:
         }
         # PICKUP 兩臂會逐階段用 SYNC_STEP 會合，指令必須同時送給兩邊
         return self._send_motion("取料", cmds, max_retries, timeout)
+
+    def _pickup_cut_segments(self, chop: Dict, max_retries: int,
+                             timeout: Optional[float]) -> bool:
+        """
+        把切好的那段分 PICK_PASSES 次夾：前幾次「夾 → 倒進下一步 PLACE 的位置」，
+        最後一次只夾，交給食譜原本的 PLACE 階段倒
+        """
+        i = self.current_phase_index
+        nxt = self.phases[i + 1] if i + 1 < len(self.phases) else None
+        if nxt is None or nxt.action != "PLACE":
+            self._phase_detail = "分段夾取後面要接 PLACE，食譜順序不對"
+            logger.error(f"  ✗ {self._phase_detail}")
+            return False
+
+        segs = ChopPlanConfig.pick_segments(chop["offset"], chop["start"], chop["cuts"])
+        oy = chop["offset_y"]
+        for k, (d1, d2) in enumerate(segs, 1):
+            label = f"取料（第 {k}/{len(segs)} 段）"
+            logger.info(f"  {label}: 切割段 X 距 cu {d1:+.1f}～{d2:+.1f}mm、Y {oy:+.1f}mm (雙臂協同)")
+            cmds = {a: PickupCommand.create("CUT_SEG", a, d1, oy, d2) for a in ("F60_F", "F60_R")}
+            if not self._validate_command(cmds["F60_F"], CommandParser.validate_pickup):
+                return False
+            if not self._send_motion(label, cmds, max_retries, timeout):
+                return False
+            if k < len(segs):
+                if not self._handle_place(nxt.location, nxt.params or {}, nxt.retries, nxt.timeout_sec):
+                    return False
+        return True
 
     def _handle_measure(self, location: str, params: Dict, max_retries: int) -> bool:
         """
@@ -526,7 +564,11 @@ class PhaseController:
                     f"偏移 X {offset:+.1f} / Y {offset_y:+.1f}mm，左臂 X {first_x:.1f}～{last_x:.1f}，"
                     f"右臂跟刀壓，雙臂協同)")
         # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
-        return self._send_motion("切割", cmd, max_retries, timeout)
+        ok = self._send_motion("切割", cmd, max_retries, timeout)
+        if ok and num_cuts > 1:
+            self._last_chop = {"food_type": food_type, "start": start, "cuts": num_cuts,
+                               "offset": offset, "offset_y": offset_y}
+        return ok
 
     def _handle_place(self, location: str, params: Dict, max_retries: int,
                       timeout: Optional[float] = None) -> bool:

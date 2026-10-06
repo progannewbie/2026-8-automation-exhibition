@@ -91,6 +91,12 @@ git checkout 10d83385 -- "robot/F60_F_左臂_slow.as"
   相機、切割區或 `cu` 動過要重新對點，更新 `X_REFERENCE` / `Y_REFERENCE`）。
 - **右臂跟刀壓**：每一刀都是「右臂在離下刀處 10 mm、還沒切的那一側壓好 → 左臂切 →
   右臂抬起」，下一刀兩臂一起往後移 5 mm。
+- **切完夾到盤子上**（`ChopPlanConfig.PICK_FOLLOW_CUT`，目前關閉）：跟著切的位置走，把切好的那段分
+  `PICK_PASSES`（3）次夾，前兩次各自「夾 → 倒進盤子」，最後一次接食譜原本的 PLACE。
+  指令 `PICKUP,CUT_SEG,<arm>,<起點距離>,<Y 偏移>,<終點距離>`（距離從 `cu` 沿 X 算）。
+  左臂從起點外側 `pick_margin` 推到中點前 `pick_gap`、右臂從終點外側推到中點後 `pick_gap`（兩臂 `INIT_CONST`）。
+  打開前要在兩臂教 `cut_pick`（偏移 (0, 0) 時鏟子在 `cu` 位置的取料姿態），並把 `pick_ready` 改 1，
+  否則手臂回 `ERROR,E4007`、不會動。關閉時照舊用 `mix_zone_pi` 夾一次；生菜一律用 `mix_zone_pi`。
 - **生菜**：中間一刀落在 `ChopPlanConfig.ROMAINE_START_INDEX` 那一格（從偏移後的第 1 格算起，改偏移要一起確認）。
 
 > ⚠️ 上機前要在現場完成，否則會被擋下：
