@@ -104,6 +104,9 @@ class ChopPlanConfig:
 
     TIP_OFFSET_MM = 5.0          # 第一刀落在 X 小那端往內幾 mm（= 第一片的厚度）
     TAIL_MARGIN_MM = 5.0         # 最後一刀至少離 X 大那端幾 mm（避免切到空氣）
+    # 依長度算出的刀數再少切幾刀（2026-10-06 現場試切後調整）。只影響有量測的情況，
+    # 沒量測時照 FOOD_CUT_PARAMS 的刀數
+    CUTS_TRIM = 3
 
     MIN_LENGTH_MM = 30.0         # 比這短當成量錯
     MAX_AXIS_ANGLE_DEG = 15.0    # 食材軸線跟刀子行進方向 (左臂 X 軸) 的夾角上限
@@ -136,7 +139,7 @@ class ChopPlanConfig:
                 return None, (f"食材前端超出切割範圍 {1 - first:.0f} 格"
                               f"（約 {(1 - first) * step:.0f}mm），請往後放")
 
-        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.cut_x(1)) // step) + 1
+        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.cut_x(1)) // step) + 1 - cls.CUTS_TRIM
         cuts = last - start + 1
         if cuts < 1:
             return None, f"量到的長度太短，切不到任何一刀（X {low_x_mm:.0f}～{high_x_mm:.0f}）"
@@ -219,7 +222,7 @@ class TableOffsetEstimate:
         """
         ox, oy = cls.estimate(right_x, right_y)
         cuts = int((length_mm - ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.TAIL_MARGIN_MM)
-                   // CHOP_STEP_MM) + 1
+                   // CHOP_STEP_MM) + 1 - ChopPlanConfig.CUTS_TRIM
         if abs(ox) > 300 or abs(oy) > 100:
             return None, (f"估出的偏移 X {ox:+.1f} / Y {oy:+.1f}mm 超出手臂允許範圍"
                           f"（±300 / ±100mm），食材擺放離基準太遠")
