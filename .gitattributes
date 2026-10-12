@@ -6,3 +6,7 @@
 *.jpg binary
 *.pdf binary
 *.docx binary
+
+# Windows 啟動檔：cmd / PowerShell 要 CRLF
+*.bat text eol=crlf
+*.ps1 text eol=crlf
