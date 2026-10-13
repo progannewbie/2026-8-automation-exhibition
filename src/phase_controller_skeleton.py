@@ -17,6 +17,7 @@ from config_commands import (
     FlipCommand, HomeCommand, StatusCommand,
 )
 from config_vision import ChopZoneHomography
+import cut_settings
 from vision_skeleton import VisionSystem
 from comms_connection_skeleton import CommsManager
 
@@ -444,7 +445,8 @@ class PhaseController:
             logger.error(f"  ✗ {self._phase_detail}")
             return False
 
-        segs = ChopPlanConfig.pick_segments(chop["pick_offset_x"], chop["start"], chop["cuts"])
+        segs = ChopPlanConfig.pick_segments(chop["pick_offset_x"], chop["start"], chop["cuts"],
+                                            chop["thickness"])
         oy = chop["pick_offset_y"]
         for k, (d1, d2) in enumerate(segs, 1):
             label = f"取料（第 {k}/{len(segs)} 段）"
@@ -519,18 +521,20 @@ class PhaseController:
             logger.error(f"  ✗ {self._phase_detail}")
             return False
 
+        # 厚度在量測這一刻定下來、跟著計畫走，CHOP 前改設定也不會跟起始格/刀數對不上
+        thickness = cut_settings.get_thickness(food_type)
         if ChopZoneHomography.is_calibrated():
             xs = sorted(p[0] for p in result['ends_mm'])
-            plan, note = ChopPlanConfig.plan(xs[0], xs[1])
+            plan, note = ChopPlanConfig.plan(xs[0], xs[1], thickness)
         else:
             rx, ry = result['right_end_mm']
-            plan, note = TableOffsetEstimate.plan(rx, ry, length)
+            plan, note = TableOffsetEstimate.plan(rx, ry, length, thickness)
         if plan is None:
             self._phase_detail = note
             logger.error(f"  ✗ {note}")
             return False
 
-        self._chop_plan = dict(plan, food_type=food_type)
+        self._chop_plan = dict(plan, food_type=food_type, thickness=thickness)
         logger.info(f"  ✓ {food_type}（{source}）：{note}")
         return True
 
@@ -539,7 +543,11 @@ class PhaseController:
         """處理切割"""
         food_type = params.get("food_type", "CUCUMBER")
         num_cuts = params.get("num_cuts", 5)
-        thickness = params.get("cut_thickness_mm", 4.0)
+        # 生菜的下刀格 ROMAINE_START_INDEX 是照 CHOP_STEP_MM 格距量的，厚度要跟著用同一個值
+        thickness = cut_settings.get_thickness(food_type) if food_type != "ROMAINE" else CHOP_STEP_MM
+        if thickness != CHOP_STEP_MM:
+            # 沒量測時切的總長維持跟原本一樣（num_cuts 是照 CHOP_STEP_MM 定的）
+            num_cuts = max(1, round(num_cuts * CHOP_STEP_MM / thickness))
         start = 1
         offset = ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM
         offset_y = ChopPlanConfig.CHOP_ORIGIN_OFFSET_Y_MM
@@ -556,7 +564,7 @@ class PhaseController:
         pick_x, pick_y = ChopPlanConfig.PICK_OFFSET_X_MM, ChopPlanConfig.PICK_OFFSET_Y_MM
         plan, self._chop_plan = self._chop_plan, None
         if plan and plan["food_type"] == food_type:
-            num_cuts, start = plan["cuts"], plan["start"]
+            num_cuts, start, thickness = plan["cuts"], plan["start"], plan["thickness"]
             offset = plan.get("offset_x", offset)
             offset_y = plan.get("offset_y", offset_y)
             pick_x = plan.get("pick_offset_x", pick_x)
@@ -566,15 +574,16 @@ class PhaseController:
         if not self._validate_command(cmd, CommandParser.validate_chop):
             return False
 
-        first_x = ChopPlanConfig.CU_X_MM + offset + (start - 1) * CHOP_STEP_MM
-        last_x = first_x + (num_cuts - 1) * CHOP_STEP_MM
-        logger.info(f"  切割: {food_type} ({num_cuts} 刀，第 {start}～{start + num_cuts - 1} 格，"
+        first_x = ChopPlanConfig.CU_X_MM + offset + (start - 1) * thickness
+        last_x = first_x + (num_cuts - 1) * thickness
+        logger.info(f"  切割: {food_type} ({num_cuts} 刀，每片 {thickness:g}mm，第 {start}～{start + num_cuts - 1} 格，"
                     f"偏移 X {offset:+.1f} / Y {offset_y:+.1f}mm，左臂 X {first_x:.1f}～{last_x:.1f}，"
                     f"右臂跟刀壓，雙臂協同)")
         # CHOP 兩臂逐刀用 SYNC_STEP 會合 (F60_F 切、F60_R 壓料步進)，指令必須同時送給兩邊
         ok = self._send_motion("切割", cmd, max_retries, timeout)
         if ok and num_cuts > 1:
             self._last_chop = {"food_type": food_type, "start": start, "cuts": num_cuts,
+                               "thickness": thickness,
                                "pick_offset_x": pick_x, "pick_offset_y": pick_y}
         return ok
 
