@@ -126,6 +126,43 @@
     border-radius:14px; padding:1.8vh 3vw; margin:0 auto 3.4vh; max-width:900px;
     font-size:clamp(14px,2vh,22px); line-height:1.6; word-break:break-all;
   }
+
+  /* ---------- 切片厚度設定 ---------- */
+  .settings-row{margin-top:clamp(12px,2vh,24px); display:flex; justify-content:center;}
+  .setting-btn{
+    display:flex; align-items:center; gap:.6em; cursor:pointer; color:var(--dim);
+    background:transparent; border:1px solid var(--line); border-radius:999px;
+    padding:clamp(8px,1.2vh,14px) clamp(18px,2.4vw,32px);
+    font-size:clamp(15px,2.1vh,24px);
+    transition:transform .12s, border-color .12s;
+  }
+  .setting-btn:active{transform:scale(.96); border-color:var(--accent);}
+  .setting-btn b{color:var(--text);}
+
+  .set{display:flex; gap:clamp(20px,4vw,64px); align-items:center; justify-content:center;}
+  .set-info{text-align:center; flex:1; max-width:560px;}
+  .set-info h2{font-size:clamp(26px,4.4vh,52px); margin-bottom:.4em;}
+  .food-tabs{display:flex; gap:12px; justify-content:center; margin-bottom:2vh;}
+  .food-tabs button{font-size:clamp(16px,2.2vh,24px); padding:.5em 1.2em;}
+  .food-tabs button.on{background:var(--accent); color:#06240f; border-color:var(--accent);}
+  .readout{
+    background:var(--card); border:2px solid var(--line); border-radius:20px;
+    padding:clamp(14px,2.4vh,30px) clamp(20px,3vw,40px); margin-bottom:1.6vh;
+    display:flex; align-items:baseline; justify-content:center; gap:.3em;
+  }
+  .readout.bad{border-color:var(--danger);}
+  .readout .num{font-size:clamp(56px,11vh,130px); font-weight:700; font-variant-numeric:tabular-nums; min-width:3ch; text-align:right;}
+  .readout .unit{font-size:clamp(24px,4vh,48px); color:var(--dim);}
+  .set-hint{color:var(--dim); font-size:clamp(14px,2vh,22px); line-height:1.7;}
+  .set-msg{min-height:1.6em; margin:1.4vh 0 2.4vh; font-size:clamp(15px,2.2vh,24px); color:#fca5a5;}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:clamp(8px,1.4vh,16px); width:clamp(260px,34vw,440px);}
+  .keypad button{
+    padding:0; height:clamp(60px,11vh,110px); font-size:clamp(28px,5vh,52px);
+    background:var(--card2); color:var(--text); border:2px solid var(--line);
+  }
+  .keypad button.fn{font-size:clamp(18px,3vh,32px); color:var(--dim);}
+  .keypad .wide{grid-column:1 / -1;}
+  @media (max-width:760px){ .set{flex-direction:column;} .keypad{width:100%;} }
 </style>
 </head>
 <body>
@@ -164,6 +201,10 @@
     </div>
     {% endif %}
 
+    <div class="settings-row">
+      <div class="setting-btn" id="open-settings">📏 切片厚度 <b id="thick-summary"></b></div>
+    </div>
+
     <div id="menu-banner" class="banner" style="display:none"></div>
   </section>
 
@@ -193,6 +234,30 @@
       </div>
       <div class="btn-row"><button class="danger" id="r-stop">停止</button></div>
       <div class="stop-hint" id="r-hint">停止會在目前動作結束後生效。緊急狀況請按實體急停按鈕。</div>
+    </div>
+  </section>
+
+  <!-- 切片厚度設定 -->
+  <section id="s-settings" class="screen">
+    <div class="set">
+      <div class="set-info">
+        <h2 id="set-title">切片厚度</h2>
+        <div class="food-tabs" id="food-tabs"></div>
+        <div class="readout" id="readout"><span class="num" id="set-num"></span><span class="unit">mm</span></div>
+        <div class="set-hint" id="set-hint"></div>
+        <div class="set-msg" id="set-msg"></div>
+        <div class="btn-row">
+          <button class="ghost" onclick="show('menu')">取消</button>
+          <button class="primary" id="set-save">儲存</button>
+        </div>
+      </div>
+      <div class="keypad" id="keypad">
+        <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button>
+        <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button>
+        <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button>
+        <button data-k=".">.</button><button data-k="0">0</button><button data-k="del" class="fn">⌫</button>
+        <button data-k="clr" class="fn wide">清除</button>
+      </div>
     </div>
   </section>
 
@@ -322,6 +387,100 @@ async function poll(){
   lastState = st.state;
 }
 
+// ---------- 切片厚度設定 ----------
+let thick = null;        // /api/settings 的內容
+let setFood = null;      // 正在改哪種食材
+let entry = "";          // 數字鍵盤輸入中的字串
+let fresh = true;        // 剛打開：按第一個鍵時取代原本的值
+
+function fmt(v){ return Number(v).toFixed(1).replace(/\.0$/, ""); }
+
+async function loadThickness(){
+  try{ thick = await (await fetch("/api/settings")).json(); }catch(e){ return; }
+  const parts = thick.foods.map(f => f.name + " " + fmt(f.value) + " mm");
+  $("thick-summary").textContent = parts.join("、");
+}
+
+function inRange(v){ return v >= thick.min && v <= thick.max; }
+function foodOf(key){ return thick.foods.find(f => f.key === key); }
+
+function renderSettings(){
+  const f = foodOf(setFood);
+  $("set-title").textContent = f.name + "切片厚度";
+  $("set-num").textContent = entry || "0";
+  $("set-hint").innerHTML = "可設定 " + fmt(thick.min) + "～" + fmt(thick.max) + " mm · 預設 " +
+    fmt(f.default) + " mm";
+  $("readout").classList.toggle("bad", !inRange(parseFloat(entry)));
+  const tabs = $("food-tabs");
+  tabs.style.display = thick.foods.length > 1 ? "" : "none";
+  tabs.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.food === setFood));
+}
+
+function pickFood(key){
+  setFood = key;
+  entry = fmt(foodOf(key).value);
+  fresh = true;
+  $("set-msg").textContent = "";
+  renderSettings();
+}
+
+$("open-settings").addEventListener("click", async () => {
+  await loadThickness();
+  if(!thick){ alert("讀不到切片厚度設定"); return; }
+  const tabs = $("food-tabs");
+  tabs.innerHTML = "";
+  thick.foods.forEach(f => {
+    const b = document.createElement("button");
+    b.className = "ghost"; b.dataset.food = f.key; b.textContent = f.name;
+    b.addEventListener("click", () => pickFood(f.key));
+    tabs.appendChild(b);
+  });
+  pickFood(thick.foods[0].key);
+  show("settings");
+});
+
+$("keypad").addEventListener("click", e => {
+  const k = e.target.dataset && e.target.dataset.k;
+  if(!k) return;
+  if(k === "clr"){ entry = ""; }
+  else if(k === "del"){ entry = fresh ? "" : entry.slice(0, -1); }
+  else {
+    if(fresh) entry = "";
+    const dot = entry.indexOf(".");
+    if(k === "."){
+      if(dot >= 0) return;
+      entry = (entry || "0") + ".";
+    } else {
+      if(dot >= 0 && entry.length - dot > 1) return;                    // 小數只到一位
+      if(dot < 0 && entry.replace(/^0+/, "").length >= 2) return;       // 整數最多兩位
+      entry = (entry === "0" ? "" : entry) + k;
+    }
+  }
+  fresh = false;
+  $("set-msg").textContent = "";
+  renderSettings();
+});
+
+$("set-save").addEventListener("click", async () => {
+  const v = parseFloat(entry);
+  if(!inRange(v)){
+    $("set-msg").textContent = "請輸入 " + fmt(thick.min) + "～" + fmt(thick.max) + " mm 之間的數值";
+    return;
+  }
+  const btn = $("set-save");
+  btn.disabled = true;
+  try{
+    const r = await (await fetch("/api/settings", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({food: setFood, thickness_mm: v})
+    })).json();
+    if(!r.ok){ $("set-msg").textContent = r.msg || "儲存失敗"; }
+    else { await loadThickness(); show("menu"); }
+  } catch(e){ $("set-msg").textContent = "連線失敗: " + e; }
+  btn.disabled = false;
+});
+
+loadThickness();
 setInterval(poll, 700);
 poll();
 </script>

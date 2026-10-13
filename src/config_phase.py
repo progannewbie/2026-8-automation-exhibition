@@ -50,20 +50,21 @@ class FoodCutParams:
     description: str            # 說明
 
 
-# ⚠️ 切片厚度由左臂下刀點決定，cut_thickness_mm 改了沒有作用。
+# ⚠️ 切片厚度 = CHOP 指令的 <CUT_THICKNESS_MM>（AS 的 .thick），兩臂每刀之間移這麼多。
+#    小黃瓜、紅蘿蔔用介面上設的值（cut_settings.get_thickness），生菜固定 CHOP_STEP_MM；
+#    FOOD_CUT_PARAMS 的 cut_thickness_mm 只是預設，實際送出的值由 _handle_chop 決定。
 #
-#    第 i 格的下刀點 = 教點 cu 沿 X 移 CHOP_ORIGIN_OFFSET_MM + (i-1)×5mm、沿 Y 移
+#    第 i 格的下刀點 = 教點 cu 沿 X 移 CHOP_ORIGIN_OFFSET_MM + (i-1)×厚度、沿 Y 移
 #    CHOP_ORIGIN_OFFSET_Y_MM（左臂 AS 即時計算，不改寫任何教點；chop_1[] 陣列已不使用）。
-#    .thick 只拿來檢查 > 0。
 #
 # ⚠️ 右臂跟著刀走：每一刀都是「右臂在離下刀處 10mm 的地方壓好 → 左臂切 → 右臂抬起」，
-#    下一刀兩臂一起往後移 5mm。右臂第 i 格壓點 = press_chop_zone 沿右臂 X 移
-#    (偏移 + (i-1)×5mm)×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 cu
+#    下一刀兩臂一起往後移一個厚度。右臂第 i 格壓點 = press_chop_zone 沿右臂 X 移
+#    (偏移 + (i-1)×厚度)×press_dir（右臂 INIT_CONST）。press_chop_zone 要教在離 cu
 #    （偏移 0 的第一刀）下刀處 10mm、還沒切的那一側。
 #
 # ⚠️ AS 端 DO_CHOP：刀數 1～60，最後一刀的格數 (起始格 + 刀數 - 1) 不超過 60。
 
-CHOP_STEP_MM = 5.0   # 必須等於左臂下刀點的間距（chop_1[] 教點陣列的間距）
+CHOP_STEP_MM = 5.0   # 小黃瓜的預設切片厚度，也是生菜 ROMAINE_START_INDEX 用的格距
 
 # CHOP 等手臂回應的秒數。2026-09-21 實測 15 刀約 28 秒（當時右臂只壓一次）；
 # 現在每刀都要等右臂抬起、移動、壓好，整根最多 60 刀，抓 300 秒。
@@ -104,9 +105,9 @@ class ChopPlanConfig:
 
     TIP_OFFSET_MM = 5.0          # 第一刀落在 X 小那端往內幾 mm（= 第一片的厚度）
     TAIL_MARGIN_MM = 5.0         # 最後一刀至少離 X 大那端幾 mm（避免切到空氣）
-    # 依長度算出的刀數再少切幾刀（2026-10-06 現場試切後調整）。只影響有量測的情況，
-    # 沒量測時照 FOOD_CUT_PARAMS 的刀數
-    CUTS_TRIM = 3
+    # 尾端再少切多長（2026-10-06 現場試切後調整：原本是少切 3 刀 × 5mm）。
+    # 用 mm 算，換厚度時留下的長度不變。只影響有量測的情況，沒量測時照 FOOD_CUT_PARAMS 的刀數
+    TAIL_TRIM_MM = 15.0
 
     MIN_LENGTH_MM = 30.0         # 比這短當成量錯
     MAX_AXIS_ANGLE_DEG = 15.0    # 食材軸線跟刀子行進方向 (左臂 X 軸) 的夾角上限
@@ -124,40 +125,42 @@ class ChopPlanConfig:
     PICK_OFFSET_Y_MM: Optional[float] = None
 
     @classmethod
-    def pick_segments(cls, offset: float, start: int, cuts: int) -> List[Tuple[float, float]]:
+    def pick_segments(cls, offset: float, start: int, cuts: int,
+                      step: float = CHOP_STEP_MM) -> List[Tuple[float, float]]:
         """
         把第 start～start+cuts-1 格平分成 PICK_PASSES 段，回傳每段 (起點距離, 終點距離)
 
-        距離在夾取座標系裡：從 cut_pick 沿 X 算，offset 是夾取的 X 偏移（第 1 格的位置）
+        距離在夾取座標系裡：從 cut_pick 沿 X 算，offset 是夾取的 X 偏移（第 1 格的位置），
+        step 是切片厚度（格距）
         """
         n = max(1, min(cls.PICK_PASSES, cuts))
         segs = []
         for k in range(n):
             a = start + round(k * cuts / n)
             b = start + round((k + 1) * cuts / n) - 1
-            segs.append((offset + (a - 1) * CHOP_STEP_MM, offset + (b - 1) * CHOP_STEP_MM))
+            segs.append((offset + (a - 1) * step, offset + (b - 1) * step))
         return segs
 
-    # 生菜「中間切一刀」落在第幾格（第 i 格 = cu + 偏移 往後 (i-1)×5mm）。
+    # 生菜「中間切一刀」落在第幾格（第 i 格 = cu + 偏移 往後 (i-1)×CHOP_STEP_MM）。
     # 待現場量測：用 test/chop_points.py ROMAINE --start N 預覽、教導器對點後填入。
     # None = 還沒量 → 生菜不切，CHOP 階段直接失敗。
     ROMAINE_START_INDEX: Optional[int] = None
 
     @classmethod
-    def cut_x(cls, index: int) -> float:
-        """第 index 格下刀點的左臂 X"""
-        return cls.CU_X_MM + cls.CHOP_ORIGIN_OFFSET_MM + (index - 1) * CHOP_STEP_MM
+    def cut_x(cls, index: int, step: float = CHOP_STEP_MM) -> float:
+        """第 index 格下刀點的左臂 X（step = 切片厚度）"""
+        return cls.CU_X_MM + cls.CHOP_ORIGIN_OFFSET_MM + (index - 1) * step
 
     @classmethod
-    def plan(cls, low_x_mm: float, high_x_mm: float) -> Tuple[Optional[Dict], str]:
+    def plan(cls, low_x_mm: float, high_x_mm: float,
+             step: float = CHOP_STEP_MM) -> Tuple[Optional[Dict], str]:
         """
-        依食材兩端的左臂 X 算出 {"start", "cuts"}
+        依食材兩端的左臂 X 與切片厚度 step 算出 {"start", "cuts"}
 
         Returns:
             (計畫, 說明)。計畫是 None 表示不能切，說明裡寫原因。
         """
-        step = CHOP_STEP_MM
-        first = (low_x_mm + cls.TIP_OFFSET_MM - cls.cut_x(1)) / step + 1
+        first = (low_x_mm + cls.TIP_OFFSET_MM - cls.cut_x(1, step)) / step + 1
         start = int(round(first))
         if start < 1:
             if start >= 0:
@@ -166,7 +169,7 @@ class ChopPlanConfig:
                 return None, (f"食材前端超出切割範圍 {1 - first:.0f} 格"
                               f"（約 {(1 - first) * step:.0f}mm），請往後放")
 
-        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.cut_x(1)) // step) + 1 - cls.CUTS_TRIM
+        last = int((high_x_mm - cls.TAIL_MARGIN_MM - cls.TAIL_TRIM_MM - cls.cut_x(1, step)) // step) + 1
         cuts = last - start + 1
         if cuts < 1:
             return None, f"量到的長度太短，切不到任何一刀（X {low_x_mm:.0f}～{high_x_mm:.0f}）"
@@ -185,7 +188,7 @@ class TableOffsetEstimate:
     對照同一張照片 vision_chop_test.py 印出的取料區座標：
       X 偏移 = 右端 X（取料區 X 較大那端）+ K，K 取對點資料平均（1:1）
       Y 偏移 = a × 右端 Y + b，最小平方擬合（至少 2 筆）
-      刀數   = 長度扣掉 TIP_OFFSET_MM、TAIL_MARGIN_MM 後每 5mm 一刀
+      刀數   = 長度扣掉 TIP_OFFSET_MM、TAIL_MARGIN_MM、TAIL_TRIM_MM 後每個切片厚度一刀
 
     ⚠️ 相機、切割區或手臂點位（cu）動過就失效，要重新手動對點、更新兩組資料。
     ⚠️ 資料只用小黃瓜量過；紅蘿蔔沿用同一組公式。
@@ -283,15 +286,18 @@ class TableOffsetEstimate:
         return right_x + k, a * right_y + b
 
     @classmethod
-    def plan(cls, right_x: float, right_y: float, length_mm: float) -> Tuple[Optional[Dict], str]:
+    def plan(cls, right_x: float, right_y: float, length_mm: float,
+             step: float = CHOP_STEP_MM) -> Tuple[Optional[Dict], str]:
         """
+        step: 切片厚度 (mm)
+
         Returns:
             ({"start", "cuts", "offset_x", "offset_y"[, "pick_offset_x", "pick_offset_y"]}, 說明)；
             計畫是 None 表示不能切。夾取偏移只有對點資料夠時才有
         """
         ox, oy = cls.estimate(right_x, right_y)
-        cuts = int((length_mm - ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.TAIL_MARGIN_MM)
-                   // CHOP_STEP_MM) + 1 - ChopPlanConfig.CUTS_TRIM
+        cuts = int((length_mm - ChopPlanConfig.TIP_OFFSET_MM - ChopPlanConfig.TAIL_MARGIN_MM
+                    - ChopPlanConfig.TAIL_TRIM_MM) // step) + 1
         if abs(ox) > 300 or abs(oy) > 100:
             return None, (f"估出的偏移 X {ox:+.1f} / Y {oy:+.1f}mm 超出手臂允許範圍"
                           f"（±300 / ±100mm），食材擺放離基準太遠")
@@ -301,7 +307,7 @@ class TableOffsetEstimate:
             return None, (f"量到的長度 {length_mm:.0f}mm 要切 {cuts} 刀，"
                           f"超過上限 {ChopPlanConfig.MAX_CUTS} 刀")
         plan = {"start": 1, "cuts": cuts, "offset_x": ox, "offset_y": oy}
-        note = f"偏移 X {ox:+.1f} / Y {oy:+.1f}mm，長 {length_mm:.0f}mm → {cuts} 刀"
+        note = f"偏移 X {ox:+.1f} / Y {oy:+.1f}mm，長 {length_mm:.0f}mm → {cuts} 刀（每片 {step:g}mm）"
         pick = cls.estimate_pick(right_x, right_y)
         if pick:
             plan["pick_offset_x"], plan["pick_offset_y"] = pick
@@ -315,14 +321,16 @@ FOOD_CUT_PARAMS = {
         num_cuts=15,
         cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="小黃瓜：整根切完（MEASURE 量長度決定刀數）；量不到時從第 1 格切 15 刀",
+        # 實際厚度用介面上設的值（cut_settings），量不到時刀數會換算成同樣的總長
+        description="小黃瓜：整根切完（MEASURE 量長度決定刀數）；量不到時從第 1 格切 75mm",
     ),
     "CARROT": FoodCutParams(
         food_type="CARROT",
         num_cuts=15,
         cut_thickness_mm=CHOP_STEP_MM,
         holding_arm="F60_R",
-        description="紅蘿蔔：整根切完（MEASURE 量長度決定刀數）；量不到時從第 1 格切 15 刀",
+        # 實際厚度用介面上設的值（cut_settings），量不到時刀數會換算成同樣的總長
+        description="紅蘿蔔：整根切完（MEASURE 量長度決定刀數）；量不到時從第 1 格切 75mm",
     ),
     "ROMAINE": FoodCutParams(
         food_type="ROMAINE",

@@ -4054,7 +4054,7 @@ listen:
 		RETURN
 	END
 	; .cuts = 刀數 (1～60)，.start = 從第幾格開始切，.offset = 第 1 格相對 cu 的 X 偏移 (mm)
-	; cu = 偏移 (0, 0) 時第一刀的位置（教點）。第 i 格下刀點 = cu 沿 X 移 .offset + (i-1)*5mm、沿 Y 移 .offset_y
+	; cu = 偏移 (0, 0) 時第一刀的位置（教點）。第 i 格下刀點 = cu 沿 X 移 .offset + (i-1)*.thick、沿 Y 移 .offset_y（.thick = 切片厚度 mm，PC 送）
 	; 只從 cu 算、不改寫任何教點；chop_1[] / chop_per[] 陣列已不使用
 	; .offset 由 PC 送（config_phase.ChopPlanConfig.CHOP_ORIGIN_OFFSET_MM），右臂壓點跟著移一樣多
 	; .offset_y = 食材放置的 Y 偏移 (mm)，每一刀的下刀點都沿 Y 移這麼多（CHOP_ORIGIN_OFFSET_Y_MM）
@@ -4080,7 +4080,7 @@ listen:
 	; 右臂 DO_CHOP 每刀 SYNC 一次、等一次 PULSE，兩邊次數必須一致
 	i = .start
 	DO
-		POINT chop_now = SHIFT (cu BY .offset + (i - 1) * 5, .offset_y, 0)
+		POINT chop_now = SHIFT (cu BY .offset + (i - 1) * .thick, .offset_y, 0)
 		POINT chop_now_per = SHIFT (chop_now BY 0, 0, 50)
 		LMOVE chop_now_per
 		break

@@ -4510,12 +4510,12 @@ exit_end:
 	LMOVE home_right
 	break
 	; 每一刀：移到離下刀處 10mm 的壓點 → 壓下 → SYNC → 等左臂切完 → 抬起
-	; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*5mm)*press_dir，跟著刀子走
+	; 第 i 格壓點 = press_chop_zone 沿本臂 X 移 (.offset + (i-1)*.thick)*press_dir，跟著刀子走（.thick = 切片厚度 mm，跟左臂同一個值）
 	; （.offset = 第 1 格相對左臂 cu 的偏移，跟左臂同一個值，由 PC 送）
 	; 食材放置的 Y 偏移 .offset_y 也跟左臂一樣，沿本臂 Y 移 .offset_y*press_dir_y
 	i = .start
 	DO
-		POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * 5) * press_dir, .offset_y * press_dir_y, 0)
+		POINT press_now = SHIFT (press_chop_zone BY (.offset + (i - 1) * .thick) * press_dir, .offset_y * press_dir_y, 0)
 		SPEED 1000 MM/s ALWAYS   ;  絕對速度
 		LMOVE press_now
 		break
@@ -6008,7 +6008,7 @@ exit_end:
 	timeout_flip = 30
 	robot_busy = 0
 	$rxbuf = ""
-	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (offset + (i-1)*5mm)*press_dir
+	; CHOP 右臂跟刀壓：第 i 格壓點 = press_chop_zone 沿本臂 X 移 (offset + (i-1)*thick)*press_dir
 	; --- CUT_SEG 夾切好的一段（do_pickup）---
 	pick_margin = 50      ; 夾取前從 +Y 側多少 mm 開始收攏（同 do_pickup_test，★ 待現場調整）
 	pick_ready = 1        ; cut_pick 已現場教好（2026-10-06）；0 = CUT_SEG 回 ERROR,E4007、不動

@@ -19,3 +19,6 @@ capture_*.jpg
 logs/
 src/stats/
 *.log
+
+# 現場調的切片厚度（網頁介面存的）
+src/settings/

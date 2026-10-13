@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from flask import Flask, jsonify, make_response, render_template, request
 
 from config_phase import MENU, get_recipe, get_phases, Phase
+import cut_settings
 from config_connection import LOGGING_CONFIG
 
 _BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -503,6 +504,18 @@ def create_app(runner: RobotRunner, token: Optional[str] = None) -> Flask:
     @app.route("/api/reset", methods=["POST"])
     def api_reset():
         return jsonify(runner.reset())
+
+    @app.route("/api/settings")
+    def api_settings():
+        return jsonify(cut_settings.snapshot())
+
+    @app.route("/api/settings", methods=["POST"])
+    def api_settings_save():
+        body = request.json or {}
+        err = cut_settings.set_thickness(body.get("food", ""), body.get("thickness_mm"))
+        if err:
+            return jsonify({"ok": False, "msg": err})
+        return jsonify({"ok": True, **cut_settings.snapshot()})
 
     return app
 
