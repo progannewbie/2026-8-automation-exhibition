@@ -410,7 +410,7 @@ class MenuRecipes:
 
     RECIPE_1_CUCUMBER = {
         "name": "菜色 1: 小黃瓜",
-        "description": "取小黃瓜 → 送進切割區 → 切 → 夾起 → 倒沙拉盤",
+        "description": "取小黃瓜 → 送進切割區 → 切 → 復歸（暫不夾取）",
         "continuous": False,
         "estimated_time_sec": 50,
         "phases": [
@@ -440,19 +440,22 @@ class MenuRecipes:
                 params=FOOD_CUT_PARAMS["CUCUMBER"].__dict__,
                 timeout_sec=CHOP_TIMEOUT_SEC,
             ),
-            # 切完食材是躺在檯面上的，要先夾起來才能搬
-            PhaseInstruction(
-                phase=Phase.PICKUP,
-                action="PICKUP",
-                location="MIX_ZONE",
-                params={"arm": "F60_F"},
-            ),
-            PhaseInstruction(
-                phase=Phase.PLACE_FINAL,
-                action="PLACE",
-                location="SALAD_BOWL",
-                params={"source": "MIX_ZONE", "method": "POUR"},
-            ),
+            # 2026-10-07 暫時切完就停：CUT_SEG 夾取點超出手臂範圍 (E1088)，
+            # 夾取對點補好之前先不夾、不倒，直接復歸。要恢復就把下面兩個階段解除註解。
+            # # 切完食材是躺在檯面上的，要先夾起來才能搬
+            # PhaseInstruction(
+            #     phase=Phase.PICKUP,
+            #     action="PICKUP",
+            #     location="MIX_ZONE",
+            #     params={"arm": "F60_F"},
+            # ),
+            # PhaseInstruction(
+            #     phase=Phase.PLACE_FINAL,
+            #     action="PLACE",
+            #     location="SALAD_BOWL",
+            #     params={"source": "MIX_ZONE", "method": "POUR"},
+            # ),
+            # 復歸要留著：沒有 HOME，arms_off_home 不會放下，下一次會拒絕開跑
             PhaseInstruction(
                 phase=Phase.HOME,
                 action="HOME",

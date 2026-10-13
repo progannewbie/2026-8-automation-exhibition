@@ -3423,10 +3423,12 @@ F60_F_左臂_GBK
 13.08.2026 09:38:19
 14.08.2026 14:49:09
 15.08.2026 18:45:59
+07.10.2026 08:49:21
+
 @@@ INSPECTION @@@
 @@@ CONNECTION @@@
 Rs07_F
-192.168.5.2
+192.168.11.2
 23
 @@@ PROGRAM @@@
 0:INIT_SWITCHES:F
@@ -3552,12 +3554,20 @@ Rs07_F
 0:pg0811:F
 0:DO_PREPARE:F
 0:do_chop_0814:F
+.cuts 
+.thick 
 0:do_clean:F
 0:do_con135:F
+.ok 
 0:do_con45:F
+.ok 
 0:do_con90:F
+.ok 
 0:do_flip_teach:F
+.cycles 
+.speed_pct 
 0:point_move:F
+.t 
 0:teach_origin:F
 0:test0820:F
 @@@ TRANS @@@
@@ -3708,38 +3718,38 @@ TOOL: NULL
 	JOINT SPEED9 ACCU1 TIMER0 TOOL1 WORK0 CLAMP1 (OFF,0,0,O) 2 (OFF,0,0,O) OX= WX= #[125.8,-36.683,104.25,-26.709,-9.052,30.916]
 .END
 .PROGRAM MAIN() #0
-	;CALL heartput
-	CALL INIT_SWITCHES
-	CALL INIT_CONST
-	;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
-	CALL INIT_TOOL
-	SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-	ACCURACY 1
-	SIGNAL -sig_out_step
-	LMOVE home_left
-	CALL CLEAN_SOCKET
-	CALL OPEN_LISTEN
-	DO
-		CALL WAIT_ACCEPT (accepted)
-		IF accepted == 1 THEN
-			sock_open_flag = 1
-			$rxbuf = ""
-			CALL DO_HANDSHAKE (hs_ok)
-			IF hs_ok == 1 THEN
-				conn_lost = 0
-				DO
-					CALL RECV_LINE ($line, rok)
-					IF rok == 0 THEN
-						conn_lost = 1
-					ELSE
-						CALL SPLIT_CSV ($line)
-						CALL DISPATCH
-					END
-				UNTIL conn_lost == 1
-			END
-			CALL DISCONNECT
-		END
-	UNTIL 1 == 0
+  ;CALL heartput
+  CALL INIT_SWITCHES
+  CALL INIT_CONST
+  ;CALL INIT_POINTS     ; 點位已現場教過，不重跑避免蓋回佔位值 0
+  CALL INIT_TOOL
+  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  ACCURACY 1
+  SIGNAL -sig_out_step
+  LMOVE home_left
+  CALL CLEAN_SOCKET
+  CALL OPEN_LISTEN
+  DO
+    CALL WAIT_ACCEPT (accepted)
+    IF accepted == 1 THEN
+      sock_open_flag = 1
+      $rxbuf = ""
+      CALL DO_HANDSHAKE (hs_ok)
+      IF hs_ok == 1 THEN
+        conn_lost = 0
+        DO
+          CALL RECV_LINE ($line, rok)
+          IF rok == 0 THEN
+            conn_lost = 1
+          ELSE
+            CALL SPLIT_CSV ($line)
+            CALL DISPATCH
+          END
+        UNTIL conn_lost == 1
+      END
+      CALL DISCONNECT
+    END
+  UNTIL 1 == 0
 .END
 .PROGRAM DISCONNECT() #214
 	TCP_CLOSE cret, sock_id
@@ -3928,116 +3938,115 @@ listen:
 	.ok = ok1
 .END
 .PROGRAM DO_PICKUP(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #313
-	IF .$arm <> "F60_F" THEN
-		CALL SEND_LINE ("ERROR,E4003")
-		RETURN
-	END
-	found = 1
-	IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
-		POINT target_pt = TRANS (.x_mm - 10, .y_mm, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
-		POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
-	ELSE
-		IF .$location == "WAIT_ZONE" THEN
-			POINT target_pt = wait_zone
-			POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-		ELSE
-			IF .$location == "MIX_ZONE" THEN
-				POINT target_pt = mix_zone_pi
-				POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-			ELSE
-				IF .$location == "MIX_ZONE2" THEN
-					POINT mix_zone_pi2 = SHIFT (mix_zone_pi BY 0, -50, 0)
-					POINT target_pt = mix_zone_pi2
-					POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
-				ELSE
-					IF .$location == "CUT_SEG" THEN
-						; 夾切好的一段：.x_mm = 起點距離、.y_mm = Y 偏移、.angle_deg = 終點距離（夾取座標系，原點 cut_pick）
-						; 夾取點 = cut_pick 沿 X 移到這段中心、沿 Y 移 .y_mm；左臂從 -Y 側 pick_margin 收攏到夾取點（同 do_pickup_test）
-						; cut_pick = 夾取偏移 (0, 0) 時、第一刀位置的夾緊點，教好後 pick_ready 改 1
-						IF pick_ready <> 1 THEN
-							CALL SEND_LINE ("ERROR,E4007")
-							RETURN
-						END
-						.dm = (.x_mm + .angle_deg) / 2
-						POINT target_pt = SHIFT (cut_pick BY .dm, .y_mm, 0);夾取點
-						POINT target_conv = SHIFT (target_pt BY 0, -pick_margin, 0);前置點
-					ELSE
-						found = 0
-					END
-				END
-			END
-		END
-	END
-	IF found == 0 THEN
-		CALL SEND_LINE ("ERROR,E4002")
-		RETURN
-	END
-	break
-	CALL SYNC_STEP (ok)
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		TOOL right_spatula
-		robot_busy = 0
-		RETURN
-	END
-	ABS.SPEED ON
-	; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
-	; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
-	; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
-	POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
-	; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
-	; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
-	; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
-	robot_busy = 1
-	SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
-	TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
-	; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
-	LMOVE target_pt_appro
-	CALL SYNC_STEP (ok)
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		TOOL left_spatula
-		robot_busy = 0
-		RETURN
-	END
-	; 階段 2: 下降 — 一起下降到取料高度
-	SPEED 100 MM/s ALWAYS
-	LMOVE target_conv
-	CALL SYNC_STEP (ok)
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		TOOL left_spatula
-		robot_busy = 0
-		RETURN
-	END
-	; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
-	SPEED 100 MM/s ALWAYS
-	LMOVE target_pt
-	break
-	CALL SYNC_STEP (ok)
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		TOOL left_spatula
-		robot_busy = 0
-		RETURN
-	END
-	; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
-	; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
-	; 直接引用階段 3 的目標點位比讀「目前位置」準確。
-	SPEED 500 MM/s ALWAYS
-	POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
-	LMOVE depart_pt
-	CALL SYNC_STEP (ok)
-	IF ok == 0 THEN
-		CALL SEND_LINE ("ERROR,E4023")
-		TOOL left_spatula
-		robot_busy = 0
-		RETURN
-	END
-	ABS.SPEED OFF
-	TOOL left_spatula
-	robot_busy = 0
-	CALL SEND_LINE ("OK")
+  IF .$arm <> "F60_F" THEN
+    CALL SEND_LINE ("ERROR,E4003")
+    RETURN
+  END
+  found = 1
+  IF .$location == "PICKUP_CUCUMBER" OR .$location == "PICKUP_CARROT" OR .$location == "PICKUP_ROMAINE" THEN
+    POINT target_pt = TRANS (.x_mm - 10, .y_mm, 0, 0, 0, 0) + pickup_origin   ; 現場測試版：先不做旋轉，只沿 BASE 做 XY 平移
+    POINT target_conv = target_pt + TRANS (converge_dx, converge_dy, 0, 0, 0, 0)
+  ELSE
+    IF .$location == "WAIT_ZONE" THEN
+      POINT target_pt = wait_zone
+      POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
+    ELSE
+      IF .$location == "MIX_ZONE" THEN
+        POINT target_pt = mix_zone_pi
+        POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
+      ELSE
+        IF .$location == "MIX_ZONE2" THEN
+          POINT mix_zone_pi2 = SHIFT (mix_zone_pi BY 0, -50, 0)
+          POINT target_pt = mix_zone_pi2
+          POINT target_conv = SHIFT (target_pt BY -100, 0, 0)
+        ELSE
+          IF .$location == "CUT_SEG" THEN
+            ; 夾切好的一段：.x_mm = 起點距離、.y_mm = Y 偏移、.angle_deg = 終點距離（夾取座標系，原點 cut_pick）
+            ; 夾取點 = cut_pick 沿 X 移到這段中心、沿 Y 移 .y_mm；左臂從 -Y 側 pick_margin 收攏到夾取點（同 do_pickup_test）
+            ; cut_pick = 夾取偏移 (0, 0) 時、第一刀位置的夾緊點，教好後 pick_ready 改 1
+            IF pick_ready <> 1 THEN
+              CALL SEND_LINE ("ERROR,E4007")
+              RETURN
+            END
+            POINT target_pt = SHIFT (cut_pick BY .x_mm, .y_mm, 0);夾取點
+            POINT target_conv = SHIFT (target_pt BY 0, -pick_margin, 0);前置點
+          ELSE
+            found = 0
+          END
+        END
+      END
+    END
+  END
+  IF found == 0 THEN
+    CALL SEND_LINE ("ERROR,E4002")
+    RETURN
+  END
+  break
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL right_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ABS.SPEED ON
+  ; LAPPRO 預設沿「目前 TOOL」Z 軸退開，方向依賴當下有沒有切 TOOL、容易跟安裝角度對不上。
+  ; 改成在 target_pt 所在的桌面座標系 (BASE ba) 裡沿 Z 手動平移 appro_mm，
+  ; 不受 TOOL 安裝角度影響 (SHIFT 沿 BASE 座標軸平移，語法已對照 AS 語言參考手冊 9.2 節確認)。
+  POINT target_pt_appro = SHIFT (target_conv BY 0, 0, appro_mm)
+  ; 階段 3 集中動作要沿 TOOL 座標系移動 (DRAW 是 BASE 座標系，見手冊 6-2/6-8 節)，
+  ; 改成一開始用複合變換值算好：target_pt + TRANS(...) 的第二項是相對於 target_pt
+  ; 自身姿態 (即 TOOL 方向) 的偏移 (見手冊 3-14 節)，不是 BASE 方向。
+  robot_busy = 1
+  SPEED 500 MM/s ALWAYS   ; ★ 絕對速度，待現場測試調整
+  TOOL ha_pickup; PICKUP 專用姿勢/進退方向，結束前一定要切回 LEFT_SPATULA
+  ; 階段 1: 就緒 — 兩臂各自到位到取料點正上方
+  LMOVE target_pt_appro
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 2: 下降 — 一起下降到取料高度
+  SPEED 100 MM/s ALWAYS
+  LMOVE target_conv
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 3: 集中 — 往中間收攏 (方向/距離為佔位示意，待現場調整)
+  SPEED 100 MM/s ALWAYS
+  LMOVE target_pt
+  break
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ; 階段 4: 抬起 — 一起抬起離開取料區 (同樣改用 SHIFT，不沿 TOOL Z 軸退開)
+  ; 用 target_conv 而非 HERE：CP ON 連續軌跡下，LMOVE 完不一定真的停在教點上，
+  ; 直接引用階段 3 的目標點位比讀「目前位置」準確。
+  SPEED 500 MM/s ALWAYS
+  POINT depart_pt = SHIFT (target_pt BY 0, 0, appro_mm)
+  LMOVE depart_pt
+  CALL SYNC_STEP (ok)
+  IF ok == 0 THEN
+    CALL SEND_LINE ("ERROR,E4023")
+    TOOL left_spatula
+    robot_busy = 0
+    RETURN
+  END
+  ABS.SPEED OFF
+  TOOL left_spatula
+  robot_busy = 0
+  CALL SEND_LINE ("OK")
 .END
 .PROGRAM DO_CHOP(.$food,.cuts,.thick,.start,.offset,.offset_y) #153
 	IF .$food <> "CUCUMBER" AND .$food <> "CARROT" AND .$food <> "ROMAINE" THEN

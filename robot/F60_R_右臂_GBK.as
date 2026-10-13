@@ -1361,38 +1361,38 @@ ZSWITCH ZCBS_CHGENV     OFF  -513
 .END
 .OPE_INFO1
 OPEINFO  30 10 6 6873  1715187219  ;(24/5/8 16:53:39) RS007L-B001 
-CONT_TIM  1009.2 
-SERV_TIM  323.7 
-MTON_CNT  9806 
+CONT_TIM  1013.7 
+SERV_TIM  326.1 
+MTON_CNT  9840 
 ESTP_CNT  16 
-BRKE_CNT  10912 
-CON_PWR  88.160 
-SUP_PWR  88.160 
+BRKE_CNT  10943 
+CON_PWR  88.603 
+SUP_PWR  88.603 
 REG_PWR  0.000 
-MOVE_TJT  25.4 35.6 32.4 25.3 28.7 26.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
-DIST_DJT  726.471 1508.735 1209.742 1587.284 1492.657 1699.999 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
-DIST_DJT_PLUS  363.843 753.572 604.373 793.526 746.566 848.613 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
-OPEINFO TP_BKLIGHT  0 399.5 50000 
+MOVE_TJT  25.4 35.7 32.5 25.3 28.8 27.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+DIST_DJT  727.954 1510.659 1211.634 1589.054 1494.587 1702.459 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+DIST_DJT_PLUS  364.596 754.558 605.323 794.405 747.544 849.886 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+OPEINFO TP_BKLIGHT  0 402.2 50000 
 OPEINFO MC  0 0 2000000 
 OPEINFO PARTS1  0 0 0 0 0 0 0 0 0 0 0 
 OPEINFO PARTS2  0 0 0 0 0 0 0 0 0 0 0 
 OPEINFO PARTS3  0 0 0 0 0 0 0 0 0 0 0 
 M_OPEINFO  30 10 6 6873  1712159022  ;(24/4/3 15:43:42) RS007L-B001 
-M_CONT_TIM  1009.3 
-M_SERV_TIM  323.7 
-M_MTON_CNT  9806 
+M_CONT_TIM  1013.9 
+M_SERV_TIM  326.1 
+M_MTON_CNT  9840 
 M_ESTP_CNT  16 
-M_BRKE_CNT  10912 
-M_CON_PWR  88.164 
-M_SUP_PWR  88.164 
+M_BRKE_CNT  10943 
+M_CON_PWR  88.607 
+M_SUP_PWR  88.607 
 M_REG_PWR  0.000 
-M_MOVE_TJT  25.4 35.6 32.4 25.3 28.7 26.9 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
-M_DIST_DJT  726.471 1508.735 1209.742 1587.284 1492.657 1699.999 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
-M_DIST_DJT_PLUS  363.843 753.572 604.373 793.526 746.566 848.613 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+M_MOVE_TJT  25.4 35.7 32.5 25.3 28.8 27.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 
+M_DIST_DJT  727.954 1510.659 1211.634 1589.054 1494.587 1702.459 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
+M_DIST_DJT_PLUS  364.596 754.558 605.323 794.405 747.544 849.886 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 0.000 
 M_MOVE_TJT_OVERDRIVE  0.0 0.0 0.0 0.0 0.0 0.0 
 M_DIST_DJT_OVERDRIVE  0.000 0.000 0.000 0.000 0.000 0.000 
 M_WARN_CJT_OVERDRIVE  0 0 0 0 0 0 
-HOUR_MTR  1009.3 
+HOUR_MTR  1013.9 
 .END
 .SYSDATA
 REG_POINT       0
@@ -1893,8 +1893,8 @@ FB_MOLEX_PFB_FILES[1] QlpoOTFBWSZTWbakmgoAIHl/h8KQACBQA//iESDaDv/v30AABEAAAEQACF
 FB_MOLEX_PFB_FILES[2] Sc5yk3YsjAAe+ykkkrCszCa3tJAaY0zpnXpt3aab5Ab8EB7/TzIDz1Ve/MBpVVsttVWDVhndm1MaSSTRa0ESQRAACQRJBEkESQCMcgiSCMiy2DDkvd6zicca7ccVWREkESQUbm0nYAALJJJWAALWq1syNtzdLdtNaaPMvNtca5zVUkklI3iTaSvGkATmmZjDpLDMmJ0Z5Xlez2xiFZ5MAAwPDYGG2RpABWgAA3eVKxjWqmKNaSSSjZo4kkk2kkk1yUU2BeRuAADEkkrAAVdpSxK9ntjEKGq17gATJsJqSSjAezGo2kxuWd5UxfFVVkFMRmRIxsyWcKzAZzTMBncLVGc1LiaQrJWgIy4UGjYmpo95nF8bZzYVNDYNpsekGAAQvuIACDAAGqe833xe
 FB_MOLEX_PFB_FILES[3] +MQCu0SiIiIiELcSSSW7kAAz5c8+nR1aJBVeH+gNvw4lVXiqq8gDrAbID91VaoD9KqvxAdOKqvzAfFugP5VVt66qumqrOaqtoDIDqAO0+bjgPu6oDWA6oDjugB0QHLVVz1Vcm/ADpqq/nDFVXPVVrbAH3qq5+OqrTIDra/95OCqtVVWkB5eHXVVrAcwDVAcWYBycIDsKquwA80gv+LuSKcKEhbUk0FA=
 FB_CIFX_FILES[0] 2
-FB_CIFX_FILES[1] QlpoOTFBWSZTWT6X6qsAAQB/zsYQACBAA/+CKyHcCv/v3+AAJEAAAAJAAAAIMAGYJKhKJE8qeE1PJqabR6oaDATE/VMjTDKGAAAAAAAAAAASJNTJT1PUxkFHqAaAxoBMgHqfYOkOUOIQFiG07gSWWvXagawYMl5TEQCqBoBgEBTwcMu+K3J0lcH3Ui8OQOQIDy1ZC8uzDx7JqPzZNv14zeZqFoDcagDJ3AwCGAagOBwcBzqVAb4VL7+9salUftssD1JkUI+SdsAra8GnS4CHNfYEhJK5We+lLggYVvNiCYExo9MnJYjgrPxmRWanbYb92+EZDvCELgy5l5dAcHQ2Ff0jdQi4ubno8Nj00W3W3dfukTms8vHCDRvguOqE4+fnCwxm70YuF+NtCdosVgNaQ+4MUlIOm3uC4MAvVqhvFpGp/gZ128SmH9Cm65rStmvdXR
-FB_CIFX_FILES[2] sx8qrUiMF7KzrQJRMqDmozGtlcc8qKiVaZJykpfQli4ZY85BhnMVkjRsV+IznKBQ5rR0b8jac2xZgO/oywoqmbYlwRX3OK5JMQS37BfUA/xdyRThQkD6X6qsA=
+FB_CIFX_FILES[1] QlpoOTFBWSZTWbLg+8EAAQB/zsYQACBAA/+CKyHcCv/v3+AAJEAAAAJAAAAIMAGYIqhJJE2qeTTTJqeptGoaDQ00NPUaPUwyhgAAAAAAAAAAEppNRpA1NpkRo0GgNGmg00Aadwd4YA3g4THSZUAzNZbbOQWggRYlJ3cGpArBADhL1Too6WzMpQ2tecnqC8F4HDdjsG3bL+3ZFIvdET+tsVGRnasMpjALFQCAHQBjA1mtOGloZwTOTn6JCaA5aWvGdlOUEuoFPkYnMKmUqAHUKnQEBKGlgc54lAOIIYGxgtCsWm5oD7Z347Sztj/e3d8brYS3KFtuAatbXcQeHE2lPyotgmz8H2KwNti878L8OX1OLg0sm+oIiLpWE7kztf65SSw4s8rOV1UBDUKVSDLKG8GFCQOPV/aFAXwqadIZxuATR+Bkpy7yV/9CWahNwNdbmp
+FB_CIFX_FILES[2] ruw6KL1AZsWp3KYU2NkPiTtDV0wyyJkqPSOUnJ7JlW1UkOaAQZIemB67mqwiNJIJGKb6s9hlMVzZAFVqsv10Y4q1gEGR7ymOPOEmSsbuAP8XckU4UJCy4PvBA=
 FB_DISCON_MASK_ERR[0]          0         0
 FB_DISCON_MASK_ERR[1]          0         0
 KLOGIC_AS_SIGNUM    0
@@ -2433,10 +2433,10 @@ CURALM_PERIOD  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 CURALM_COUNTER1  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 CURALM_COUNTER2  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 CURALM_PRI_FLG  0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
-MNTWARN_CONT_TIM 7096658 7096658 -1 10000 24 0
-MNTWARN_SERV_TIM 2276208 2276208 -1 5000 24 0
-MNTWARN_MTON_CNT 9806 9806 -1 0 0 0
-MNTWARN_BRKE_CNT 10912 10912 -1 0 0 0
+MNTWARN_CONT_TIM 7128681 7128681 -1 10000 24 0
+MNTWARN_SERV_TIM 2292792 2292792 -1 5000 24 0
+MNTWARN_MTON_CNT 9840 9840 -1 0 0 0
+MNTWARN_BRKE_CNT 10943 10943 -1 0 0 0
 MNTWARN_ESTP_CNT 16 16 -1 0 0 0
 MNTWARN_WARNMSG_J1 メンテナンスを夸京します。呵大のカワサキロボットサ〖ビスへお啼圭せ布さい。
 MNTWARN_WARNMSG_E1 Please contact your nearest Kawasaki Robot Service.
@@ -2468,7 +2468,7 @@ SWITCH HOLD.STEP       OFF
 SWITCH WS_COMPOFF      OFF
 SWITCH WS.ZERO         OFF
 SWITCH SLOW_START      OFF
-SWITCH ABS.SPEED       ON 
+SWITCH ABS.SPEED       OFF
 SWITCH UDP_EMSG        ON 
 SWITCH TOUCH.ENA       ON 
 SWITCH TOUCHST.ENA     ON 
@@ -2536,10 +2536,10 @@ SWITCH CURALMFUNC      OFF
 .CONDITION
 AS_VER       ASF_01000001T
 SV_VER       SVF_010000026
-ELOG_NUM            505
+ELOG_NUM            507
 CHK_ONCE      255
-MAN_SPEED     4
-CHK_SPEED     4
+MAN_SPEED     1
+CHK_SPEED     1
 MON_SPEED        20.000
 PRG_ACCEL       100.000
 PRG_SPEED       100.000
@@ -2577,8 +2577,8 @@ PRG_JT_DECEL    100.000   100.000   100.000   100.000   100.000   100.000   100.
 PRM_JT_ACCEL    100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000
 PRM_JT_DECEL    100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000   100.000
 STEP1ENV_CALL_PRGNAME do_pickup_test
-STEP1ENV_PRG_STEP          8
-USR_DO1      00000000000000000000001000000001
+STEP1ENV_PRG_STEP          1
+USR_DO1      00000000000000000000001000000000
 USR_DO2      00000000000000000000000000000000
 USR_DO3      00000000000000000000000000000000
 USR_DO4      00000000000000000000000000000000
@@ -4403,7 +4403,7 @@ exit_end:
 	LMOVE cu_20
 	LMOVE cu_30
 .END
-.PROGRAM clean_socket() #177
+.PROGRAM clean_socket() #184
 	IF sock_open_flag == 1 THEN
 		PRINT "偵測到上次殘留的連線 sock_id=", sock_id, "，先關閉再繼續"
 		CALL disconnect
@@ -4429,11 +4429,11 @@ exit_end:
 		PRINT "TCP_CLOSE OK"
 	END
 .END
-.PROGRAM disconnect() #172
+.PROGRAM disconnect() #181
 	TCP_CLOSE cret, sock_id
 	sock_open_flag = 0
 .END
-.PROGRAM dispatch() #33292
+.PROGRAM dispatch() #35510
 	IF $fld[1] == "HEARTBEAT" THEN
 		CALL send_line ("HEARTBEAT_ACK")
 		RETURN
@@ -4475,7 +4475,7 @@ exit_end:
 			CALL send_line ("ERROR,E4021")
 	END
 .END
-.PROGRAM do_chop(.$food,.cuts,.thick,.start,.offset,.offset_y) #159
+.PROGRAM do_chop(.$food,.cuts,.thick,.start,.offset,.offset_y) #164
 	ABS.SPEED ON
 	; press_chop_zone 要教在離左臂 cu（偏移 0 的第一刀）下刀處 10mm、還沒切的那一側，
 	; 教好、確認 press_dir 方向後把 init_const 的 press_ready 改成 1。
@@ -4948,7 +4948,7 @@ exit_end:
 	TOOL right_spatula
 	JMOVE home_right
 .END
-.PROGRAM do_handshake(.ok) #186
+.PROGRAM do_handshake(.ok) #195
 	CALL recv_line ($line, rok)
 	IF rok == 0 THEN
 		.ok = 0
@@ -4962,7 +4962,7 @@ exit_end:
 		.ok = 0
 	END
 .END
-.PROGRAM do_home(.$arm) #184
+.PROGRAM do_home(.$arm) #186
 	IF .$arm <> $this_arm THEN
 		CALL send_line ("ERROR,E4003")
 		RETURN
@@ -4996,7 +4996,7 @@ exit_end:
 		END
 	END
 .END
-.PROGRAM do_pickup(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #281
+.PROGRAM do_pickup(.$location,.$arm,.x_mm,.y_mm,.angle_deg) #284
 	IF .$arm <> "F60_R" THEN
 		CALL send_line ("ERROR,E4003")
 		RETURN
@@ -5027,8 +5027,7 @@ exit_end:
 							CALL send_line ("ERROR,E4007")
 							RETURN
 						END
-						.dm = (.x_mm + .angle_deg) / 2
-						POINT target_pt = SHIFT (cut_pick BY .dm * press_dir, .y_mm * press_dir_y, 0);夾取點
+						POINT target_pt = SHIFT (cut_pick BY .x_mm, .y_mm, 0);夾取點
 						POINT target_conv = SHIFT (target_pt BY 0, pick_margin, 0);前置點
 					ELSE
 						found = 0
@@ -5155,7 +5154,7 @@ exit_end:
 	LMOVE target_pt
 	LMOVE depart_pt
 .END
-.PROGRAM do_place(.$source,.$location,.$method) #291
+.PROGRAM do_place(.$source,.$location,.$method) #296
 	; 解析目的地
 	ABS.SPEED ON
 	found = 1
@@ -5463,7 +5462,7 @@ exit_end:
 	CALL sync_step (s)
 	.ok = s
 .END
-.PROGRAM do_status(.$arm) #274
+.PROGRAM do_status(.$arm) #285
 	IF .$arm <> $this_arm THEN
 		CALL send_line ("ERROR,E4003")
 		RETURN
@@ -5983,7 +5982,7 @@ exit_end:
 	DECEL 100 ALWAYS;        减速度设定(全体)               ％
 	100
 .END
-.PROGRAM init_const() #181
+.PROGRAM init_const() #189
 	$this_arm = "F60_R"
 	; --- TCP 通訊參數 ---
 	port = 9000
@@ -6054,7 +6053,7 @@ exit_end:
 	;POINT rturn135_turn10 = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
 	;POINT rturn135_turn20 = TRANS (0, 0, 0, 0, 0, 0)   ; PTEACH: 待手動校點
 .END
-.PROGRAM init_switches() #211
+.PROGRAM init_switches() #219
 	CP ON                    ; 連續軌跡制御動作 有效 — LMOVE/DRAW 連續動作(切割、翻炒)平滑銜接需要
 	CHECK.HOLD OFF           ; 暫停狀態下小鍵盤啟動 無效
 	CYCLE.STOP OFF           ; 外部暫停時自動運轉停止 無效
@@ -6077,7 +6076,7 @@ exit_end:
 	SLOW_START OFF           ; 低速START機能 無效
 	AFTER.WAIT.TMR OFF       ; 簡易WX開始Timing 軸一致後
 .END
-.PROGRAM init_tool() #157
+.PROGRAM init_tool() #165
 	BASE NULL
 	POINT ba = TRANS (43, 0, 0, 0, -90, 0)                      ; 基礎座標 (原程式 rs_r.as init1222())
 	BASE ba
@@ -6130,7 +6129,7 @@ exit_end:
 	RESET
 	CALL ethernet_test
 .END
-.PROGRAM open_listen() #194
+.PROGRAM open_listen() #202
 	er_count = 0
 listen:
 	TCP_LISTEN lret, port
@@ -6575,7 +6574,7 @@ connect:
 		END
 	END
 .END
-.PROGRAM recv_line(.$line,.rok) #33740
+.PROGRAM recv_line(.$line,.rok) #35973
 	DO
 		nl_pos = INSTR (1 , $rxbuf , $CHR (10))
 		IF nl_pos > 0 THEN
@@ -6996,11 +6995,11 @@ connect:
 		PRINT "TCP_SEND error=", sret
 	END
 .END
-.PROGRAM send_line(.$msg) #33624
+.PROGRAM send_line(.$msg) #35851
 	$send_buf[1] = .$msg + $CHR (10)
 	TCP_SEND sret, sock_id, $send_buf[1], 1, tout_send
 .END
-.PROGRAM split_csv(.$line) #33520
+.PROGRAM split_csv(.$line) #35740
 	FOR i = 1 TO 8
 		$fld[i] = ""
 	END
@@ -7162,7 +7161,7 @@ connect:
 	break
 	LMOVE star
 .END
-.PROGRAM sync_step(.ok) #6548
+.PROGRAM sync_step(.ok) #6797
 	SIGNAL sig_out_step
 	CALL wait_signal (sig_in_step, timeout_io_sec, ok1)
 	SIGNAL -sig_out_step
@@ -7215,7 +7214,7 @@ connect:
 	CALL wait_signal_off (sig_out_step, 5, ok)
 	PRINT "結束，ok=", ok
 .END
-.PROGRAM wait_accept(.accepted) #3525
+.PROGRAM wait_accept(.accepted) #3688
 	TCP_ACCEPT sock_id, port, tout_accept, client_ip[1]
 	IF sock_id < 0 THEN
 		.accepted = 0
@@ -7224,7 +7223,7 @@ connect:
 		.accepted = 1
 	END
 .END
-.PROGRAM wait_signal(.sig_no,.timeout_sec,.ok) #6548
+.PROGRAM wait_signal(.sig_no,.timeout_sec,.ok) #6797
 	TIMER 1 = 0
 	WAIT SIG (.sig_no) OR TIMER (1) > .timeout_sec
 	IF SIG (.sig_no) THEN
@@ -7494,7 +7493,7 @@ cu_50[37] -475.990936 730.675720 -360.099060 -178.282074 74.354858 88.735176
 cu_50[38] -480.990936 730.675720 -360.099060 -178.282074 74.354858 88.735176
 cu_50[39] -485.990936 730.675720 -360.099060 -178.282074 74.354858 88.735176
 cu_50[40] -490.990936 730.675720 -360.099060 -178.282074 74.354858 88.735176
-cut_pick -380.055603 443.657104 -414.834045 -168.304596 178.201019 -164.762802
+cut_pick -407.406921 447.720947 -416.664185 -168.250229 178.201202 -164.707626
 depart_pt -380.055603 443.657104 -364.834045 -168.304596 178.201019 -164.762802
 fr10_f -435.798035 766.494446 -247.491501 7.795664 120.298264 90.815613
 fr10_r -435.783081 766.538574 -223.356293 7.795975 120.295097 90.822617
@@ -7534,12 +7533,12 @@ origin 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
 pickup_carrot 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
 pickup_corn 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
 pickup_cucumber 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
-pickup_origin -553.709106 446.610901 -410.921387 121.780022 175.892548 -145.547943
+pickup_origin -550.599060 446.613037 -413.372131 126.238029 176.214783 -144.226822
 press_chop_1 -258.956177 452.339600 -353.057861 2.480422 109.062843 89.191467
 press_chop_per -340.723022 449.403595 -372.087891 2.491133 108.988434 89.185951
 press_chop_zo -353.747223 448.044006 -397.381073 141.681259 176.946442 143.944626
 press_chop_zone -351.462097 472.812927 -320.670898 -1.005785 121.738945 90.275955
-press_now -310.762085 480.312927 -320.670898 -1.005785 121.738945 90.275955
+press_now -268.062103 464.312927 -320.670898 -1.005785 121.738945 90.275955
 rcon120_con -424.097961 657.764099 -354.052246 -149.212662 60.025761 88.413231
 rcon120_down -43.542801 827.730042 -351.430603 -150.383102 60.001701 89.004936
 rcon120_ready -43.501141 827.824219 -272.371613 -150.332520 59.605076 88.266579
@@ -7585,8 +7584,8 @@ rturn90_turn1 -471.927490 648.155212 -279.162262 -179.542679 43.876637 88.829041
 rturn90_turn10 -385.321289 632.392334 -270.127533 166.746048 2.321661 106.822227
 rturn90_turn20 -550.558960 633.537720 -324.809601 179.250412 46.190208 94.099480
 rturn90_turn_1 -645.686279 508.807922 -268.924683 -177.431747 34.371311 91.197449
-salad_bowl -304.331146 713.164246 -348.257812 150.101746 173.861786 -119.600861
-salad_bowl_up -251.989929 716.686401 -362.405945 15.729055 171.138535 102.388077
+salad_bowl -272.398163 571.252075 -314.448090 -168.211075 178.197800 -164.665497
+salad_bowl_up -272.348602 601.824524 -376.822601 95.289818 168.877014 99.006683
 st -292.907166 549.046692 -334.437408 -87.571404 102.660973 -84.654846
 star -344.473541 523.949707 -282.561890 -25.967569 174.136215 -27.097530
 target_conv -380.055603 493.657104 -414.834045 -168.304596 178.201019 -164.762802
@@ -7634,7 +7633,7 @@ work_flip_zone 0.000000 0.000000 0.000000 0.000000 0.000000 0.000000
 #water -2.899073 36.994267 -79.029396 165.832932 58.829731 -79.220261
 .END
 .REALS
-accepted = 1
+accepted = 0
 ad = -1
 an = -1
 appro_mm = 50
@@ -7645,7 +7644,7 @@ client_ip[1] = 192
 client_ip[2] = 168
 client_ip[3] = 11
 client_ip[4] = 100
-conn_lost = 0
+conn_lost = 1
 converge_dx = 0
 converge_dy = 40
 count = 2
@@ -7657,7 +7656,7 @@ flip_down_mm = 90
 found = 1
 fr = 3
 hs_ok = 1
-i = 33
+i = 9
 ip[1] = 192
 ip[2] = 168
 ip[3] = 5
@@ -7669,11 +7668,13 @@ max_len = 64
 max_length = 255
 min = 200
 msg_max = 100
-nfld = 7
-nl_pos = 34
+nfld = 1
+nl_pos = 0
 ok = 1
 ok1 = 1
 p = 0
+pick_margin = 50
+pick_ready = 1
 port = 9000
 pour_tilt_deg = 90
 press_dir = 1
@@ -7691,15 +7692,15 @@ r1_1 = -34025
 rc = 0
 recv_n = 1
 ret = 0
-robot_busy = 1
-rok = 1
-rret = 0
+robot_busy = 0
+rok = 0
+rret = -34021
 rsock_id = 36
 s = 1
 sig_in_step = 1001
 sig_out_step = 1
-sock_id = 37
-sock_open_flag = 1
+sock_id = -34024
+sock_open_flag = 0
 sp1 = 300
 sp150 = 150
 sp2 = 300
@@ -7737,20 +7738,20 @@ $arm_id = "R"
 $buf[1] = ""
 $cmd = "START"
 $dish = "BURGER"
-$fld[1] = "CHOP"
-$fld[2] = "CUCUMBER"
-$fld[3] = "32"
-$fld[4] = "5.0"
-$fld[5] = "1"
-$fld[6] = "-114.3"
-$fld[7] = "7.5"
+$fld[1] = "HEARTBEAT"
+$fld[2] = ""
+$fld[3] = ""
+$fld[4] = ""
+$fld[5] = ""
+$fld[6] = ""
+$fld[7] = ""
 $fld[8] = ""
 $id = "7"
 $kp[1] = "ok\n"
 $kw = "RUN"
-$line = "CHOP,CUCUMBER,32,5.0,1,-114.3,7.5"
+$line = "HEARTBEAT"
 $msg = "ID,R,v4"
-$recv_buf[1] = "CHOP,CUCUMBER,32,5.0,1,-114.3,7.5\n"
+$recv_buf[1] = "HEARTBEAT\n"
 $recv_buf[2] = "BEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\nHEARTBEAT\n"
 $recv_buf[3] = "HEARTBEAT\n"
 $reply = "DONE,7"
