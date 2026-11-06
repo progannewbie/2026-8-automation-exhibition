@@ -19,8 +19,12 @@ class YOLOConfig:
     """YOLOv8 模型配置"""
 
     # 模型參數
-    MODEL_PATH = str(_SRC_DIR / "models" / "yolo26_smartcook_v4.pt")
-    CONFIDENCE_THRESHOLD = 0.5  # 信心閾值
+    # v5（2026-11-05）：相機被動過後檯面變成深色反光不鏽鋼，v4 只學過淺色檯面、
+    # 小黃瓜常抓不到。用新檯面 221 張＋舊資料 300 張從 v4 接著訓練（D:\suger-main_v2\yolo模型）。
+    # 要換回舊的就改成 yolo26_smartcook_v4.pt、閾值改回 0.5。
+    MODEL_PATH = str(_SRC_DIR / "models" / "yolo26_smartcook_v5.pt")
+    # v5 在新照片上有幾顆框得對但信心只有 0.35~0.40，0.5 會漏掉；0.4 漏得少、也幾乎不誤判
+    CONFIDENCE_THRESHOLD = 0.4  # 信心閾值
     IOU_THRESHOLD = 0.5  # IoU 非極大值抑制閾值
 
     # 類別定義 — 必須與模型內嵌的 names 一致，順序即索引。
