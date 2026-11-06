@@ -10,7 +10,9 @@ SmartCook 檯面標定工具 (Table Calibration)
     2. 手臂退開到不擋畫面的位置
     3. 預覽視窗按 SPACE 拍照：
          - 畫面上只有一個 YOLO 偵測 → 自動取它的中心點
-         - 偵測不到或不只一個 → 用滑鼠點食材/標記中心
+         - 不只一個 → 用滑鼠點夾爪下那個食材，取它的 YOLO 中心
+           （建議桌上一次只放一個食材，最不會出錯）
+         - 偵測不到 → 只能用手點的位置，誤差較大，最好換位置重拍
        ENTER 確認、r 重拍、s 跳過這格
     4. 9 格做完自動計算；也可以中途按 c 先算
     5. 終端機印出殘差、留一驗證、跟舊標定比偏了多少，以及一段程式碼，
@@ -127,9 +129,17 @@ def calibrate(cv2, args, grid):
     state = {"frozen": None, "pick": None}
 
     def on_mouse(event, x, y, flags, param):
+        # 點滑鼠是「選哪一個食材」，座標仍取那個食材的 YOLO 中心——執行時換算用的
+        # 就是 YOLO 中心，手點的位置會系統性偏掉（11-06 手點那組實測偏 13mm）
         if event == cv2.EVENT_LBUTTONDOWN and state["frozen"] is not None:
-            state["pick"] = (float(x), float(y))
-            print(f"  手動指定 ({x},{y})")
+            dets = state.get("dets") or []
+            if dets:
+                d = min(dets, key=lambda d: (d["center_x_pixel"] - x) ** 2 + (d["center_y_pixel"] - y) ** 2)
+                state["pick"] = (d["center_x_pixel"], d["center_y_pixel"])
+                print(f"  選了 {d.get('class_name', '')}，YOLO 中心 ({state['pick'][0]:.0f},{state['pick'][1]:.0f})")
+            else:
+                state["pick"] = (float(x), float(y))
+                print(f"  ⚠ 沒有 YOLO 偵測，只能用手點的位置 ({x},{y})，誤差會比較大")
 
     cv2.namedWindow(WINDOW)
     cv2.setMouseCallback(WINDOW, on_mouse)
@@ -180,6 +190,7 @@ def calibrate(cv2, args, grid):
             elif key == ord(" ") and todo and state["frozen"] is None:
                 state["frozen"] = frame.copy()
                 dets = detector.detect(frame)
+                state["dets"] = dets
                 if len(dets) == 1:
                     d = dets[0]
                     state["pick"] = (d["center_x_pixel"], d["center_y_pixel"])
@@ -187,7 +198,7 @@ def calibrate(cv2, args, grid):
                           f"，ENTER 確認 / 點滑鼠改位置 / r 重拍")
                 else:
                     state["pick"] = None
-                    print(f"  偵測到 {len(dets)} 個物件，請用滑鼠點食材中心，再按 ENTER")
+                    print(f"  偵測到 {len(dets)} 個物件，用滑鼠點夾爪下那個食材（會取它的 YOLO 中心），再按 ENTER")
             elif key in (13, 10) and state["frozen"] is not None:
                 if state["pick"] is None:
                     print("  還沒有中心點：用滑鼠點一下")
