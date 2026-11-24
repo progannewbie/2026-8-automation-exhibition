@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+
+# 系統/編輯器
+.DS_Store
+.claude/settings.local.json
+
+# 虛擬環境
+.venv/
+venv/
+
+# 測試時拍的照片/暫存，不是原始碼
+test/captures*/
+*.zip
+capture_*.jpg
+
+# 執行期日誌
+logs/
+src/stats/
+*.log
+
+# 現場調的切片厚度（網頁介面存的）
+src/settings/
