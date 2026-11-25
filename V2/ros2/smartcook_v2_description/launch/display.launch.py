@@ -1,7 +1,7 @@
-"""在 RViz 顯示 SmartCook V2 底座 + RS007L，附關節滑桿。
+"""在 RViz 顯示 SmartCook V2 底座 + 兩支側裝 RS007L，附關節滑桿。
 
     ros2 launch smartcook_v2_description display.launch.py
-    ros2 launch smartcook_v2_description display.launch.py mount_yaw:=1.5708
+    ros2 launch smartcook_v2_description display.launch.py mount_roll:=1.5708
 """
 import os
 
@@ -18,11 +18,12 @@ def generate_launch_description():
     xacro_file = os.path.join(share, "urdf", "smartcook_v2.urdf.xacro")
     rviz_file = os.path.join(share, "rviz", "display.rviz")
 
+    # 預設值要和 urdf/smartcook_v2.urdf.xacro 的 xacro:arg 一致
     mount_args = {
-        "mount_x": "0.0",
+        "plate_x": "0.058",
         "mount_y": "0.108",
-        "mount_z": "1.204",
-        "mount_yaw": "0.0",
+        "mount_z": "1.109",
+        "mount_roll": "0.0",
     }
     declares = [DeclareLaunchArgument(k, default_value=v) for k, v in mount_args.items()]
 

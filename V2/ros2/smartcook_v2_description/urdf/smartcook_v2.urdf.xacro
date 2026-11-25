@@ -1,27 +1,44 @@
 <?xml version="1.0"?>
 <!--
-  SmartCook V2：機器人底座 + Kawasaki RS007L
+  SmartCook V2：機器人底座 + 兩支 Kawasaki RS007L（側裝在立柱兩側）
 
   底座：V2/圖檔/robot_base.step（同 robot base.stl，單位 mm，這裡縮成 m）
-    - 600 x 600 底板，100 mm 寬立柱，立柱頂端 z = 1204 mm
-    - 頂端安裝面：x -58 ~ 58 mm、y -5 ~ 245 mm（中心 y = 120 mm）
-  RS007L：底面腳座 x -95 ~ 95 mm、y -98 ~ 122 mm（中心 y = 12 mm，相對 base_link）
+    - 600 x 600 底板，100 mm 方管立柱
+    - 立柱頂端兩側各有一塊安裝板：x = ±58 mm，y -5 ~ 245 mm，z 1014 ~ 1204 mm（190 x 250 mm）
+      板中心 y = 120 mm、z = 1109 mm
+  RS007L：腳座 x -95 ~ 95 mm（190）、y -98 ~ 122 mm（220，中心 y = 12 mm，相對 base_link）
+    → 腳座 190 那一邊對齊安裝板的 190 高度，220 那一邊放在 250 寬裡
 
-  預設把 RS007L 腳座中心對齊立柱頂面中心：
-    mount_y = 0.120 - 0.012 = 0.108 m
-  實際螺絲孔位確定後，改下面的 mount_* 參數（或啟動時用 xacro 參數覆蓋）。
+  座標系：world 的 X/Y 和 CAD 相同，底座底面（CAD z = -82 mm）貼在 world z = 0。
+  手臂命名（假設從 -Y 方向看底座）：+X 那側 = right_，-X 那側 = left_
+
+  每支手臂的 base_link Z 軸朝外（垂直安裝板），
+  mount_roll 是手臂在安裝板上繞自己 Z 軸的旋轉（調整手臂「朝上 / 朝下 / 朝前」）。
 -->
 <robot name="smartcook_v2" xmlns:xacro="http://ros.org/wiki/xacro">
 
-  <xacro:arg name="mount_x"   default="0.0"/>
-  <xacro:arg name="mount_y"   default="0.108"/>
-  <xacro:arg name="mount_z"   default="1.204"/>
-  <xacro:arg name="mount_yaw" default="0.0"/>
+  <!-- 安裝板參數（兩側對稱） -->
+  <xacro:arg name="plate_x"    default="0.058"/>   <!-- 安裝板面到立柱中心 -->
+  <xacro:arg name="mount_y"    default="0.108"/>   <!-- 0.120 板中心 - 0.012 腳座中心偏移 -->
+  <xacro:arg name="mount_z"    default="1.109"/>   <!-- 安裝板中心高度（CAD 座標） -->
+  <xacro:arg name="mount_roll" default="0.0"/>     <!-- 手臂在板上繞自己 Z 軸轉幾度（rad） -->
+
+  <xacro:property name="plate_x"    value="$(arg plate_x)"/>
+  <xacro:property name="mount_y"    value="$(arg mount_y)"/>
+  <xacro:property name="mount_z"    value="$(arg mount_z)"/>
+  <xacro:property name="mount_roll" value="$(arg mount_roll)"/>
 
   <xacro:include filename="$(find khi_rs_description)/urdf/rs007l_macro.xacro"/>
 
   <material name="BaseGray">
     <color rgba="0.55 0.58 0.62 1"/>
+  </material>
+  <!-- RS007L 用的顏色（setup_wsl.sh 已從 Kawasaki 巨集拿掉，避免兩支手臂重複定義） -->
+  <material name="White">
+    <color rgba="1 1 1 1"/>
+  </material>
+  <material name="Black">
+    <color rgba="0 0 0 1"/>
   </material>
 
   <link name="world"/>
@@ -41,20 +58,39 @@
     </collision>
   </link>
 
-  <!-- 底座底面在 z = -82 mm，抬起來讓底面貼地 -->
+  <!-- 底座底面在 CAD z = -82 mm，抬起來讓底面貼地 -->
   <joint name="world_to_robot_base" type="fixed">
     <parent link="world"/>
     <child link="robot_base"/>
     <origin xyz="0 0 0.082" rpy="0 0 0"/>
   </joint>
 
-  <!-- RS007L（Kawasaki 官方 khi_rs_description） -->
-  <xacro:khi_rs007l prefix=""/>
-
-  <joint name="robot_base_to_rs007l" type="fixed">
+  <!-- 右臂：+X 安裝板，base_link Z 軸朝 +X -->
+  <xacro:khi_rs007l prefix="right_"/>
+  <link name="right_mount"/>
+  <joint name="robot_base_to_right_mount" type="fixed">
     <parent link="robot_base"/>
-    <child link="base_link"/>
-    <origin xyz="$(arg mount_x) $(arg mount_y) $(arg mount_z)" rpy="0 0 $(arg mount_yaw)"/>
+    <child link="right_mount"/>
+    <origin xyz="${plate_x} 0 ${mount_z}" rpy="0 ${pi/2} 0"/>
+  </joint>
+  <joint name="right_mount_to_base" type="fixed">
+    <parent link="right_mount"/>
+    <child link="right_base_link"/>
+    <origin xyz="0 ${mount_y} 0" rpy="0 0 ${mount_roll}"/>
+  </joint>
+
+  <!-- 左臂：-X 安裝板，base_link Z 軸朝 -X -->
+  <xacro:khi_rs007l prefix="left_"/>
+  <link name="left_mount"/>
+  <joint name="robot_base_to_left_mount" type="fixed">
+    <parent link="robot_base"/>
+    <child link="left_mount"/>
+    <origin xyz="${-plate_x} 0 ${mount_z}" rpy="0 ${-pi/2} 0"/>
+  </joint>
+  <joint name="left_mount_to_base" type="fixed">
+    <parent link="left_mount"/>
+    <child link="left_base_link"/>
+    <origin xyz="0 ${mount_y} 0" rpy="0 0 ${-mount_roll}"/>
   </joint>
 
 </robot>

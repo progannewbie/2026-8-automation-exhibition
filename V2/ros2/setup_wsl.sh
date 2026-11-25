@@ -27,8 +27,13 @@ fi
 # 2. ROS 2 版的套件設定（只需要 urdf 和 meshes）
 KHI_PKG=$WS/src/khi_rs_description
 mkdir -p "$KHI_PKG"
-ln -sfn "$KHI/khi_rs_description/urdf"   "$KHI_PKG/urdf"
 ln -sfn "$KHI/khi_rs_description/meshes" "$KHI_PKG/meshes"
+# urdf 用複製的：拿掉巨集裡的 White / Black 材質定義（只保留引用），
+# 否則同一個 URDF 放兩支 RS007L 時材質會重複定義、解析失敗。
+# 這兩個顏色改由 smartcook_v2.urdf.xacro 定義一次。
+rm -rf "$KHI_PKG/urdf"
+cp -r "$KHI/khi_rs_description/urdf" "$KHI_PKG/urdf"
+perl -0pi -e 's{\s*<material name="(White|Black)">\s*<color [^>]*/>\s*</material>}{}g' "$KHI_PKG"/urdf/*_macro.xacro
 cat > "$KHI_PKG/package.xml" <<'EOF'
 <?xml version="1.0"?>
 <package format="3">
