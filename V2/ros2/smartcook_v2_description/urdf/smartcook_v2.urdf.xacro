@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!--
+  SmartCook V2：機器人底座 + Kawasaki RS007L
+
+  底座：V2/圖檔/robot_base.step（同 robot base.stl，單位 mm，這裡縮成 m）
+    - 600 x 600 底板，100 mm 寬立柱，立柱頂端 z = 1204 mm
+    - 頂端安裝面：x -58 ~ 58 mm、y -5 ~ 245 mm（中心 y = 120 mm）
+  RS007L：底面腳座 x -95 ~ 95 mm、y -98 ~ 122 mm（中心 y = 12 mm，相對 base_link）
+
+  預設把 RS007L 腳座中心對齊立柱頂面中心：
+    mount_y = 0.120 - 0.012 = 0.108 m
+  實際螺絲孔位確定後，改下面的 mount_* 參數（或啟動時用 xacro 參數覆蓋）。
+-->
+<robot name="smartcook_v2" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:arg name="mount_x"   default="0.0"/>
+  <xacro:arg name="mount_y"   default="0.108"/>
+  <xacro:arg name="mount_z"   default="1.204"/>
+  <xacro:arg name="mount_yaw" default="0.0"/>
+
+  <xacro:include filename="$(find khi_rs_description)/urdf/rs007l_macro.xacro"/>
+
+  <material name="BaseGray">
+    <color rgba="0.55 0.58 0.62 1"/>
+  </material>
+
+  <link name="world"/>
+
+  <!-- 底座 -->
+  <link name="robot_base">
+    <visual>
+      <geometry>
+        <mesh filename="package://smartcook_v2_description/meshes/robot_base.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="BaseGray"/>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://smartcook_v2_description/meshes/robot_base.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- 底座底面在 z = -82 mm，抬起來讓底面貼地 -->
+  <joint name="world_to_robot_base" type="fixed">
+    <parent link="world"/>
+    <child link="robot_base"/>
+    <origin xyz="0 0 0.082" rpy="0 0 0"/>
+  </joint>
+
+  <!-- RS007L（Kawasaki 官方 khi_rs_description） -->
+  <xacro:khi_rs007l prefix=""/>
+
+  <joint name="robot_base_to_rs007l" type="fixed">
+    <parent link="robot_base"/>
+    <child link="base_link"/>
+    <origin xyz="$(arg mount_x) $(arg mount_y) $(arg mount_z)" rpy="0 0 $(arg mount_yaw)"/>
+  </joint>
+
+</robot>

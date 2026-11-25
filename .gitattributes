@@ -10,3 +10,11 @@
 # Windows 啟動檔：cmd / PowerShell 要 CRLF
 *.bat text eol=crlf
 *.ps1 text eol=crlf
+
+# shell 腳本在 WSL 執行，一律 LF
+*.sh text eol=lf
+
+# 3D 模型
+*.stl binary
+*.step binary
+*.ics binary
