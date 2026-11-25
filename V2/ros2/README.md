@@ -42,7 +42,19 @@ wsl -d Ubuntu -- bash -c "source ~/smartcook_ws/install/setup.bash && ros2 launc
 
 「回原點」把兩支手臂所有軸歸零（手臂水平往外伸）。
 
-> 這是運動學模擬：沒有碰撞檢查，手臂可以穿過底座或煎台。
+### 碰撞檢查
+
+手臂（link1～link6）不能穿過煎台，也不能低於地面：
+
+- 每個連桿的 3D 模型表面約每 5 mm 取一個檢查點，任何一點進入「煎台方塊 + 安全距離」就算碰到。
+- 會碰到的吋動（軸、基座、工具、世界模式、回原點都一樣）會直接擋下，面板顯示是哪個連桿，例如「停止：link4 會碰到煎台」。
+- 已經在干涉中時（例如把煎台移到手臂上），煎台面變紅、面板顯示「⚠ 干涉中」，只允許讓干涉變少的動作，往外移就能脫離。
+- 安全距離預設 10 mm，面板上可以改，也可以暫時關閉檢查；按「儲存設定」會一起存。
+
+還沒檢查的：
+
+- **工具（平鏟）**：還沒建模，鏟子本來就要碰煎台，所以不檢查。法蘭（link6）有檢查。
+- **底座 / 立柱**和**兩支手臂互撞**：還沒檢查，手臂仍可以穿過它們。
 
 ### 工具座標（TCP）
 
@@ -50,7 +62,7 @@ wsl -d Ubuntu -- bash -c "source ~/smartcook_ws/install/setup.bash && ros2 launc
 
 ## 煎台
 
-煎台位置還沒定，先放在立柱前方（世界座標 X 0、Y -600、頂面高 850 mm，600 × 400 × 60 mm）。
+煎台位置還沒定，目前放在世界座標 X 0、Y 600、頂面高 850 mm，600 × 400 × 60 mm（實際值以 `config/scene.yaml` 為準）。
 
 - 在面板的「煎台」欄位改位置、旋轉、長寬厚，RViz 會立刻更新。
 - 按「儲存設定」會寫回 [smartcook_v2_description/config/scene.yaml](smartcook_v2_description/config/scene.yaml)（連同 TCP 偏移），下次開啟就用新的值。記得把這個檔 commit。
@@ -88,7 +100,7 @@ wsl -d Ubuntu -- bash -c "source ~/smartcook_ws/install/setup.bash && ros2 launc
 ## 檔案
 
 - `smartcook_v2_description/scripts/jog_panel.py`：吋動面板，同時發佈 `/joint_states`、煎台標記 `/smartcook_scene`、TF（`griddle`、`right_tcp`、`left_tcp`）
-- `smartcook_v2_description/config/scene.yaml`：煎台位置、尺寸和 TCP 偏移
+- `smartcook_v2_description/config/scene.yaml`：煎台位置、尺寸、TCP 偏移和碰撞設定
 - `smartcook_v2_description/meshes/robot_base.stl`：底座模型，複製自 `V2/圖檔/robot base.stl`（和 `robot_base.step` 尺寸相同，單位 mm）。底座改版後要重新匯出 STL 並覆蓋這個檔。
 - RS007L 模型不在這個 repo：它是 Kawasaki 的 CAD 授權，由 `setup_wsl.sh` 下載到 WSL。
   setup 會拿掉 Kawasaki 巨集裡的 White / Black 材質定義（改由我們的 xacro 定義一次），否則兩支手臂會重複定義、URDF 解析失敗。

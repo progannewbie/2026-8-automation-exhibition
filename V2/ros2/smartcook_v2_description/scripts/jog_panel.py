@@ -15,6 +15,12 @@
   TF: world → griddle（煎台頂面中心）、<arm>_link6 → <arm>_tcp
 
 煎台與 TCP 偏移存在 scene_file（預設 config/scene.yaml），面板上按「儲存設定」寫回。
+
+碰撞檢查
+  每支手臂 link1～link6 的 3D 模型表面每約 5 mm 取一點，檢查有沒有點進入
+  「煎台方塊 + 安全距離」或低於地面。會撞到的吋動直接拒絕；
+  若已經在干涉中（例如把煎台移到手臂上），只允許讓干涉變少的動作，方便退出。
+  工具（平鏟）還沒建模，不在檢查範圍內。
 """
 import math
 import os
@@ -24,16 +30,26 @@ import xml.etree.ElementTree as ET
 import numpy as np
 import rclpy
 import yaml
+from ament_index_python.packages import get_package_share_directory
 from geometry_msgs.msg import TransformStamped
 from python_qt_binding.QtCore import Qt, QTimer
+from python_qt_binding.QtGui import QFont, QFontDatabase
 from python_qt_binding.QtWidgets import (
-    QApplication, QButtonGroup, QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
+    QApplication, QButtonGroup, QCheckBox, QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QPushButton, QRadioButton, QSlider, QVBoxLayout, QWidget,
 )
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
 from tf2_ros import TransformBroadcaster
 from visualization_msgs.msg import Marker, MarkerArray
+
+# WSL 預設沒有中文字型：依序找 Linux 已安裝的、再用 Windows 的微軟正黑體
+CJK_FONT_FILES = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+    "/mnt/c/Windows/Fonts/msjh.ttc",      # 微軟正黑體
+    "/mnt/c/Windows/Fonts/msyh.ttc",      # 微軟雅黑
+    "/mnt/c/Windows/Fonts/mingliu.ttc",   # 細明體
+]
 
 ARMS = ["right_", "left_"]
 ARM_NAMES = {"right_": "右臂 (+X)", "left_": "左臂 (-X)"}
@@ -44,6 +60,7 @@ MAX_LIN = 0.100              # m/s，100% 速度
 MAX_ROT = math.radians(30)   # rad/s
 MAX_JNT = math.radians(30)   # rad/s
 DT = 0.04                    # 吋動更新週期 (s)
+SAMPLE_SPACING = 0.005       # 碰撞取樣點間距 (m)，要小於安全距離
 DLS_LAMBDA = 0.05            # 奇異點附近的最大阻尼
 SING_THRESHOLD = 0.04        # Jacobian 最小奇異值低於這個才開始加阻尼
 
@@ -91,6 +108,44 @@ def mat_to_quat(R):
     return tuple(q)
 
 
+def resolve_package_uri(uri):
+    if uri.startswith("package://"):
+        pkg, rel = uri[len("package://"):].split("/", 1)
+        return os.path.join(get_package_share_directory(pkg), rel)
+    return uri.replace("file://", "")
+
+
+def sample_stl(path, scale, spacing):
+    """讀 STL（binary），在每個三角形表面均勻取點，回傳 (N, 3)，單位 m。"""
+    with open(path, "rb") as f:
+        data = f.read()
+    n = int.from_bytes(data[80:84], "little")
+    if 84 + 50 * n != len(data):
+        raise ValueError(f"只支援 binary STL：{path}")
+    rec = np.frombuffer(data[84:], dtype=np.dtype([("n", "<f4", 3), ("v", "<f4", (3, 3)), ("a", "<u2")]))
+    tri = rec["v"].astype(np.float64) * scale            # (n, 3, 3)
+    a, b, c = tri[:, 0], tri[:, 1], tri[:, 2]
+    pts = [a, b, c]
+    longest = np.max(np.stack([np.linalg.norm(b - a, axis=1), np.linalg.norm(c - b, axis=1),
+                               np.linalg.norm(a - c, axis=1)]), axis=0)
+    # 依三角形最長邊決定細分數，讓表面上任一點離取樣點都不超過約 spacing
+    divs = np.clip(np.ceil(longest / spacing), 1, 200).astype(int)
+    for k in np.unique(divs):
+        if k <= 1:
+            continue
+        sel = divs == k
+        i, j = np.meshgrid(np.arange(k + 1), np.arange(k + 1), indexing="ij")
+        keep = (i + j) <= k
+        u, v = (i[keep] / k), (j[keep] / k)
+        A, B, C = a[sel][:, None], b[sel][:, None], c[sel][:, None]
+        pts.append((A + u[None, :, None] * (B - A) + v[None, :, None] * (C - A)).reshape(-1, 3))
+    P = np.concatenate(pts)
+    # 體素去重，避免點太多
+    key = np.floor(P / (spacing * 0.8)).astype(np.int64)
+    _, idx = np.unique(key, axis=0, return_index=True)
+    return P[idx]
+
+
 def mat_to_oat(R):
     """Kawasaki O/A/T（ZYZ 尤拉角），單位 deg。"""
     a = math.atan2(math.hypot(R[0, 2], R[1, 2]), R[2, 2])
@@ -115,42 +170,70 @@ class ArmChain:
             link = joints[link].find("parent").get("link")
         chain.reverse()
         self.prefix = prefix
-        self.elems = []   # (T_origin, axis or None, joint_name)
+        self.elems = []   # (T_origin, axis or None, child_link)
         self.names, self.lower, self.upper = [], [], []
         for j in chain:
             o = j.find("origin")
             xyz = [float(v) for v in (o.get("xyz", "0 0 0") if o is not None else "0 0 0").split()]
             rpy = [float(v) for v in (o.get("rpy", "0 0 0") if o is not None else "0 0 0").split()]
             T0 = make_T(rpy_to_mat(*rpy), xyz)
+            child = j.find("child").get("link")
             if j.get("type") == "revolute":
                 ax = np.array([float(v) for v in j.find("axis").get("xyz").split()])
                 lim = j.find("limit")
-                self.elems.append((T0, ax / np.linalg.norm(ax), j.get("name")))
+                self.elems.append((T0, ax / np.linalg.norm(ax), child))
                 self.names.append(j.get("name"))
                 self.lower.append(float(lim.get("lower")))
                 self.upper.append(float(lim.get("upper")))
             else:
-                self.elems.append((T0, None, j.get("name")))
-            if j.find("child").get("link") == f"{prefix}base_link":
+                self.elems.append((T0, None, child))
+            if child == f"{prefix}base_link":
                 self.base_index = len(self.elems)   # 之後的元素屬於手臂
         self.lower, self.upper = np.array(self.lower), np.array(self.upper)
 
-    def fk(self, q, T_tcp):
-        """回傳 (T_base, T_tcp_world, 各軸位置, 各軸 world 軸向)。"""
+        # 會動的連桿（link1～link6）表面取樣點，座標在各自 link frame
+        self.points = {}
+        links = {l.get("name"): l for l in root.findall("link")}
+        for _, ax, child in self.elems:
+            if ax is None:
+                continue
+            vis = links[child].find("visual")
+            mesh = vis.find("geometry/mesh") if vis is not None else None
+            if mesh is None:
+                continue
+            scale = float((mesh.get("scale") or "1 1 1").split()[0])
+            P = sample_stl(resolve_package_uri(mesh.get("filename")), scale, SAMPLE_SPACING)
+            o = vis.find("origin")
+            if o is not None:
+                Tv = make_T(rpy_to_mat(*[float(v) for v in o.get("rpy", "0 0 0").split()]),
+                            [float(v) for v in o.get("xyz", "0 0 0").split()])
+                P = P @ Tv[:3, :3].T + Tv[:3, 3]
+            self.points[child] = P
+
+    def fk(self, q, T_tcp, links=False):
+        """回傳 (T_base, T_tcp_world, 各軸位置, 各軸 world 軸向)；links=True 時再加上 {link: T_world}。"""
         T = np.eye(4)
         T_base = None
-        pos, axes = [], []
+        pos, axes, link_T = [], [], {}
         qi = 0
-        for idx, (T0, ax, _) in enumerate(self.elems):
+        for idx, (T0, ax, child) in enumerate(self.elems):
             T = T @ T0
             if ax is not None:
                 pos.append(T[:3, 3].copy())
                 axes.append(T[:3, :3] @ ax)
                 T = T @ make_T(axis_angle(ax, q[qi]), [0, 0, 0])
                 qi += 1
+            link_T[child] = T.copy()
             if idx + 1 == self.base_index:
                 T_base = T.copy()
+        if links:
+            return T_base, T @ T_tcp, pos, axes, link_T
         return T_base, T @ T_tcp, pos, axes
+
+    def world_points(self, q):
+        """所有會動連桿的取樣點（world 座標），回傳 {link: (N, 3)}。"""
+        link_T = self.fk(q, np.eye(4), links=True)[4]
+        return {l: P @ link_T[l][:3, :3].T + link_T[l][:3, 3] for l, P in self.points.items()}
 
     def jacobian(self, q, T_tcp):
         _, Tt, pos, axes = self.fk(q, T_tcp)
@@ -188,6 +271,7 @@ class JogNode(Node):
             "griddle": {"x": 0.0, "y": -600.0, "z": 850.0, "yaw": 0.0,
                         "length": 600.0, "width": 400.0, "thickness": 60.0},
             "tcp": {"x": 0.0, "y": 0.0, "z": 0.0},
+            "collision": {"enabled": True, "margin": 10.0},
         }
         if self.scene_file and os.path.exists(self.scene_file):
             with open(self.scene_file, encoding="utf-8") as f:
@@ -203,7 +287,8 @@ class JogNode(Node):
                   "# 長度單位 mm、角度單位 deg；座標都是 world（地面，X/Y 同 CAD）\n")
         with open(self.scene_file, "w", encoding="utf-8") as f:
             f.write(header)
-            yaml.safe_dump({k: {kk: float(vv) for kk, vv in v.items()} for k, v in self.scene.items()},
+            yaml.safe_dump({k: {kk: (bool(vv) if isinstance(vv, bool) else float(vv)) for kk, vv in v.items()}
+                            for k, v in self.scene.items()},
                            f, allow_unicode=True, sort_keys=False)
         return f"已儲存：{os.path.realpath(self.scene_file)}"
 
@@ -215,6 +300,49 @@ class JogNode(Node):
         g = self.scene["griddle"]
         return make_T(rpy_to_mat(0, 0, math.radians(g["yaw"])), [g["x"] / 1000, g["y"] / 1000, g["z"] / 1000])
 
+    # ---- 碰撞
+    def interference(self, arm, q):
+        """回傳 (干涉深度總和 m, 最嚴重的連桿, 對象)。0 = 沒有干涉。
+
+        對象：煎台（方塊加安全距離）、地面（z < 0）。
+        """
+        g = self.scene["griddle"]
+        m = self.scene["collision"]["margin"] / 1000
+        hx, hy = g["length"] / 2000 + m, g["width"] / 2000 + m
+        z_lo, z_hi = -g["thickness"] / 1000 - m, m
+        Tg = self.T_griddle()
+        total, worst, worst_link, what = 0.0, 0.0, "", ""
+        for link, P in self.chains[arm].world_points(q).items():
+            L = (P - Tg[:3, 3]) @ Tg[:3, :3]          # 轉到煎台座標
+            depth = np.minimum.reduce([hx - L[:, 0], hx + L[:, 0], hy - L[:, 1], hy + L[:, 1],
+                                       z_hi - L[:, 2], L[:, 2] - z_lo])
+            d = depth[depth > 0]
+            floor = -P[:, 2][P[:, 2] < 0]
+            for arr, name in ((d, "煎台"), (floor, "地面")):
+                if arr.size:
+                    total += float(arr.sum())
+                    if arr.max() > worst:
+                        worst, worst_link, what = float(arr.max()), link, name
+        return total, worst_link, what
+
+    def try_set(self, arm, q, ok_msg=""):
+        """碰撞檢查通過才更新手臂姿態，回傳要顯示的訊息。"""
+        if not self.scene["collision"]["enabled"]:
+            self.q[arm] = q
+            return ok_msg
+        cur, _, _ = self.interference(arm, self.q[arm])
+        new, link, what = self.interference(arm, q)
+        if new == 0.0:
+            self.q[arm] = q
+            return ok_msg
+        if new < cur - 1e-9:      # 已在干涉中：允許往脫離的方向動
+            self.q[arm] = q
+            return f"干涉中（{link.replace(arm, '')} 碰到{what}），請往外移"
+        return f"停止：{link.replace(arm, '')} 會碰到{what}"
+
+    def colliding(self):
+        return any(self.interference(p, self.q[p])[0] > 0 for p in ARMS)
+
     # ---- 吋動
     def jog_joint(self, arm, idx, direction, speed):
         c = self.chains[arm]
@@ -222,8 +350,7 @@ class JogNode(Node):
         q[idx] += direction * MAX_JNT * speed * DT
         if q[idx] < c.lower[idx] or q[idx] > c.upper[idx]:
             return f"JT{idx + 1} 到達極限"
-        self.q[arm] = q
-        return ""
+        return self.try_set(arm, q)
 
     def jog_cart(self, arm, mode, idx, direction, speed):
         c = self.chains[arm]
@@ -242,11 +369,10 @@ class JogNode(Node):
         bad = [i for i in range(len(q)) if q[i] < c.lower[i] or q[i] > c.upper[i]]
         if bad:
             return "到達軸極限：" + ", ".join(f"JT{i + 1}" for i in bad)
-        self.q[arm] = q
-        return "接近奇異點（TCP 可能跟不上指令）" if s_min < SING_THRESHOLD else ""
+        return self.try_set(arm, q, "接近奇異點（TCP 可能跟不上指令）" if s_min < SING_THRESHOLD else "")
 
     # ---- 發佈
-    def publish(self):
+    def publish(self, hit=False):
         now = self.get_clock().now().to_msg()
         js = JointState()
         js.header.stamp = now
@@ -276,7 +402,10 @@ class JogNode(Node):
         top.pose.position.z = 0.0005
         top.pose.orientation.w = 1.0
         top.scale.x, top.scale.y, top.scale.z = g["length"] / 1000 - 0.02, g["width"] / 1000 - 0.02, 0.001
-        top.color.r, top.color.g, top.color.b, top.color.a = 0.85, 0.35, 0.1, 0.9
+        if hit:   # 干涉中：煎台面變紅
+            top.color.r, top.color.g, top.color.b, top.color.a = 1.0, 0.0, 0.0, 1.0
+        else:
+            top.color.r, top.color.g, top.color.b, top.color.a = 0.85, 0.35, 0.1, 0.9
         label = Marker()
         label.header = body.header
         label.ns, label.id, label.type, label.action = "griddle", 2, Marker.TEXT_VIEW_FACING, Marker.ADD
@@ -307,7 +436,8 @@ class Panel(QWidget):
         self.arm = ARMS[0]
         self.mode = "JOINT"
         self.active = None   # (idx, direction) 按住中的按鈕
-        self.setWindowTitle("SmartCook V2 吋動面板")
+        # 標題列由 WSLg 繪製，用不到我們載入的中文字型，所以用英文
+        self.setWindowTitle("SmartCook V2 Jog Panel")
         lay = QVBoxLayout(self)
 
         # 手臂 / 座標模式
@@ -365,7 +495,8 @@ class Panel(QWidget):
 
         # 目前位置
         self.pose_lbl = QLabel()
-        self.pose_lbl.setStyleSheet("font-family: monospace;")
+        # 等寬字放數字，中文字退回到載入的中文字型
+        self.pose_lbl.setStyleSheet(f"font-family: 'DejaVu Sans Mono', '{QApplication.font().family()}';")
         self.pose_lbl.setTextInteractionFlags(Qt.TextSelectableByMouse)
         lay.addWidget(self.pose_lbl)
         self.msg_lbl = QLabel()
@@ -396,7 +527,19 @@ class Panel(QWidget):
         gl.addLayout(row2, 1, 0)
         lay.addWidget(g_box)
 
-        save = QPushButton("儲存設定（煎台 + TCP）")
+        # 碰撞檢查
+        c_box = QGroupBox("碰撞檢查（手臂 vs 煎台、地面）")
+        cl = QHBoxLayout(c_box)
+        self.coll_chk = QCheckBox("啟用")
+        self.coll_chk.setChecked(bool(self.node.scene["collision"]["enabled"]))
+        self.coll_chk.toggled.connect(lambda on: self.node.scene["collision"].__setitem__("enabled", on))
+        cl.addWidget(self.coll_chk)
+        self.spin(cl, "collision", "margin", "安全距離 mm", 0, 200)
+        self.coll_lbl = QLabel()
+        cl.addWidget(self.coll_lbl)
+        lay.addWidget(c_box)
+
+        save = QPushButton("儲存設定（煎台 + TCP + 碰撞）")
         save.clicked.connect(lambda: self.msg_lbl.setText(self.node.save_scene()))
         lay.addWidget(save)
 
@@ -437,8 +580,8 @@ class Panel(QWidget):
         self.active = None
 
     def go_home(self):
-        for p in ARMS:
-            self.node.q[p][:] = 0.0
+        msgs = [self.node.try_set(p, np.zeros_like(self.node.q[p])) for p in ARMS]
+        self.msg_lbl.setText("；".join(m for m in msgs if m))
 
     def tick(self):
         if self.active:
@@ -449,7 +592,10 @@ class Panel(QWidget):
             else:
                 msg = self.node.jog_cart(self.arm, self.mode, idx, d, s)
             self.msg_lbl.setText(msg)
-        self.node.publish()
+        hit = self.node.colliding()
+        self.coll_lbl.setText("⚠ 干涉中" if hit else "OK")
+        self.coll_lbl.setStyleSheet("color: red; font-weight: bold;" if hit else "color: green;")
+        self.node.publish(hit)
         self.show_pose()
         rclpy.spin_once(self.node, timeout_sec=0)
 
@@ -470,10 +616,27 @@ class Panel(QWidget):
         self.pose_lbl.setText("\n".join(lines))
 
 
+def setup_cjk_font(app, node):
+    """系統已有中文字型就不動；沒有的話載入 CJK_FONT_FILES 裡第一個找得到的。"""
+    if any(QFontDatabase().families(QFontDatabase.TraditionalChinese)):
+        return
+    for path in CJK_FONT_FILES:
+        if not os.path.exists(path):
+            continue
+        fid = QFontDatabase.addApplicationFont(path)
+        families = QFontDatabase.applicationFontFamilies(fid) if fid >= 0 else []
+        if families:
+            app.setFont(QFont(families[0], app.font().pointSize()))
+            node.get_logger().info(f"中文字型：{families[0]}（{path}）")
+            return
+    node.get_logger().warn("找不到中文字型，面板上的中文會顯示成方塊；可安裝 fonts-noto-cjk")
+
+
 def main():
     rclpy.init(args=sys.argv)
     node = JogNode()
     app = QApplication(sys.argv)
+    setup_cjk_font(app, node)
     panel = Panel(node)
     panel.show()
     code = app.exec_()
