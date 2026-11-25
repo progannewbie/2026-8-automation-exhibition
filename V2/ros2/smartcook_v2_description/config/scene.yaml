@@ -1,0 +1,14 @@
+# SmartCook V2 模擬場景設定（jog_panel 的「儲存設定」會覆寫這個檔）
+# 長度單位 mm、角度單位 deg；座標都是 world（地面，X/Y 同 CAD）
+griddle:
+  x: 0.0
+  y: 600.0
+  z: 850.0
+  yaw: 0.0
+  length: 600.0
+  width: 400.0
+  thickness: 60.0
+tcp:
+  x: 0.0
+  y: 0.0
+  z: 0.0

@@ -18,3 +18,6 @@
 *.stl binary
 *.step binary
 *.ics binary
+
+# ROS 2 的 Python 腳本在 WSL 直接執行，一律 LF
+V2/ros2/**/*.py text eol=lf

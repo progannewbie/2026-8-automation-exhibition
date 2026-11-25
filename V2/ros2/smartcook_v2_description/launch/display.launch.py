@@ -1,4 +1,4 @@
-"""在 RViz 顯示 SmartCook V2 底座 + 兩支側裝 RS007L，附關節滑桿。
+"""在 RViz 顯示 SmartCook V2 底座 + 兩支側裝 RS007L + 煎台，附吋動面板。
 
     ros2 launch smartcook_v2_description display.launch.py
     ros2 launch smartcook_v2_description display.launch.py mount_roll:=1.5708
@@ -38,9 +38,15 @@ def generate_launch_description():
             executable="robot_state_publisher",
             parameters=[{"robot_description": robot_description}],
         ),
+        # 吋動面板：軸 / 基座 / 工具 / 世界座標吋動，並調整煎台位置（取代 joint_state_publisher_gui）
         Node(
-            package="joint_state_publisher_gui",
-            executable="joint_state_publisher_gui",
+            package="smartcook_v2_description",
+            executable="jog_panel.py",
+            parameters=[{
+                "robot_description": robot_description,
+                # colcon --symlink-install 時這是指回 repo 的連結，儲存會直接寫回 repo 的 config/scene.yaml
+                "scene_file": os.path.join(share, "config", "scene.yaml"),
+            }],
         ),
         Node(
             package="rviz2",
