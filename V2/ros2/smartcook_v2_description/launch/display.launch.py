@@ -7,10 +7,24 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import Command, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
+
+# 最早「手臂裝在立柱頂端」版本的參數。現在改成側裝，這些參數不存在了；
+# 但 mount_y / mount_z 名稱還在、意思不同，舊指令會把手臂裝到立柱裡、一直顯示干涉。
+OLD_ARGS = ("mount_x", "mount_yaw")
+
+
+def check_old_args(context):
+    old = [a for a in OLD_ARGS if a in context.launch_configurations]
+    if old:
+        raise RuntimeError(
+            f"{', '.join(old)} 是舊版（手臂裝在立柱頂端）的參數，現在手臂側裝在立柱兩側。\n"
+            "直接用：ros2 launch smartcook_v2_description display.launch.py\n"
+            "要調安裝位置改用 plate_x / mount_y / mount_z / mount_roll（見 V2/ros2/README.md）。")
+    return []
 
 
 def generate_launch_description():
@@ -33,6 +47,7 @@ def generate_launch_description():
     robot_description = ParameterValue(Command(xacro_cmd), value_type=str)
 
     return LaunchDescription(declares + [
+        OpaqueFunction(function=check_old_args),
         Node(
             package="robot_state_publisher",
             executable="robot_state_publisher",
