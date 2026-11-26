@@ -38,8 +38,8 @@ gripper:
   mount_diameter: 63.0
   mount_thickness: 12.0
 tray:
-  x: 0.0
-  y: 1000.0
+  x: 450.0
+  y: 950.0
   z: 850.0
   yaw: 0.0
   length: 450.0

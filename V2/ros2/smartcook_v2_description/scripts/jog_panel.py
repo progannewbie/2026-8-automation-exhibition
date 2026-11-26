@@ -31,8 +31,9 @@
   夾爪是參數化平行雙指，TCP 在指尖中心；開合量即時顯示、也算進碰撞檢查。
 
 取料、翻面（都先規劃整條路徑：逆運動學 + 每一步碰撞檢查，全部可行才開始動）
-  取料（兩把平鏟）：右鏟放平貼托盤 → 左鏟尖朝下把肉排刮上右鏟 → 右鏟端到煎台
-        → 左鏟擋在肉排後面、右鏟抽出，肉排落到煎台 → 兩支回到出發位置。
+  取料（兩把平鏟）：左鏟放平貼托盤 → 右鏟尖朝下把肉排刮上左鏟 → 左鏟保持水平端到煎台
+        → 右鏟擋在肉排後面、左鏟抽出，肉排落到煎台 → 右鏟回出發位置
+        → 完整流程：左鏟直接貼著煎台鏟回肉排底下翻面（整段一次規劃、動作連續）。
   取料（有一支是夾爪）：夾起 → 搬到煎台 → 放開。
   翻面：平鏟鏟進肉排底下 → 抬起 → 繞把手方向（轉軸通過肉排中心）轉 180°
         → 肉排滑落、翻面落回煎台 → 轉回 → 退回上方。
@@ -72,6 +73,8 @@ CJK_FONT_FILES = [
 
 ARMS = ["right_", "left_"]
 ARM_NAMES = {"right_": "右臂 (+X)", "left_": "左臂 (-X)"}
+ARM_SIDE = {"right_": "右", "left_": "左"}
+PICKUP_CARRIER, PICKUP_SCRAPER = "left_", "right_"   # 兩把平鏟取料：左鏟接著端、右鏟刮
 MODES = ["JOINT", "BASE", "TOOL", "WORLD"]
 MODE_NAMES = {"JOINT": "軸", "BASE": "基座", "TOOL": "工具", "WORLD": "世界"}
 
@@ -301,7 +304,7 @@ TOOL_PART_NAMES = {
     "gripper": {"mount": "夾爪法蘭座", "body": "夾爪本體", "finger_l": "夾指", "finger_r": "夾指"},
 }
 TRAY_DEFAULT = {
-    "x": 0.0, "y": 1000.0, "z": 850.0, "yaw": 0.0,      # 托盤頂面中心（world）：煎台再過去一點
+    "x": 450.0, "y": 950.0, "z": 850.0, "yaw": 0.0,     # 托盤頂面中心（world）：煎台右前角（兩支手臂動作最順）
     "length": 450.0, "width": 200.0, "thickness": 20.0,
     "count": 3.0, "spacing": 140.0,                     # 沿托盤長邊排幾片、間距
 }
@@ -583,7 +586,7 @@ class JogNode(Node):
         """另一支手臂的 KD-tree：(連桿 + base_link, 工具)，姿態沒變就沿用。other_q：規劃時指定它的姿態。"""
         other = ARMS[1] if arm == ARMS[0] else ARMS[0]
         q = self.q[other] if other_q is None else other_q
-        key = (q.tobytes(), self.tool_key(other))
+        key = (other, q.tobytes(), self.tool_key(other))   # 要含手臂名稱：兩支姿態相同時不能拿錯
         cached = self._arm_tree.get(key)
         if cached is None:
             pts = self.arm_points(other, q, include_base=True)
@@ -855,11 +858,11 @@ class JogNode(Node):
                 return f"{part_name(arm, link)} 會碰到{what}"
         return None
 
-    def flip_poses(self, theta):
-        """鏟入方向 theta（deg，煎台座標）時的關鍵 TCP 姿態（world）。"""
+    def flip_poses(self, theta, patty_T=None):
+        """鏟入方向 theta（deg，煎台座標）時的關鍵 TCP 姿態（world）。patty_T：肉排位置，None = 目前的。"""
         p = self.scene["patty"]
         Tg = self.T_griddle()
-        L = np.linalg.inv(Tg) @ self.patty["T"]
+        L = np.linalg.inv(Tg) @ (self.patty["T"] if patty_T is None else patty_T)
         c = np.array([L[0, 3], L[1, 3], 0.0])        # 肉排目前位置（煎台座標）
         t = math.radians(theta)
         d = np.array([math.cos(t), math.sin(t), 0.0])
@@ -875,16 +878,17 @@ class JogNode(Node):
         return {"pre": T(start, 0.15), "down": T(start, FLIP_GAP),
                 "slide": T(end, FLIP_GAP), "lift": T(end, FLIP_GAP + p["lift"] / 1000)}
 
-    def plan_flip(self, arm, q0, theta0, auto=True):
-        """規劃整個翻面動作。成功回傳 {"frames": [(q, 階段, 事件)], "theta"}，失敗回傳原因字串。"""
+    def plan_flip(self, arm, q0, theta0, auto=True, patty_T=None, other_q=None):
+        """規劃整個翻面動作。成功回傳 {"frames": [(q, 階段, 事件)], "theta"}，失敗回傳原因字串。
+        patty_T / other_q：接在別的動作後面時，用預測的肉排位置、另一支手臂姿態規劃（None = 目前的）。"""
         p, sp = self.scene["patty"], self.scene["spatula"]
         if self.tool(arm) != "spatula":
             return f"{ARM_NAMES[arm]}裝的不是平鏟"
-        if self.patty is None:
-            return "煎台上沒有肉排：先「取料放上煎台」或「放肉排」"
+        if patty_T is None and self.patty is None:
+            return "煎台上沒有肉排：先「取料放上煎台」或「從煎台開始」"
         if sp["blade_length"] < p["diameter"] + 10:
             return f"鏟面長 {sp['blade_length']:.0f} mm 太短，至少要比肉排直徑多 10 mm"
-        if self.patty["mode"] != "rest":
+        if patty_T is None and self.patty["mode"] != "rest":
             return "肉排不在煎台上"
         cands = [theta0]
         if auto:
@@ -895,15 +899,19 @@ class JogNode(Node):
             if round(th) in seen:
                 continue
             seen.add(round(th))
-            res = self._plan_flip_dir(arm, q0, th)
+            res = self._plan_flip_dir(arm, q0, th, patty_T, other_q)
             if isinstance(res, list):
                 return {"frames": res, "theta": th}
             reasons.append(f"{th:.0f}°：{res}")
         return "找不到可行的翻面路徑\n" + "\n".join(reasons[:6]) + ("\n…" if len(reasons) > 6 else "")
 
-    def _plan_flip_dir(self, arm, q0, theta):
+    def _plan_flip_dir(self, arm, q0, theta, patty_T=None, other_q=None):
         c = self.chains[arm]
-        poses = self.flip_poses(theta)
+        poses = self.flip_poses(theta, patty_T)
+        # 鏟子已經放平貼在煎台、就在鏟入起點旁邊（例如剛把肉排放下來）：直接貼著煎台滑過去，不用先抬高
+        T0 = c.fk(q0, self.T_tcp(arm))[1]
+        near = (np.linalg.norm(T0[:3, 3] - poses["down"][:3, 3]) < 0.06 and
+                np.linalg.norm(Rotation.from_matrix(T0[:3, :3].T @ poses["down"][:3, :3]).as_rotvec()) < 0.1)
         # 先只算運動學（便宜），全部解得到再做碰撞檢查（貴）
         sols = []
         rng = np.random.default_rng(0)
@@ -920,7 +928,7 @@ class JogNode(Node):
         sols.sort(key=lambda q: float(np.abs(q - q0).sum()))
         why = "鏟入路徑解不到"
         for q_pre in sols[:3]:
-            down = self.plan_linear(arm, q_pre, poses["down"])
+            down = self.plan_linear(arm, q0 if near else q_pre, poses["down"])
             slide = down and self.plan_linear(arm, down[-1], poses["slide"])
             lift = slide and self.plan_linear(arm, slide[-1], poses["lift"])
             if not lift:
@@ -954,7 +962,7 @@ class JogNode(Node):
             # 碰撞：局部動作先檢查
             hit = None
             for name, qs in (("下降", down), ("鏟進肉排", slide), ("抬起", lift), ("退回", back)):
-                h = self.first_hit(arm, qs)
+                h = self.first_hit(arm, qs, other_q=other_q)
                 if h:
                     hit = f"{name}時{h}"
                     break
@@ -963,7 +971,7 @@ class JogNode(Node):
                 continue
             flip = None
             for qs in flips:
-                h = self.first_hit(arm, qs)
+                h = self.first_hit(arm, qs, other_q=other_q)
                 if h is None:
                     flip = qs
                     break
@@ -971,18 +979,18 @@ class JogNode(Node):
             if flip is None:
                 continue
             # 移到肉排旁：直接走軸，撞到的話先抬到更高再直線下來
-            approach = self.plan_joint(q0, q_pre)
-            h = self.first_hit(arm, approach)
+            approach = [] if near else self.plan_joint(q0, q_pre)
+            h = self.first_hit(arm, approach, other_q=other_q)
             if h:
                 q_high = self.ik(arm, poses["pre"] @ make_T(np.eye(3), [0, 0, -0.25]), q_pre)   # TCP Z 朝下，-Z = 往上
                 to_pre = q_high is not None and self.plan_linear(arm, q_high, poses["pre"])
                 approach2 = to_pre and self.plan_joint(q0, q_high) + to_pre
-                if not approach2 or self.first_hit(arm, approach2):
+                if not approach2 or self.first_hit(arm, approach2, other_q=other_q):
                     why = f"移到肉排旁時{h}"
                     continue
                 approach = approach2
             frames = [(q, "移到肉排旁", None) for q in approach]
-            frames += [(q, "下降", None) for q in down]
+            frames += [(q, "貼著煎台移到肉排前" if near else "下降", None) for q in down]
             frames += [(q, "鏟進肉排底下", None) for q in slide]
             frames[-1] = (frames[-1][0], "鏟進肉排底下", "attach")
             frames += [(q, "抬起", None) for q in lift]
@@ -995,20 +1003,43 @@ class JogNode(Node):
             return frames
         return why
 
+    @staticmethod
+    def joint_cost(q0, q1):
+        """移動量：最慢那一軸（決定時間）＋其他軸總和的一部分（避免多餘的甩動）。"""
+        d = np.abs(np.asarray(q1) - np.asarray(q0))
+        return float(d.max() + 0.3 * d.sum())
+
     def ik_multi(self, arm, T, q0):
-        """從幾個起點解 IK，回傳不重複的解，離 q0 近的排前面。"""
+        """從幾個起點解 IK，回傳不重複的解，移動量最小（離 q0 最近、最不甩）的排前面。
+        同一次規劃裡同樣的問題會重複問，結果記起來。"""
+        memo = getattr(self, "_ik_memo", None)
+        if memo is None or len(memo) > 2000:
+            memo = self._ik_memo = {}
+        key = (arm, np.round(T, 6).tobytes(), np.round(q0, 6).tobytes(), self.tool_key(arm))
+        if key in memo:
+            return memo[key]
         c = self.chains[arm]
         rng = np.random.default_rng(0)
+        seeds = [q0, np.zeros(6)]
+        for j in (3, 5):                       # 手腕（JT4 / JT6）轉半圈的起點：常常是比較順的解
+            for sgn in (1, -1):
+                sd = np.array(q0, dtype=float)
+                sd[j] += sgn * math.pi
+                seeds.append(np.clip(sd, c.lower, c.upper))
+        seeds += [rng.uniform(c.lower, c.upper) * 0.8 for _ in range(4)]
         sols = []
-        for k in range(10):
-            if k == 2 and sols:
-                break
-            seed = (q0, np.zeros(6))[k] if k < 2 else rng.uniform(c.lower, c.upper) * 0.8
+        for seed in seeds:
             q = self.ik(arm, T, seed)
             if q is not None and all(np.abs(q - o).max() > 1e-2 for o in sols):
                 sols.append(q)
-        sols.sort(key=lambda q: float(np.abs(q - q0).sum()))
+        sols.sort(key=lambda q: self.joint_cost(q0, q))
+        memo[key] = sols
         return sols
+
+    def ik_cost(self, arm, T, q0, rise=0.15):
+        """移到 T 上方 rise 的最小移動量（解不到 = 無限大），用來排方向的先後。"""
+        sols = self.ik_multi(arm, make_T(T[:3, :3], T[:3, 3] + [0, 0, rise]), q0)
+        return self.joint_cost(q0, sols[0]) if sols else math.inf
 
     def plan_transfer(self, arm, q0, q1, T1, opening=None, other_q=None):
         """q0 走到 q1（TCP 在 T1）：先試直接走軸，撞到的話先抬高 250 mm 再直線下來。
@@ -1140,11 +1171,17 @@ class JogNode(Node):
         low = min(0.0, -t * R[2, 2])          # 鏟尖頂面那條邊（TCP − t·Z）可能比 TCP 低
         return T_surf @ make_T(R, [tip_xy[0], tip_xy[1], height - low])
 
-    def approach(self, arm, q0, T, other_q, rise=0.15):
-        """從 q0 移到 T 上方 rise，再直線下到 T。回傳 (軸角度清單, None) 或 (None, 原因)。"""
+    def approach(self, arm, q0, T, other_q, rise=0.15, prefer=None):
+        """從 q0 移到 T 上方 rise，再直線下到 T。回傳 (軸角度清單, None) 或 (None, 原因)。
+        prefer：上方那一點想要的手臂姿勢（軸角度），有的話先試。"""
         why = "到不了"
         T_pre = make_T(T[:3, :3], T[:3, 3] + [0, 0, rise])
-        for q_pre in self.ik_multi(arm, T_pre, q0)[:3]:
+        sols = self.ik_multi(arm, T_pre, q0)[:3]
+        if prefer is not None:
+            q = self.ik(arm, T_pre, prefer)
+            if q is not None:
+                sols = [q] + sols
+        for q_pre in sols:
             down = self.plan_linear(arm, q_pre, T)
             if not down:
                 why = "下降路徑解不到"
@@ -1160,6 +1197,47 @@ class JogNode(Node):
             return go + down, None
         return None, why
 
+    def max_tilt(self, arm, qs):
+        """路徑上鏟面最大傾斜角 (rad)：TCP 的 Z（鏟面底面法向）和正下方的夾角。"""
+        c, T_tcp = self.chains[arm], self.T_tcp(arm)
+        return max((math.acos(np.clip(-c.fk(q, T_tcp)[1][2, 2], -1, 1)) for q in qs), default=0.0)
+
+    def carry(self, arm, q0, T, other_q, rise=0.15, max_tilt=math.radians(30)):
+        """端著肉排移到 T 上方 rise 再直線下到 T，全程鏟面傾斜不超過 max_tilt（不然肉排會滑掉）。
+        先試直線（鏟面一直放平），撞到或解不到再試走軸。回傳 (軸角度清單, None) 或 (None, 原因)。"""
+        T_pre = make_T(T[:3, :3], T[:3, 3] + [0, 0, rise])
+        why = "端過去的路徑解不到"
+        options = []
+        straight = self.plan_linear(arm, q0, T_pre)
+        if straight:
+            options.append(straight)
+        for q_pre in self.ik_multi(arm, T_pre, q0)[:3]:
+            options.append(self.plan_joint(q0, q_pre))
+            T_high = make_T(T[:3, :3], T[:3, 3] + [0, 0, rise + 0.25])      # 先抬高再過去
+            q_high = self.ik(arm, T_high, q0)
+            up_path = q_high is not None and self.plan_linear(arm, q0, T_high)
+            down_path = up_path and self.plan_linear(arm, up_path[-1], T_pre)
+            if down_path:
+                options.append(up_path + down_path)
+        for path in options:
+            if self.max_tilt(arm, path) > max_tilt:
+                why = f"端過去時鏟面會傾斜超過 {math.degrees(max_tilt):.0f}°（肉排會滑掉）"
+                continue
+            h = self.first_hit(arm, path, other_q=other_q)
+            if h:
+                why = f"端過去時{h}"
+                continue
+            down = self.plan_linear(arm, path[-1], T)
+            if not down:
+                why = "放下路徑解不到"
+                continue
+            h = self.first_hit(arm, down, other_q=other_q)
+            if h:
+                why = f"放下時{h}"
+                continue
+            return path + down, None
+        return None, why
+
     def lin(self, arm, q0, T, other_q, what):
         """直線移動 + 碰撞檢查，回傳 (軸角度清單, None) 或 (None, 原因)。"""
         path = self.plan_linear(arm, q0, T)
@@ -1168,9 +1246,11 @@ class JogNode(Node):
         h = self.first_hit(arm, path, other_q=other_q)
         return (None, f"{what}時{h}") if h else (path, None)
 
-    def plan_two_spatula(self, rcv, scr, q0r, q0s):
+    def plan_two_spatula(self, rcv, scr, q0r, q0s, then_flip=False):
         """兩把平鏟取料：scr（刮的那支）把托盤上的肉排刮到 rcv（接的那支）的鏟面上，
         rcv 端到煎台，scr 從後面擋住肉排、rcv 往後抽出來，肉排落在煎台設定位置。
+        then_flip：放下後接著用 rcv 翻面（不回出發位置、不另外規劃）。
+        方向（托盤上刮的方向、煎台上放的方向）先用 IK 粗估移動量排序，動最少的先試，動作比較順。
         成功回傳 {"frames"}（每格是 {手臂: 軸角度}），失敗回傳原因。"""
         pp, sp = self.scene["patty"], self.scene["spatula"]
         if self.tool(rcv) != "spatula" or self.tool(scr) != "spatula":
@@ -1183,6 +1263,7 @@ class JogNode(Node):
         if sp["blade_length"] < pp["diameter"] + 10:
             return f"鏟面長 {sp['blade_length']:.0f} mm 太短，至少要比肉排直徑多 10 mm"
         slot = slots[0]
+        self._ik_memo = {}
         r, t = pp["diameter"] / 2000, sp["blade_thickness"] / 1000
         lift = pp["lift"] / 1000
         tilt = math.radians(45)               # 刮的那支鏟尖朝下 45°，像一面牆推肉排
@@ -1196,8 +1277,51 @@ class JogNode(Node):
         # ---- 1. 刮上鏟面（在托盤上）
         #   rcv 鏟面放平，鏟尖朝向肉排（d），停在肉排前 10 mm
         #   scr 從肉排另一邊（+d 那側）往 -d 推，推到鏟尖離 rcv 鏟尖 8 mm
-        reasons, pick = [], None
+        def pick_poses(th):
+            d = np.array([math.cos(math.radians(th)), math.sin(math.radians(th))])
+            return (d, self.spatula_pose(T_tray, P - (r + 0.010) * d, d, FLIP_GAP),
+                    self.spatula_pose(T_tray, P + (r + 0.030) * d, -d, 0.003, tilt))
+
+        # 擋肉排的那支有兩種拿法（鏟尖都在肉排正後方、比接的鏟面高 6 mm）：
+        #   +1：鏟尖朝肉排、鏟面往後翹 45°（像一面牆）
+        #   -1：鏟尖朝外、鏟面斜靠在肉排上方 60°（和刮的時候同一個朝向，手臂不用大翻轉）
+        def place_poses(ph, way):
+            d = np.array([math.cos(math.radians(ph)), math.sin(math.radians(ph))])
+            T_sh = self.spatula_pose(T_g, G - (r + 0.003) * d, way * d, FLIP_GAP + t + 0.006,
+                                     tilt if way > 0 else math.radians(60))
+            return self.spatula_pose(T_g, G + (r - 0.008) * d, d, FLIP_GAP), T_sh
+
+        # 刮的那支：托盤上刮的姿勢要和等一下在煎台上擋的姿勢同一邊（手肘、手腕），
+        # 不然中間要整個翻過去（JT3、JT5 轉 200° 左右）。先把兩邊所有姿勢解出來配對，挑最接近的。
+        cs = self.chains[scr]
+        rng = np.random.default_rng(1)
+        seeds = [q0s, np.zeros(6)] + [rng.uniform(cs.lower, cs.upper) * 0.9 for _ in range(8)]
+
+        def all_sols(T):
+            out = []
+            for sd in seeds:
+                q = self.ik(scr, T, sd)
+                if q is not None and all(np.abs(q - o).max() > 0.05 for o in out):
+                    out.append(q)
+            return out
+
+        holds = [q for ph in range(0, 360, 30) for way in (1, -1)
+                 for q in all_sols(up(place_poses(ph, way)[1], 0.12))]
+        prefer, pair_cost = {}, {}
         for th in range(0, 360, 30):
+            best = (math.inf, None)
+            for qa in all_sols(up(pick_poses(th)[2], 0.15)):
+                cost = min((self.joint_cost(qa, qb) for qb in holds), default=math.inf) \
+                    + 0.3 * self.joint_cost(q0s, qa)
+                best = min(best, (cost, qa), key=lambda x: x[0])
+            pair_cost[th], prefer[th] = best
+
+        # 每個方向先粗估要動多少，動最少（最順）的先試。從出發姿態第一次移過去的量只算一部分
+        # （只發生一次），主要看刮完到煎台擋肉排之間順不順。
+        order = sorted(range(0, 360, 30),
+                       key=lambda th: 0.3 * self.ik_cost(rcv, pick_poses(th)[1], q0r) + pair_cost[th])
+        reasons, pick = [], None
+        for th in order:
             d = np.array([math.cos(math.radians(th)), math.sin(math.radians(th))])
             T_r = self.spatula_pose(T_tray, P - (r + 0.010) * d, d, FLIP_GAP)
             T_s0 = self.spatula_pose(T_tray, P + (r + 0.030) * d, -d, 0.003, tilt)
@@ -1206,7 +1330,7 @@ class JogNode(Node):
             if why:
                 reasons.append(f"{th}°：{ARM_NAMES[rcv]}{why}")
                 continue
-            s_in, why = self.approach(scr, q0s, T_s0, r_in[-1])
+            s_in, why = self.approach(scr, q0s, T_s0, r_in[-1], prefer=prefer[th])
             push = s_in and self.lin(scr, s_in[-1], T_s1, r_in[-1], "推肉排")
             s_out = push and push[0] and self.lin(scr, push[0][-1], up(T_s1, 0.12), r_in[-1], "抬起")
             if why or not push[0] or not s_out[0]:
@@ -1216,23 +1340,29 @@ class JogNode(Node):
             if why:
                 reasons.append(f"{th}°：{ARM_NAMES[rcv]}{why}")
                 continue
-            pick = (r_in, s_in, push[0], s_out[0], r_up, 0.030 / (2 * r + 0.032))
+            pick = (r_in, s_in, push[0], s_out[0], r_up, 0.030 / (2 * r + 0.032), T_s0)
             break
         if not pick:
             return "托盤上刮不到肉排（每個方向失敗的原因）\n" + "\n".join(reasons)
-        r_in, s_in, push, s_out, r_up, contact = pick
+        r_in, s_in, push, s_out, r_up, contact, T_s0 = pick
         qr, qs = r_up[-1], s_out[-1]
 
         # ---- 2. 放上煎台
         #   rcv 把鏟面放平在煎台上，肉排中心對準設定位置（肉排中心在鏟尖後 r - 8 mm）
         #   scr 鏟尖在肉排後面擋住（比 rcv 鏟面高 6 mm），rcv 往後抽出來
+        order = sorted(((ph, way) for ph in range(0, 360, 30) for way in (1, -1)),
+                       key=lambda pw: self.ik_cost(rcv, place_poses(*pw)[0], qr)
+                       + self.ik_cost(scr, place_poses(*pw)[1], qs))
         reasons, place = [], None
-        for ph in range(0, 360, 30):
+        for ph, way in order:
+            if math.isinf(self.ik_cost(rcv, place_poses(ph, way)[0], qr)
+                          + self.ik_cost(scr, place_poses(ph, way)[1], qs)):
+                reasons.append(f"{ph}°：到不了")
+                continue
             d = np.array([math.cos(math.radians(ph)), math.sin(math.radians(ph))])
-            T_rp = self.spatula_pose(T_g, G + (r - 0.008) * d, d, FLIP_GAP)
-            T_sh = self.spatula_pose(T_g, G - (r + 0.003) * d, d, FLIP_GAP + t + 0.006, tilt)
+            T_rp, T_sh = place_poses(ph, way)
             T_rw = self.spatula_pose(T_g, G - (r + 0.023) * d, d, FLIP_GAP)
-            r_go, why = self.approach(rcv, qr, T_rp, qs)
+            r_go, why = self.carry(rcv, qr, T_rp, qs)
             if why:
                 reasons.append(f"{ph}°：{ARM_NAMES[rcv]}{why}")
                 continue
@@ -1253,11 +1383,11 @@ class JogNode(Node):
             if why:
                 reasons.append(f"{ph}°：{ARM_NAMES[rcv]}{why}")
                 continue
-            place = (r_go, s_go, pull, r_out, s_back, (r - 0.008) / (2 * r + 0.015))
+            place = (r_go, s_go, pull, r_out, s_back, (r - 0.008) / (2 * r + 0.015), ph, way)
             break
         if not place:
             return "煎台上放不下去（每個方向失敗的原因）\n" + "\n".join(reasons)
-        r_go, s_go, pull, r_out, s_back, drop = place
+        r_go, s_go, pull, r_out, s_back, drop, ph, _ = place
 
         # ---- 組成每一格兩支手臂的姿態
         cur = {rcv: q0r, scr: q0s}
@@ -1268,24 +1398,44 @@ class JogNode(Node):
                 cur[arm] = q
                 frames.append((dict(cur), phase, (events or {}).get(i)))
 
-        add(rcv, r_in, "右鏟移到托盤" if rcv == ARMS[0] else "接的鏟子移到托盤")
-        add(scr, s_in, "左鏟移到肉排後面" if scr == ARMS[1] else "刮的鏟子移到肉排後面")
-        add(scr, push, "把肉排刮上鏟面", {min(int(len(push) * contact), len(push) - 1): ("push", scr, slot),
-                                       len(push) - 1: ("attach", rcv)})
-        add(scr, s_out, "刮的鏟子抬起")
-        add(rcv, r_up, "端起肉排")
+        rn, sn = ARM_SIDE[rcv], ARM_SIDE[scr]
+        add(rcv, r_in, f"{rn}鏟移到托盤")
+        add(scr, s_in, f"{sn}鏟移到肉排後面")
+        add(scr, push, f"{sn}鏟把肉排刮上{rn}鏟", {min(int(len(push) * contact), len(push) - 1): ("push", scr, slot),
+                                                 len(push) - 1: ("attach", rcv)})
+        add(scr, s_out, f"{sn}鏟抬起")
+        add(rcv, r_up, f"{rn}鏟端起肉排")
         add(rcv, r_go, "搬到煎台")
-        add(scr, s_go, "刮的鏟子擋在肉排後面")
-        add(rcv, pull, "抽出鏟子、肉排落到煎台", {0: ("hold",), min(int(len(pull) * drop), len(pull) - 1): "release"})
-        add(scr, s_back, "抬起")
-        add(rcv, r_out, "抬起")
-        # 兩支都回到出發姿態，讓出煎台給下一個動作（翻面）；回不去就停在上方
-        s_home, _ = self.plan_transfer(scr, s_back[-1], q0s, self.chains[scr].fk(q0s, self.T_tcp(scr))[1],
-                                       other_q=r_out[-1])
-        add(scr, s_home or [], "回到出發位置")
+        add(scr, s_go, f"{sn}鏟擋在肉排後面")
+        add(rcv, pull, f"{rn}鏟抽出、肉排落到煎台",
+            {0: ("hold",), min(int(len(pull) * drop), len(pull) - 1): "release"})
+        add(scr, s_back, f"{sn}鏟抬起")
+        # 刮的那支讓出煎台：回到托盤上方（準備下一片），不行再回出發姿態
+        T_ready = make_T(T_s0[:3, :3], T_s0[:3, 3] + [0, 0, 0.15])
+        s_home, ready_name = None, f"{sn}鏟回到托盤上方"
+        for q_ready in self.ik_multi(scr, T_ready, s_back[-1])[:3]:
+            s_home, _ = self.plan_transfer(scr, s_back[-1], q_ready, T_ready, other_q=pull[-1])
+            if s_home:
+                break
+        if not s_home:
+            s_home, _ = self.plan_transfer(scr, s_back[-1], q0s, self.chains[scr].fk(q0s, self.T_tcp(scr))[1],
+                                           other_q=pull[-1])
+            ready_name = f"{sn}鏟回到出發位置"
+        add(scr, s_home or [], ready_name)
+        if then_flip:
+            # 接著翻面：rcv 現在鏟面放平、就在肉排後面，先試同一個方向直接貼著煎台鏟回去
+            G_T = T_g @ make_T(np.eye(3), [G[0], G[1], pp["thickness"] / 2000])
+            flip = self.plan_flip(rcv, pull[-1], float(ph), True, G_T, cur[scr])
+            if isinstance(flip, str):
+                return "放上煎台可以，但接著翻面不行：\n" + flip
+            for q, phase, ev in flip["frames"]:
+                cur[rcv] = q
+                frames.append((dict(cur), phase, ev))
+            return {"frames": frames, "title": "取料 → 翻面", "theta": flip["theta"]}
+        add(rcv, r_out, f"{rn}鏟抬起")
         r_home, _ = self.plan_transfer(rcv, r_out[-1], q0r, self.chains[rcv].fk(q0r, self.T_tcp(rcv))[1],
                                        other_q=cur[scr])
-        add(rcv, r_home or [], "回到出發位置")
+        add(rcv, r_home or [], f"{rn}鏟回到出發位置")
         return {"frames": frames, "title": "取料"}
 
     def start_motion(self, arm, plan, title="翻面"):
@@ -1678,7 +1828,7 @@ class Panel(QWidget):
         r2.addWidget(self.auto_dir)
         self.spin(r2, "patty", "lift", "抬高", 30, 400)
         self.task_btns = []
-        for text, kinds, row in (("完整流程：取料 → 翻面", ["pick", "flip"], r3),
+        for text, kinds, row in (("完整流程：取料 → 放上煎台 → 翻面", ["full"], r3),
                                  ("取料放上煎台", ["pick"], r3), ("翻面", ["flip"], r3)):
             b = QPushButton(text)
             b.clicked.connect(lambda _, k=kinds: self.start_task(k))
@@ -1754,7 +1904,7 @@ class Panel(QWidget):
 
     def task_arm(self, kind):
         """翻面：裝平鏟的手臂（兩支都是時用目前選的那支）。
-        取料：兩支都是平鏟時回傳 "both"（右臂接、左臂刮）；否則用裝夾爪的那支。"""
+        取料 / 完整流程：兩支都是平鏟時回傳 "both"（左鏟接、右鏟刮）；否則用裝夾爪的那支。"""
         spat = [a for a in ARMS if self.node.tool(a) == "spatula"]
         if kind == "flip":
             return (self.arm if self.arm in spat else spat[0]) if spat else None
@@ -1781,8 +1931,9 @@ class Panel(QWidget):
             return
         self.task_state = "planning"
         self.plan_result = None
-        name = "翻面" if kind == "flip" else "取料"
-        who = "右臂接、左臂刮" if arm == "both" else ARM_NAMES[arm]
+        name = {"flip": "翻面", "pick": "取料", "full": "取料 → 翻面"}[kind]
+        who = (f"{ARM_SIDE[PICKUP_CARRIER]}鏟接、{ARM_SIDE[PICKUP_SCRAPER]}鏟刮" if arm == "both"
+               else ARM_NAMES[arm])
         self.msg_lbl.setText(f"規劃{name}路徑中（{who}，逆運動學 + 碰撞檢查，約 10～60 秒）…")
         q0 = {a: self.node.q[a].copy() for a in ARMS}
         theta, auto = self.node.scene["patty"]["approach"], self.auto_dir.isChecked()
@@ -1793,12 +1944,15 @@ class Panel(QWidget):
                 if kind == "flip":
                     res = self.node.plan_flip(arm, q0[arm], theta, auto)
                 elif arm == "both":
-                    res = self.node.plan_two_spatula(ARMS[0], ARMS[1], q0[ARMS[0]], q0[ARMS[1]])
+                    res = self.node.plan_two_spatula(PICKUP_CARRIER, PICKUP_SCRAPER, q0[PICKUP_CARRIER],
+                                                     q0[PICKUP_SCRAPER], then_flip=(kind == "full"))
+                elif kind == "full":
+                    res = "完整流程要兩支手臂都裝平鏟"
                 else:
                     res = self.node.plan_pick_place(arm, q0[arm])
             except Exception as e:   # noqa: BLE001  顯示在面板上，不要讓執行緒默默結束
                 res = f"規劃失敗：{e}"
-            self.plan_result = (token, ARMS[0] if arm == "both" else arm, q0, res)
+            self.plan_result = (token, PICKUP_CARRIER if arm == "both" else arm, q0, res)
         threading.Thread(target=work, daemon=True).start()
 
     def end_task(self, msg):
