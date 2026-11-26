@@ -47,6 +47,12 @@ tray:
   thickness: 20.0
   count: 3.0
   spacing: 140.0
+plate:
+  x: -350.0
+  y: 200.0
+  z: 850.0
+  diameter: 240.0
+  thickness: 15.0
 tools:
   right: spatula
   left: spatula
