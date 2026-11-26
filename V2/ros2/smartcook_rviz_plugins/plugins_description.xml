@@ -1,0 +1,8 @@
+<library path="smartcook_rviz_plugins">
+  <class
+    name="smartcook_rviz_plugins/RightPanOrbit"
+    type="smartcook_rviz_plugins::RightPanOrbitViewController"
+    base_class_type="rviz_common::ViewController">
+    <description>Orbit 視角，滑鼠右鍵拖曳改成平移，滾輪縮放。</description>
+  </class>
+</library>

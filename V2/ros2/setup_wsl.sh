@@ -6,7 +6,7 @@
 # 1. 下載 Kawasaki 官方 khi_rs_description（RS007L 模型，ROS 1 套件）
 #    模型檔是 KHI CAD 授權，只放在 WSL，不放進 smartcook repo
 # 2. 補上 ROS 2 用的 package.xml / CMakeLists.txt
-# 3. 把 smartcook_v2_description 連到 Windows 上的 repo，colcon build
+# 3. 把 smartcook_v2_description、smartcook_rviz_plugins 連到 Windows 上的 repo，colcon build
 set -euo pipefail
 
 WS=~/smartcook_ws
@@ -57,6 +57,7 @@ EOF
 
 # 3. SmartCook V2 套件（直接連到 repo，改檔案後重新 build 即可）
 ln -sfn "$REPO_PKG" "$WS/src/smartcook_v2_description"
+ln -sfn "$(dirname "$REPO_PKG")/smartcook_rviz_plugins" "$WS/src/smartcook_rviz_plugins"   # RViz 右鍵平移視角
 
 cd "$WS"
 colcon build --symlink-install

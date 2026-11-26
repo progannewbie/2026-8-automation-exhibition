@@ -189,7 +189,7 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
+      Class: smartcook_rviz_plugins/RightPanOrbit
       Distance: 2.7740225791931152
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549

@@ -8,10 +8,22 @@ griddle:
   length: 600.0
   width: 400.0
   thickness: 60.0
-tcp:
-  x: 0.0
-  y: 0.0
-  z: 0.0
+spatula:
+  blade_width: 140.0
+  blade_length: 150.0
+  blade_thickness: 2.0
+  bend_angle: 30.0
+  shaft_length: 150.0
+  shaft_diameter: 20.0
+  mount_diameter: 63.0
+  mount_thickness: 12.0
 collision:
   enabled: true
   margin: 10.0
+patty:
+  x: 0.0
+  y: 0.0
+  diameter: 110.0
+  thickness: 15.0
+  approach: 180.0
+  lift: 100.0
